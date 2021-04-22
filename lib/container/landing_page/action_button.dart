@@ -1,9 +1,15 @@
+import 'dart:async';
+
 import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 
-class LoginButton extends StatelessWidget {
-  final GlobalKey<FormState> loginForm;
-  LoginButton({this.loginForm});
+class ActionButton extends StatelessWidget {
+  final GlobalKey<FormState> form;
+  final VoidCallback onPressed;
+  final String buttonText;
+  final bool disableTextFields;
+  ActionButton(
+      {this.form, this.onPressed, this.buttonText, this.disableTextFields});
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -18,14 +24,25 @@ class LoginButton extends StatelessWidget {
             )),
             backgroundColor: MaterialStateProperty.all(Colors.white)),
         onPressed: () {
-          print(loginForm.currentState.validate());
+          onPressed();
+          if (!form.currentState.validate()) {
+            //return false;
+          }
         },
         // color: Colors.white,
-        child: Text(
-          'LOGIN',
-          style: textStyles['button_label_blue'],
-        ),
+        child: disableTextFields
+            ? SizedBox(
+                child: CircularProgressIndicator(),
+                height: 20,
+                width: 20,
+              )
+            : Text(
+                buttonText,
+                style: textStyles['button_label_blue'],
+              ),
       ),
     );
   }
 }
+
+void popDialouge() {}

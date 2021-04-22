@@ -1,17 +1,20 @@
-import 'package:beauty_fyi/container/landing_page/email_textfield.dart';
+import 'package:beauty_fyi/container/textfields/email_textfield.dart';
+import 'package:beauty_fyi/container/landing_page/action_button.dart';
 import 'package:beauty_fyi/container/landing_page/forgot_password_label.dart';
-import 'package:beauty_fyi/container/landing_page/login_button.dart';
-import 'package:beauty_fyi/container/landing_page/password_textfield.dart';
+import 'package:beauty_fyi/container/textfields/password_textfield.dart';
 import 'package:beauty_fyi/container/landing_page/sign_up_label.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
-class LandingPage extends StatelessWidget {
+class LandingScreen extends StatelessWidget {
   final loginForm = GlobalKey<FormState>();
-  final emailTextField = TextEditingController();
-  final passwordTextField = TextEditingController();
+  final emailTextFieldController = TextEditingController();
+  final passwordTextFieldController = TextEditingController();
+  final bool disableTextFields = false;
   @override
   Widget build(BuildContext context) {
+    String emailAddress;
+    String password;
     return Scaffold(
         appBar: false
             ? AppBar(
@@ -28,7 +31,14 @@ class LandingPage extends StatelessWidget {
                       gradient: LinearGradient(
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
-                          colors: [colorStyles['purple'], Colors.blue]))),
+                          colors: [
+                        colorStyles['dark_purple'],
+                        colorStyles['light_purple'],
+                        colorStyles['blue'],
+                        colorStyles['green']
+                        // Color.fromRGBO(207, 237, 225, 1),
+                        // Color.fromRGBO(207, 237, 225, 1),
+                      ]))),
               Container(
                   height: double.infinity,
                   child: SingleChildScrollView(
@@ -39,7 +49,7 @@ class LandingPage extends StatelessWidget {
                       ),
                       child: Form(
                           key: loginForm,
-                          autovalidateMode: AutovalidateMode.disabled,
+                          autovalidateMode: AutovalidateMode.always,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
@@ -54,14 +64,29 @@ class LandingPage extends StatelessWidget {
                               ),
                               SizedBox(height: 20.0),
                               EmailTextField(
-                                emailTextField: emailTextField,
-                                myCallBack: (value) {},
+                                disableTextFields: disableTextFields,
+                                emailTextFieldController:
+                                    emailTextFieldController,
+                                onSaved: (String value) {
+                                  emailAddress = value;
+                                },
                               ),
                               SizedBox(height: 10.0),
-                              PasswordTextField(passwordTextField),
+                              PasswordTextField(
+                                  disableTextFields: disableTextFields,
+                                  passwordTextFieldController:
+                                      passwordTextFieldController,
+                                  onSaved: (value) {
+                                    password = value;
+                                  }),
                               ForgotPasswordLabel(),
                               SizedBox(height: 10.0),
-                              LoginButton(loginForm: loginForm),
+                              ActionButton(
+                                buttonText: "login in",
+                                form: loginForm,
+                                onPressed: () {},
+                                disableTextFields: disableTextFields,
+                              ),
                               SignUpLabel()
                             ],
                           ))))

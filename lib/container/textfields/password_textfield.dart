@@ -3,8 +3,11 @@ import 'package:beauty_fyi/styles/textfields.dart';
 import 'package:flutter/material.dart';
 
 class PasswordTextField extends StatelessWidget {
-  final TextEditingController _passwordTextField;
-  PasswordTextField(this._passwordTextField);
+  final TextEditingController passwordTextFieldController;
+  final ValueSetter onSaved;
+  final bool disableTextFields;
+  PasswordTextField(
+      {this.passwordTextFieldController, this.onSaved, this.disableTextFields});
   @override
   Widget build(BuildContext context) {
     return Column(
@@ -20,7 +23,17 @@ class PasswordTextField extends StatelessWidget {
           decoration: textfieldStyles['fullwidth_textfield'],
           height: 50.0,
           child: TextFormField(
-            controller: _passwordTextField,
+            enabled: !disableTextFields,
+            onSaved: (newValue) {
+              onSaved(newValue);
+            },
+            validator: (value) {
+              if (value.toString().isEmpty) {
+                return "Please enter a password";
+              }
+              return null;
+            },
+            controller: passwordTextFieldController,
             obscureText: true,
             style: textStyles['tf_label'],
             decoration: InputDecoration(
@@ -30,7 +43,7 @@ class PasswordTextField extends StatelessWidget {
                 Icons.lock,
                 color: Colors.white,
               ),
-              hintText: 'Enter your Password',
+              hintText: 'Password',
               hintStyle: textStyles['tf_hint'],
             ),
           ),

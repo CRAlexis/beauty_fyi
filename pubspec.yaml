@@ -23,6 +23,17 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  image_picker: ^0.7.3
+  video_player: ^2.0.2
+  flutter_ffmpeg: ^0.4.0
+  path_provider: ^2.0.1
+  camera: ^0.5.8+2
+  social_share: ^2.1.1
+  record: ^2.1.0+1
+  jiffy: ^4.1.0
+  sqflite: ^2.0.0+3
+  simple_animations: ^3.0.3
+
 
 
   # The following adds the Cupertino Icons font to your application.

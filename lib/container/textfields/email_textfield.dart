@@ -1,10 +1,13 @@
+import 'package:beauty_fyi/styles/colors.dart';
 import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 
 class EmailTextField extends StatelessWidget {
-  final TextEditingController emailTextField;
-  final ValueSetter<String> myCallBack;
-  EmailTextField({this.emailTextField, this.myCallBack});
+  final TextEditingController emailTextFieldController;
+  final ValueSetter<String> onSaved;
+  final bool disableTextFields;
+  EmailTextField(
+      {this.emailTextFieldController, this.onSaved, this.disableTextFields});
 
   @override
   Widget build(BuildContext context) {
@@ -22,7 +25,7 @@ class EmailTextField extends StatelessWidget {
         Container(
           alignment: Alignment.centerLeft,
           decoration: BoxDecoration(
-            color: Color(0xFF6CA8F1),
+            color: colorStyles['green'],
             borderRadius: BorderRadius.circular(10.0),
             boxShadow: [
               BoxShadow(
@@ -34,8 +37,12 @@ class EmailTextField extends StatelessWidget {
           ),
           height: 50.0,
           child: TextFormField(
+            enabled: !disableTextFields,
             keyboardType: TextInputType.emailAddress,
-            controller: emailTextField,
+            controller: emailTextFieldController,
+            onSaved: (newValue) {
+              onSaved(newValue);
+            },
             onChanged: (value) {},
             validator: (value) {
               String email = value.toString().trim();
@@ -56,7 +63,7 @@ class EmailTextField extends StatelessWidget {
                   color: Colors.white,
                   size: double.parse('30'),
                 ),
-                hintText: 'Enter your Email',
+                hintText: 'Email',
                 hintStyle: textStyles['tf_hint']),
           ),
         ),

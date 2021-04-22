@@ -7,7 +7,9 @@ class ForgotPasswordLabel extends StatelessWidget {
     return Container(
       alignment: Alignment.centerRight,
       child: TextButton(
-        onPressed: null,
+        onPressed: () {
+          Navigator.pushNamed(context, "/forgot-password");
+        },
         child: Text(
           "forgot password?",
           style: textStyles['tf_label'],
