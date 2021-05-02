@@ -7,6 +7,7 @@ class AreYouSureAlertDialog {
   final onLeftButton;
   final onRightButton;
   final BuildContext context;
+  final bool dismissible;
   const AreYouSureAlertDialog(
       {Key key,
       this.message,
@@ -14,11 +15,12 @@ class AreYouSureAlertDialog {
       this.rightButtonText,
       this.onLeftButton,
       this.onRightButton,
-      this.context});
+      this.context,
+      this.dismissible = false});
 
   Future<void> show() async {
     return showDialog(
-        barrierDismissible: false,
+        barrierDismissible: dismissible,
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(

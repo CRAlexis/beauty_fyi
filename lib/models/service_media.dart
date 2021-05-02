@@ -41,12 +41,13 @@ class ServiceMedia {
     }
   }
 
-  Future<List<ServiceMedia>> readServiceMedias() async {
+  Future<List<ServiceMedia>> readServiceMedia({sql, args}) async {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      List<Map<String, dynamic>> query = await db.query('service_media',
-          where: "service_id = ?", whereArgs: [serviceId]);
+      print(args);
+      List<Map<String, dynamic>> query =
+          await db.query('service_media' /*, where: sql, whereArgs: args*/);
       return List.generate(query.length, (index) {
         return ServiceMedia(
             id: query[index]['id'],

@@ -10,7 +10,7 @@ class ClientsTab extends StatefulWidget {
 }
 
 class _ClientsTabState extends State<ClientsTab> {
-  Future clients;
+  Future<List<ClientModel>> clients;
 
   void initState() {
     super.initState();
@@ -45,7 +45,7 @@ class _ClientsTabState extends State<ClientsTab> {
                 vertical: 20.0,
               ),
               child: Column(children: [
-                FutureBuilder(
+                FutureBuilder<List<ClientModel>>(
                     future: clients,
                     builder: (context, clients) {
                       print("refreshing future");
@@ -63,8 +63,14 @@ class _ClientsTabState extends State<ClientsTab> {
                           itemBuilder: (context, index) {
                             return GestureDetector(
                               onTap: () {
-                                var addClientAAlertDialog;
-                                addClientAAlertDialog = AddClientAlertDialog(
+                                Navigator.pushNamed(context, 'client-screen',
+                                    arguments: {
+                                      'clientId': clients.data[index].clientId,
+                                      'clientName':
+                                          clients.data[index].clientName
+                                    });
+                                // var addClientAAlertDialog;
+                                /*  addClientAAlertDialog = AddClientAlertDialog(
                                     context: context,
                                     clientName: clients.data[index].clientName,
                                     leftButtonText: "DELETE",
@@ -144,7 +150,7 @@ class _ClientsTabState extends State<ClientsTab> {
                                       setState(() {});
                                     });
 
-                                addClientAAlertDialog.show();
+                                addClientAAlertDialog.show();*/
                               },
                               child: Card(
                                 elevation: 4,
@@ -325,7 +331,7 @@ class AddClientAlertDialog {
   }
 }
 
-Future fetchClients() async {
+Future<List<ClientModel>> fetchClients() async {
   print("collecting clients data");
   return await ClientModel().readClients();
 }

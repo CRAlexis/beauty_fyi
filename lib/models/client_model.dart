@@ -7,7 +7,7 @@ class ClientModel {
 
   ClientModel({this.clientId, this.clientName});
 
-  Map<String, dynamic> toMap() {
+  Map<String, dynamic> get map {
     return {'client_name': clientName};
   }
 
@@ -17,7 +17,7 @@ class ClientModel {
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       int query = await db.insert(
         'clients',
-        clientModel.toMap(),
+        clientModel.map,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
       return query == 1;
@@ -30,7 +30,7 @@ class ClientModel {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      int query = await db.update('clients', clientModel.toMap(),
+      int query = await db.update('clients', clientModel.map,
           where: "id = ?", whereArgs: [clientId]);
       return query == 1;
     } catch (error) {

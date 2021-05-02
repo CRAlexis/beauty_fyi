@@ -1,5 +1,8 @@
 import 'dart:async';
+import 'dart:io';
 
+import 'package:beauty_fyi/bloc/gallery_bloc.dart';
+import 'package:beauty_fyi/models/session_model.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_animations/simple_animations.dart';
 
@@ -9,12 +12,16 @@ class LiveSessionBottomBar extends StatefulWidget {
   final onStartRecording;
   final onStopRecording;
   final switchCamera;
+  final GalleryBloc galleryBloc;
+  final SessionModel sessionModel;
   LiveSessionBottomBar(
       {this.tabController,
       this.onTakePhoto,
       this.onStartRecording,
       this.onStopRecording,
-      this.switchCamera});
+      this.switchCamera,
+      this.galleryBloc,
+      this.sessionModel});
   @override
   _LiveSessionBottomBarState createState() => _LiveSessionBottomBarState();
 }
@@ -24,7 +31,6 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
       CustomAnimationControl.PLAY;
   CustomAnimationControl customAnimationControlCamera =
       CustomAnimationControl.STOP;
-  bool showCameraUi = false;
   @override
   Widget build(BuildContext context) {
     widget.tabController.addListener(() {
@@ -58,7 +64,7 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
                     alwaysIncludeSemantics: false,
                     opacity: value,
                     child: Visibility(
-                      visible: value == 0 ? false : true,
+                      visible: value == 1,
                       child: Material(
                         color: Colors.transparent,
                         child: TabBar(
@@ -126,18 +132,20 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
                                   padding: EdgeInsets.only(left: 15, top: 38),
                                   child: Align(
                                     alignment: Alignment.centerLeft,
-                                    child: GalleryIcon(),
+                                    child: GalleryIcon(
+                                        galleryBloc: widget.galleryBloc,
+                                        sessionModel: widget.sessionModel),
                                   ),
                                 ),
                                 Align(
                                   alignment: Alignment.center,
-                                  child: CircleButton(
-                                      onTakePhoto: () {
-                                        widget.onTakePhoto();
-                                        print("Are we here");
-                                      },
-                                      onStartRecording: () {},
-                                      onStopRecording: () {}),
+                                  child: CircleButton(onTakePhoto: () {
+                                    widget.onTakePhoto();
+                                  }, onStartRecording: () {
+                                    widget.onStartRecording();
+                                  }, onStopRecording: () {
+                                    widget.onStopRecording();
+                                  }),
                                 ),
                                 GestureDetector(
                                   onTap: () => widget.switchCamera(),
@@ -191,12 +199,12 @@ class _CircleButtonState extends State<CircleButton> {
         tapDownActive = true;
         Timer(Duration(milliseconds: 500), () {
           if (tapDownActive) {
+            widget.onStartRecording();
             recording = true;
             print("Start recording");
             setState(() {
               animate = true;
               buffer = true;
-              widget.onStartRecording();
             });
           }
         });
@@ -204,16 +212,14 @@ class _CircleButtonState extends State<CircleButton> {
       onTapUp: (TapUpDetails tapUpDetails) {
         tapDownActive = false;
         if (recording) {
-          print("stop recording");
+          widget.onStopRecording();
           setState(() {
             recording = false;
             animate = false;
             buffer = true;
-            widget.onStopRecording();
           });
         } else {
           if (buffer) return;
-          print("take photo");
           setState(() {
             takePhoto = true;
             animate = true;
@@ -231,16 +237,14 @@ class _CircleButtonState extends State<CircleButton> {
       onTapCancel: () {
         tapDownActive = false;
         if (recording) {
-          print("stop recording");
+          widget.onStopRecording();
           setState(() {
             recording = false;
             animate = false;
             buffer = true;
-            widget.onStopRecording();
           });
         } else {
           if (buffer) return;
-          print("take photo");
           setState(() {
             takePhoto = true;
             animate = true;
@@ -276,21 +280,69 @@ class _CircleButtonState extends State<CircleButton> {
 }
 
 class GalleryIcon extends StatefulWidget {
+  final GalleryBloc galleryBloc;
+  final SessionModel sessionModel;
+
+  const GalleryIcon({Key key, this.galleryBloc, this.sessionModel})
+      : super(key: key);
   @override
   _GalleryIconState createState() => _GalleryIconState();
 }
 
 class _GalleryIconState extends State<GalleryIcon> {
   @override
+  void initState() {
+    super.initState();
+    refresh();
+  }
+
+  void refresh() {
+    Timer(Duration(seconds: 1), () {
+      widget.galleryBloc.eventSink.add({
+        GalleryEvent.PhotoCaptured: widget.sessionModel.id
+      }); // This does not run on very first instance
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 35,
-      width: 35,
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.all(Radius.circular(5)),
-        border: Border.all(color: Colors.white, width: 2),
-        color: Color.fromRGBO(255, 255, 255, 0.2),
-      ),
-    );
+    return StreamBuilder<File>(
+        stream: widget.galleryBloc.galleryStream,
+        initialData: null,
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            return GestureDetector(
+                onTap: () => {
+                      Navigator.pushNamed(context, "/gallery-screen",
+                          arguments: {"sessionModel": widget.sessionModel})
+                    },
+                child: Container(
+                    height: 35,
+                    width: 35,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(5)),
+                      border: Border.all(color: Colors.white, width: 2),
+                      color: Color.fromRGBO(255, 255, 255, 0.2),
+                      image: DecorationImage(
+                        fit: BoxFit.cover,
+                        image: FileImage(snapshot.data),
+                      ),
+                    )));
+          } else {
+            return GestureDetector(
+                onTap: () => {
+                      Navigator.pushNamed(context, "/gallery-screen",
+                          arguments: {"sessionModel": widget.sessionModel})
+                    },
+                child: Container(
+                    height: 35,
+                    width: 35,
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.all(Radius.circular(5)),
+                      border: Border.all(color: Colors.white, width: 2),
+                      color: Color.fromRGBO(255, 255, 255, 0.2),
+                    )));
+          }
+        });
   }
 }

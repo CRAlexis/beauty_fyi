@@ -1,20 +1,20 @@
 import 'dart:convert';
 
 import 'package:beauty_fyi/container/textfields/email_textfield.dart';
-import 'package:beauty_fyi/container/textfields/default_textfield.dart';
 import 'package:beauty_fyi/container/textfields/password_textfield.dart';
 import 'package:beauty_fyi/container/landing_page/action_button.dart';
 import 'package:beauty_fyi/container/landing_page/login_label.dart';
+import 'package:beauty_fyi/http/http_service.dart';
 import 'package:beauty_fyi/styles/colors.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 
-class SignInScreen extends StatefulWidget {
+class RegisterScreen extends StatefulWidget {
   @override
-  _SignInScreenState createState() => _SignInScreenState();
+  _RegisterScreenState createState() => _RegisterScreenState();
 }
 
-class _SignInScreenState extends State<SignInScreen> {
+class _RegisterScreenState extends State<RegisterScreen> {
   final signUpForm = GlobalKey<FormState>();
 
   final emailTextFieldController = TextEditingController();
@@ -43,7 +43,12 @@ class _SignInScreenState extends State<SignInScreen> {
                       gradient: LinearGradient(
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
-                          colors: [colorStyles['purple'], Colors.blue]))),
+                          colors: [
+                        colorStyles['dark_purple'],
+                        colorStyles['light_purple'],
+                        colorStyles['blue'],
+                        colorStyles['green']
+                      ]))),
               Container(
                   height: double.infinity,
                   child: SingleChildScrollView(
@@ -58,8 +63,10 @@ class _SignInScreenState extends State<SignInScreen> {
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
+                              SizedBox(height: 30.0),
                               Text(
-                                'Sign Up',
+                                'Get started with Beauty-fyi',
+                                textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontFamily: 'OpenSans',
@@ -67,38 +74,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
-                              DefaultTextField(
-                                iconData: Icons.person,
-                                hintText: "First name",
-                                invalidMessage: "Invalid name",
-                                labelText: "First name",
-                                textInputType: TextInputType.name,
-                                defaultTextFieldController:
-                                    firstNameTextFieldController,
-                                onSaved: (String value) {
-                                  firstNameValue = value;
-                                },
-                                disableTextFields: disableTextFields,
-                              ),
-                              SizedBox(
-                                height: 20,
-                              ),
-                              DefaultTextField(
-                                iconData: Icons.person,
-                                hintText: "Last name",
-                                invalidMessage: "Invalid name",
-                                labelText: "Last name",
-                                textInputType: TextInputType.name,
-                                defaultTextFieldController:
-                                    lastNameTextFieldController,
-                                onSaved: (String value) {
-                                  lastNameValue = value;
-                                },
-                                disableTextFields: disableTextFields,
-                              ),
-                              SizedBox(
-                                height: 20,
-                              ),
+                              SizedBox(height: 30.0),
                               EmailTextField(
                                 disableTextFields: disableTextFields,
                                 emailTextFieldController:
@@ -107,7 +83,7 @@ class _SignInScreenState extends State<SignInScreen> {
                                   emailValue = value;
                                 },
                               ),
-                              SizedBox(height: 20.0),
+                              SizedBox(height: 10.0),
                               PasswordTextField(
                                   disableTextFields: disableTextFields,
                                   passwordTextFieldController:
@@ -118,21 +94,22 @@ class _SignInScreenState extends State<SignInScreen> {
                               SizedBox(height: 10.0),
                               ActionButton(
                                   disableTextFields: disableTextFields,
-                                  buttonText: "Sign up",
+                                  buttonText: "continue",
                                   form: signUpForm,
                                   onPressed: () {
                                     setState(() {
                                       autovalidateMode =
                                           AutovalidateMode.onUserInteraction;
-                                      disableTextFields = true;
+                                      // disableTextFields = true;
                                     });
                                     signUpUser(
-                                            firstNameTextFieldController.text,
-                                            lastNameTextFieldController.text,
-                                            emailTextFieldController.text,
-                                            passwordTextFieldController.text,
-                                            signUpForm,
-                                            context)
+                                            emailValue:
+                                                emailTextFieldController.text,
+                                            passwordValue:
+                                                passwordTextFieldController
+                                                    .text,
+                                            signUpForm: signUpForm,
+                                            context: context)
                                         .then((value) => {
                                               setState(() {
                                                 disableTextFields = false;
@@ -147,64 +124,55 @@ class _SignInScreenState extends State<SignInScreen> {
 }
 
 Future signUpUser(
-    String firstNameValue,
-    String lastNameValue,
-    String emailValue,
+    {String emailValue,
     String passwordValue,
     GlobalKey<FormState> signUpForm,
-    BuildContext context) async {
+    BuildContext context}) async {
+  HttpService http = HttpService();
+
   if (!signUpForm.currentState.validate()) {
     //return;
   }
   final content = new Map<String, dynamic>();
-  content['first_name'] = firstNameValue;
-  content['last_name'] = lastNameValue;
   content['email'] = emailValue;
   content['password'] = passwordValue;
   try {
-    final http.Response response = await http.post(
-      // Uri.http('192.168.43.100:3333', 'sign-up'),
-      Uri.parse("http://192.168.1.245:3333/sign-up"),
-      headers: <String, String>{
-        'Content-Type': 'application/json; charset=UTf-8',
-        'Accept': 'application/json'
-      },
-      body: jsonEncode(content),
-    );
-    print(response.statusCode);
+    Response response = await http.postRequest(
+        endPoint: 'authentication/register/1', data: content);
     if (response.statusCode == 200) {
-      //Go to dashboard
+      print(response.data['key']);
+      final storage = new FlutterSecureStorage();
+      return;
     } else {
-      showDialog(
-          context: context,
-          builder: (BuildContext context) {
-            return AlertDialog(
-              content: new SingleChildScrollView(
-                child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text("Unable to sign up. Please try again."),
-                      SizedBox(
-                        height: 10,
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                    },
-                    child: Text("ok"))
-              ],
-            );
-          });
+      throw response;
     }
-    return;
   } catch (e) {
     print(e);
-    return;
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            content: new SingleChildScrollView(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text("Unable to sign up. Please try again."),
+                    SizedBox(
+                      height: 10,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            actions: [
+              TextButton(
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("ok"))
+            ],
+          );
+        });
   }
 }

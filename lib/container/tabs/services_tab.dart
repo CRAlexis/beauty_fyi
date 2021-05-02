@@ -14,12 +14,7 @@ class _ServicesTabState extends State<ServicesTab> {
   @override
   void initState() {
     super.initState();
-    services = fetchServices();
-  }
-
-  void didChangeDependencies() {
-    super.didChangeDependencies();
-    // services = fetchServices();
+    refreshFuture();
   }
 
   void refreshFuture() {

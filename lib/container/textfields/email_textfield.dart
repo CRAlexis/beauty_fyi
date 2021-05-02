@@ -1,5 +1,6 @@
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:beauty_fyi/styles/text.dart';
+import 'package:beauty_fyi/styles/textfields.dart';
 import 'package:flutter/material.dart';
 
 class EmailTextField extends StatelessWidget {
@@ -16,25 +17,15 @@ class EmailTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Padding(
-          padding: EdgeInsets.only(bottom: 10),
+          padding: EdgeInsets.only(bottom: 0),
           child: Text(
-            'Email',
-            style: textStyles['tf_label'],
+            '',
+            style: textStyles['tf_label_white'],
           ),
         ),
         Container(
           alignment: Alignment.centerLeft,
-          decoration: BoxDecoration(
-            color: colorStyles['green'],
-            borderRadius: BorderRadius.circular(10.0),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black12,
-                blurRadius: 6.0,
-                offset: Offset(0, 2),
-              ),
-            ],
-          ),
+          decoration: textfieldStyles['blue_textfield'],
           height: 50.0,
           child: TextFormField(
             enabled: !disableTextFields,

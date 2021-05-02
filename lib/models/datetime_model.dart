@@ -2,12 +2,16 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DateTimeModel {
-  final DateTime dateTime;
+  DateTime dateTime;
   final String className;
   DateTimeModel({this.dateTime, this.className});
 
   Map<String, dynamic> toMap() {
     return {'class_name': className, 'date_time': dateTime.toString()};
+  }
+
+  set setDateTime(DateTime dateTime) {
+    this.dateTime = dateTime;
   }
 
   Future<bool> insertDateTime(
@@ -44,6 +48,18 @@ class DateTimeModel {
           className: query[0]['class_name']);
     } catch (error) {
       return Future.error(error, StackTrace.fromString(""));
+    }
+  }
+
+  Future<bool> removeDateTime() async {
+    try {
+      Database db = await openDatabase(
+          join(await getDatabasesPath(), 'beautyfyi_database.db'));
+      int query = await db
+          .delete('datetimes', where: 'class_name = ?', whereArgs: [className]);
+      return query == 1;
+    } catch (error) {
+      return Future.error(error, StackTrace.current);
     }
   }
 }

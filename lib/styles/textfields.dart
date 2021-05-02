@@ -4,7 +4,7 @@ import 'package:flutter/material.dart';
 
 Map<String, BoxDecoration> textfieldStyles = {
   "fullwidth_textfield": BoxDecoration(
-    color: colorStyles['green'],
+    color: colorStyles['blue'],
     borderRadius: BorderRadius.circular(10.0),
     boxShadow: [
       BoxShadow(

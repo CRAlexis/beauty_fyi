@@ -1,12 +1,15 @@
 import 'dart:io';
 
 import 'package:beauty_fyi/container/alert_dialoges/are_you_sure_alert_dialog.dart';
+import 'package:beauty_fyi/container/alert_dialoges/client_list_alert_dialog.dart';
 import 'package:beauty_fyi/container/alert_dialoges/message_alert_dialog.dart';
 import 'package:beauty_fyi/container/app_bar/app_bar.dart';
 import 'package:beauty_fyi/container/view_service/image_and_name_card.dart';
 import 'package:beauty_fyi/container/view_service/start_session_button.dart';
 import 'package:beauty_fyi/container/view_service/tab_card.dart';
+import 'package:beauty_fyi/models/datetime_model.dart';
 import 'package:beauty_fyi/models/service_model.dart';
+import 'package:beauty_fyi/models/session_model.dart';
 import 'package:flutter/material.dart';
 
 class ViewServiceScreen extends StatefulWidget {
@@ -28,6 +31,53 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
     service = fetchService(id: widget.args['id']);
   }
 
+  void newSession({SessionModel sessionModel}) async {
+    final result =
+        await ClientListAlertDialog(context: context, onConfirm: () {}).show();
+    if (result.values.first != null) {
+      await DateTimeModel(className: 'countdown').removeDateTime();
+      Navigator.of(context).pop();
+      sessionModel.setClientId = result.values.first;
+      int sessionId = await sessionModel.startSession(sessionModel);
+      sessionModel.setSessionId = sessionId;
+      Navigator.of(context).pop();
+      Navigator.pushNamed(context, "/live-session",
+          arguments: {'sessionModel': sessionModel});
+    }
+  }
+
+  void navigateToSessionPage() async {
+    print("should be 0");
+    SessionModel sessionModel = SessionModel(
+        clientId: null,
+        serviceId: widget.args['id'],
+        dateTime: DateTime.now(),
+        notes: "",
+        active: true,
+        currentProcess: 0);
+    List sessionAlreadyActive = await sessionModel.sessionInit();
+    if (sessionAlreadyActive[0]) {
+      AreYouSureAlertDialog(
+        dismissible: true,
+        context: context,
+        message:
+            "You already have a session active with ${sessionAlreadyActive[1]}.",
+        leftButtonText: "New session",
+        rightButtonText: "Resume",
+        onLeftButton: () async {
+          newSession(sessionModel: sessionModel);
+        },
+        onRightButton: () async {
+          Navigator.of(context).pop();
+          Navigator.pushNamed(context, "/live-session",
+              arguments: {'sessionModel': sessionAlreadyActive[3]});
+        },
+      ).show();
+    } else {
+      newSession(sessionModel: sessionModel);
+    }
+  }
+
   Widget build(BuildContext context) {
     return FutureBuilder(
       future: service,
@@ -39,7 +89,7 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
                 transparent: false,
                 titleText: snapshot.data['service_name'],
                 leftIcon: Icons.arrow_back,
-                rightIcon: null,
+                rightIcon: Icons.more_vert,
                 leftIconClicked: () {
                   Navigator.of(context).pop();
                 },
@@ -103,6 +153,7 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
                             TabCard(
                               serviceDescription:
                                   snapshot.data['service_description'],
+                              serviceId: widget.args['id'],
                             ),
                             SizedBox(
                               height: 100,
@@ -110,8 +161,7 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
                           ]))),
                   StartSessionButton(
                     onPressed: () {
-                      Navigator.of(context).pushNamed("/live-session",
-                          arguments: ({'service_id': widget.args['id']}));
+                      navigateToSessionPage();
                     },
                   )
                 ],

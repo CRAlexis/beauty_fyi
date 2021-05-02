@@ -14,13 +14,13 @@ class PasswordTextField extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          'Password',
-          style: textStyles['tf_label'],
+          '',
+          style: textStyles['tf_label_white'],
         ),
-        SizedBox(height: 10.0),
+        SizedBox(height: 00.0),
         Container(
           alignment: Alignment.centerLeft,
-          decoration: textfieldStyles['fullwidth_textfield'],
+          decoration: textfieldStyles['blue_textfield'],
           height: 50.0,
           child: TextFormField(
             enabled: !disableTextFields,

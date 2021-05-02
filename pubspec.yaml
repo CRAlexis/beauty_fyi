@@ -33,6 +33,9 @@ dependencies:
   jiffy: ^4.1.0
   sqflite: ^2.0.0+3
   simple_animations: ^3.0.3
+  vibration: ^1.7.3
+  dio: ^4.0.0
+  flutter_secure_storage: ^4.2.0
 
 
 

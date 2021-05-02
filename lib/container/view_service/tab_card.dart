@@ -1,10 +1,18 @@
+import 'dart:async';
+import 'dart:developer';
+import 'dart:io';
+
+import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class TabCard extends StatefulWidget {
   final String serviceDescription;
+  final int serviceId;
 
-  const TabCard({Key key, this.serviceDescription}) : super(key: key);
+  const TabCard({Key key, this.serviceDescription, this.serviceId})
+      : super(key: key);
   @override
   _TabCardState createState() => _TabCardState();
 }
@@ -81,11 +89,14 @@ class _TabCardState extends State<TabCard> with SingleTickerProviderStateMixin {
               ),
               Align(
                 alignment: Alignment.center,
-                child: Text(
-                  "Coming soon...",
-                  style: TextStyle(fontWeight: FontWeight.bold),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    "Coming soon...",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
                 ),
-              )
+              ),
             ]),
           ),
         ]));

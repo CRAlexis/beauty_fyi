@@ -1,7 +1,10 @@
-import 'package:beauty_fyi/screens/full_screen_image.dart';
+import 'package:beauty_fyi/container/full_screen_image/full_screen_image.dart';
+import 'package:beauty_fyi/screens/client_screen.dart';
+import 'package:beauty_fyi/screens/full_screen_media_screen.dart';
+import 'package:beauty_fyi/screens/gallery_screen.dart';
 import 'package:beauty_fyi/screens/landing_screen.dart';
 import 'package:beauty_fyi/screens/live_session_screen.dart';
-import 'package:beauty_fyi/screens/sign_up_screen.dart';
+import 'package:beauty_fyi/screens/register_screen.dart';
 import 'package:beauty_fyi/screens/forgot_password_screen.dart';
 
 import 'package:beauty_fyi/screens/dashboard_screen.dart';
@@ -21,11 +24,7 @@ void main() async {
     statusBarColor: Colors.transparent, // transparent status bar
   ));
   final Future<Database> database = openDatabase(
-    // Set the path to the database. Note: Using the `join` function from the
-    // `path` package is best practice to ensure the path is correctly
-    // constructed for each platform.
     join(await getDatabasesPath(), 'beautyfyi_database.db'),
-
     onOpen: (db) async {
       print(db);
       await db.execute(
@@ -34,9 +33,11 @@ void main() async {
       await db.execute(
         "CREATE TABLE IF NOT EXISTS datetimes(id INTEGER PRIMARY KEY, class_name VARCHAR, date_time VARCHAR)",
       );
-      await db.execute("DROP TABLE IF EXISTS service_media");
       await db.execute(
         "CREATE TABLE IF NOT EXISTS service_media(id INTEGER PRIMARY KEY, session_id INTEGER, service_id INTEGER, user_id INTEGER, file_type VARCHAR, file_path TEXT)",
+      );
+      await db.execute(
+        "CREATE TABLE IF NOT EXISTS sessions(id INTEGER PRIMARY KEY, client_id INTEGER, service_id INTEGER, date_time TEXT, notes TEXT, active INTEGER, current_process INTEGER)",
       );
       return db.execute(
         "CREATE TABLE IF NOT EXISTS clients(id INTEGER PRIMARY KEY, client_name VARCHAR)",
@@ -59,11 +60,11 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/dashboard',
+      initialRoute: '/register-screen',
       onGenerateRoute: (RouteSettings settings) {
         final routes = <String, WidgetBuilder>{
           '/': (BuildContext context) => LandingScreen(),
-          '/sign-up': (BuildContext context) => SignInScreen(),
+          '/register-screen': (BuildContext context) => RegisterScreen(),
           '/forgot-password': (BuildContext context) => ForgotPasswordScreen(),
           '/dashboard': (BuildContext context) => DashboardScreen(),
           '/view-service': (BuildContext context) => ViewServiceScreen(
@@ -72,8 +73,14 @@ class MyApp extends StatelessWidget {
           '/add-service': (BuildContext context) =>
               CreateServiceScreen(args: settings.arguments),
           '/full-screen-image': (BuildContext context) => FullScreenImage(),
+          '/full-screen-media': (BuildContext context) =>
+              FullScreenMediaScreen(args: settings.arguments),
+          '/gallery-screen': (BuildContext context) =>
+              GalleryScreen(args: settings.arguments),
           '/live-session': (BuildContext context) =>
               LiveSessionScreen(args: settings.arguments),
+          'client-screen': (BuildContext context) =>
+              ClientScreen(args: settings.arguments),
           '/testing-screen': (BuildContext context) => CameraPreviewTest(),
         };
         WidgetBuilder builder = routes[settings.name];

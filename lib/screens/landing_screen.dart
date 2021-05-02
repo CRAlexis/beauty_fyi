@@ -1,6 +1,5 @@
 import 'package:beauty_fyi/container/textfields/email_textfield.dart';
 import 'package:beauty_fyi/container/landing_page/action_button.dart';
-import 'package:beauty_fyi/container/landing_page/forgot_password_label.dart';
 import 'package:beauty_fyi/container/textfields/password_textfield.dart';
 import 'package:beauty_fyi/container/landing_page/sign_up_label.dart';
 import 'package:beauty_fyi/styles/colors.dart';
@@ -36,8 +35,6 @@ class LandingScreen extends StatelessWidget {
                         colorStyles['light_purple'],
                         colorStyles['blue'],
                         colorStyles['green']
-                        // Color.fromRGBO(207, 237, 225, 1),
-                        // Color.fromRGBO(207, 237, 225, 1),
                       ]))),
               Container(
                   height: double.infinity,
@@ -49,7 +46,7 @@ class LandingScreen extends StatelessWidget {
                       ),
                       child: Form(
                           key: loginForm,
-                          autovalidateMode: AutovalidateMode.always,
+                          autovalidateMode: AutovalidateMode.onUserInteraction,
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
@@ -79,7 +76,7 @@ class LandingScreen extends StatelessWidget {
                                   onSaved: (value) {
                                     password = value;
                                   }),
-                              ForgotPasswordLabel(),
+                              // ForgotPasswordLabel(),
                               SizedBox(height: 10.0),
                               ActionButton(
                                 buttonText: "login in",

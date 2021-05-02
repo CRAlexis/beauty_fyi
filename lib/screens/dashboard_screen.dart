@@ -33,7 +33,7 @@ class _DashboardScreenState extends State<DashboardScreen>
           transparent: false,
           titleText: "Beauty-FYI",
           leftIcon: Icons.menu,
-          rightIcon: Icons.more_vert,
+          rightIcon: null,
           leftIconClicked: () {},
           rightIconClicked: () {},
           automaticallyImplyLeading: false),

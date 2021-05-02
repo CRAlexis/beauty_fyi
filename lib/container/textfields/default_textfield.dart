@@ -60,7 +60,14 @@ class DefaultTextField extends StatelessWidget {
         'tf_hint_black',
         'black_text_decoration',
         'tf_label_black_bold', // for label
-      ]
+      ],
+      [
+        'fullwidth_textfield',
+        'tf_label_white',
+        'tf_hint',
+        'white_text_decoration',
+        'tf_label_white'
+      ],
     ];
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
