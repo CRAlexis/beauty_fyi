@@ -9,8 +9,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final VoidCallback rightIconClicked;
   final bool automaticallyImplyLeading;
   final bool transparent;
+  final bool dark;
   final bool focused;
   final bool centerTitle;
+  final double height;
   CustomAppBar(
       {this.titleText = "Beauty-FYI",
       this.leftIcon,
@@ -19,8 +21,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       this.rightIconClicked,
       this.automaticallyImplyLeading = true,
       this.transparent,
+      this.dark = false,
       this.focused,
-      this.centerTitle = true});
+      this.centerTitle = true,
+      this.height});
   @override
   Size get preferredSize => const Size.fromHeight(55);
   Widget build(BuildContext context) {
@@ -28,22 +32,29 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
         opacity: this.focused ? 1 : 0.3,
         duration: Duration(milliseconds: 300),
         child: new AppBar(
-          backgroundColor: this.transparent ? Colors.transparent : Colors.red,
+          brightness: this.dark ? Brightness.dark : Brightness.light,
+          backgroundColor: this.dark
+              ? Colors.black
+              : this.transparent
+                  ? Colors.transparent
+                  : Colors.black,
           elevation: this.transparent ? 0 : 10,
           automaticallyImplyLeading: automaticallyImplyLeading,
           flexibleSpace: Container(
             decoration: BoxDecoration(
               gradient: this.transparent
                   ? null
-                  : LinearGradient(
-                      colors: [
-                        colorStyles['dark_purple'],
-                        colorStyles['light_purple'],
-                        colorStyles['blue'],
-                        colorStyles['green']
-                      ],
-                      // stops: [0.1, 1.0, 0.5],
-                    ),
+                  : this.dark
+                      ? null
+                      : LinearGradient(
+                          colors: [
+                            colorStyles['dark_purple'],
+                            colorStyles['light_purple'],
+                            colorStyles['blue'],
+                            colorStyles['green']
+                          ],
+                          // stops: [0.1, 1.0, 0.5],
+                        ),
             ),
           ),
           centerTitle: centerTitle,

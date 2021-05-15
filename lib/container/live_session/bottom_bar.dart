@@ -317,8 +317,8 @@ class _GalleryIconState extends State<GalleryIcon> {
                           arguments: {"sessionModel": widget.sessionModel})
                     },
                 child: Container(
-                    height: 35,
-                    width: 35,
+                    height: 50,
+                    width: 50,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.white, width: 2),
@@ -335,8 +335,8 @@ class _GalleryIconState extends State<GalleryIcon> {
                           arguments: {"sessionModel": widget.sessionModel})
                     },
                 child: Container(
-                    height: 35,
-                    width: 35,
+                    height: 50,
+                    width: 50,
                     decoration: BoxDecoration(
                       borderRadius: BorderRadius.all(Radius.circular(5)),
                       border: Border.all(color: Colors.white, width: 2),

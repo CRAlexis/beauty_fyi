@@ -31,7 +31,6 @@ class DefaultTextArea extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String validationErrorMessage = invalidMessage;
     List textFieldStylingListHolder = [
       ['blue_textfield', 'tf_label_white', 'tf_hint', 'white_text_decoration'],
       [

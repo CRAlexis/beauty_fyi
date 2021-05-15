@@ -51,7 +51,8 @@ class _ServicesTabState extends State<ServicesTab> {
                   future: services,
                   builder: (context, services) {
                     if (services.connectionState == ConnectionState.none ||
-                        !services.hasData) {
+                        !services.hasData ||
+                        services.data.length == 0) {
                       return AddNewServiceCard(
                         constrained: true,
                         refresh: () {

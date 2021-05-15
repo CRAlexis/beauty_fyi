@@ -1,5 +1,3 @@
-import 'dart:async';
-
 import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 

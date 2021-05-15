@@ -5,11 +5,11 @@ import 'package:path/path.dart';
 class SessionModel {
   int id;
   int clientId;
-  final DateTime dateTime;
+  DateTime dateTime;
   String notes;
-  final bool active;
+  bool active;
   int currentProcess;
-  final int serviceId;
+  int serviceId;
   SessionModel({
     this.id,
     @required this.clientId,
@@ -47,30 +47,30 @@ class SessionModel {
     this.clientId = clientId;
   }
 
+  set setActive(bool active) {
+    this.active = active;
+  }
+
   Future<List> sessionInit() async {
     try {
       bool sessionIsActive = false;
       String clientName;
       String serviceName;
-      int clientId;
-      int serviceId;
       SessionModel previousSession;
       final Database db = await openDatabase(
           join(await getDatabasesPath(), "beautyfyi_database.db"));
       final List<Map<String, dynamic>> query = await db.query("sessions");
 
-      print(query);
       if (query.isEmpty) {
         return [false, null, null];
       }
+
       query.every((element) {
         if (element['active'] == 1) {
           sessionIsActive = true;
-          clientId = element['client_id'];
-          serviceId = element['service_id'];
           previousSession = SessionModel(
               id: element['id'],
-              clientId: element['client_id'],
+              clientId: int.parse(element['client_id']),
               dateTime: DateTime.parse(element['date_time']),
               notes: element['notes'],
               active: element['active'] == 1,
@@ -80,17 +80,19 @@ class SessionModel {
         }
         return true;
       });
+
       if (sessionIsActive) {
-        List<Map<String, dynamic>> clientQuery =
-            await db.query('clients', where: "id = ?", whereArgs: [clientId]);
-        clientName = clientQuery.first['client_name'];
-        List<Map<String, dynamic>> serviceQuery =
-            await db.query('services', where: "id = ?", whereArgs: [serviceId]);
+        List<Map<String, dynamic>> clientQuery = await db.query('clients',
+            where: "id = ?", whereArgs: [previousSession.clientId]);
+        clientName =
+            "${clientQuery.first['client_first_name']} ${clientQuery.first['client_last_name']}";
+        List<Map<String, dynamic>> serviceQuery = await db.query('services',
+            where: "id = ?", whereArgs: [previousSession.serviceId]);
         serviceName = serviceQuery.first['service_name'];
       }
       return [sessionIsActive, clientName, serviceName, previousSession];
     } catch (error) {
-      print(error);
+      print("error $error");
       return Future.error(error, StackTrace.fromString(""));
     }
   }
@@ -134,6 +136,18 @@ class SessionModel {
           join(await getDatabasesPath(), "beautyfyi_database.db"));
       await db.update('sessions', sessionModel._toMap,
           where: "id = ?", whereArgs: [sessionModel.id]);
+      return;
+    } catch (e) {
+      return Future.error(e, StackTrace.current);
+    }
+  }
+
+  Future<void> endSession() async {
+    try {
+      final Database db = await openDatabase(
+          join(await getDatabasesPath(), "beautyfyi_database.db"));
+      await db.update('sessions', this._toMap,
+          where: "id = ?", whereArgs: [this.id]);
       return;
     } catch (e) {
       return Future.error(e, StackTrace.current);

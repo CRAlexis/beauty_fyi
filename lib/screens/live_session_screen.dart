@@ -7,12 +7,10 @@ import 'package:beauty_fyi/container/live_session/camera_preview.dart';
 import 'package:beauty_fyi/container/live_session/countdown.dart';
 import 'package:beauty_fyi/container/live_session/notes_section.dart';
 import 'package:beauty_fyi/models/service_media.dart';
-import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'dart:convert';
 
 import 'package:path_provider/path_provider.dart';
 
@@ -29,11 +27,12 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   CameraDescription camera;
   CameraController cameraController;
   Future<void> initialiseCameraControllerFuture;
+  Timer processFinishedTimer;
+  Timer sessionFinishedTimer;
   bool displayCamera = true;
   int cameraIndex = 0;
   String videoFileName;
   final GalleryBloc _galleryBloc = GalleryBloc();
-  SessionModel sessionModel;
   List<Color> backgroundColors = [
     colorStyles['dark_purple'],
     colorStyles['light_purple'],
@@ -67,11 +66,25 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
   @override
   void dispose() {
-    super.dispose();
     tabController.dispose();
-    cameraController.dispose();
+
     WidgetsBinding.instance.removeObserver(this);
     _galleryBloc.dipose();
+    try {
+      processFinishedTimer.cancel();
+      sessionFinishedTimer.cancel();
+    } catch (e) {}
+    super.dispose();
+  }
+
+  Future<void> disposeCameras() async {
+    try {
+      cameraIndex = null;
+      await cameraController.dispose();
+      return;
+    } catch (e) {
+      print(e);
+    }
   }
 
   Future<void> initCameras({index = 0}) async {
@@ -80,7 +93,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     final cameras = await availableCameras();
     // Get a specific camera from the list of available cameras.
     camera = cameras[index];
-    cameraController = CameraController(camera, ResolutionPreset.high);
+    cameraController = CameraController(camera, ResolutionPreset.max);
     initialiseCameraControllerFuture = cameraController.initialize();
     return;
   }
@@ -106,7 +119,15 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     });
     return new WillPopScope(
         onWillPop: () async {
-          return Future.value(true);
+          if (tabController.index == 0) {
+            tabController.animateTo(1,
+                duration: Duration(milliseconds: 400),
+                curve: Curves.easeOutCirc);
+            return Future.value(false);
+          } else {
+            await disposeCameras();
+            return Future.value(true);
+          }
         },
         child: Scaffold(
             extendBodyBehindAppBar: true,
@@ -116,13 +137,21 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                 titleText: "",
                 leftIcon: Icons.arrow_back,
                 rightIcon: null,
-                leftIconClicked: () {
-                  Navigator.pop(context);
+                leftIconClicked: () async {
+                  if (tabController.index == 0) {
+                    tabController.animateTo(1,
+                        duration: Duration(milliseconds: 400),
+                        curve: Curves.easeOutCirc);
+                  } else {
+                    await disposeCameras();
+                    print("this should be second");
+                    Navigator.pop(context);
+                  }
                 },
                 rightIconClicked: () {},
                 automaticallyImplyLeading: false),
             body: AnimatedContainer(
-                duration: Duration(milliseconds: 400),
+                duration: Duration(milliseconds: 1000),
                 width: double.infinity,
                 height: double.infinity,
                 decoration: BoxDecoration(
@@ -146,12 +175,34 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                           CountDown(
                             secondCallBack: (timeInSeconds) {},
                             sessionFinished: () {
-                              print("are we here");
-                              setState(() {
-                                sessionFinished();
+                              sessionFinishedTimer =
+                                  Timer(Duration(milliseconds: 1250), () {
+                                setState(() {
+                                  sessionFinished();
+                                });
                               });
                             },
-                            startingNextProcess: () {},
+                            startingNextProcess: () {
+                              setState(() {
+                                backgroundColors = [
+                                  colorStyles['blue'],
+                                  colorStyles['cream'],
+                                  colorStyles['green'],
+                                  colorStyles['cream']
+                                ];
+                              });
+                              processFinishedTimer =
+                                  Timer(Duration(milliseconds: 1000), () {
+                                setState(() {
+                                  backgroundColors = [
+                                    colorStyles['dark_purple'],
+                                    colorStyles['light_purple'],
+                                    colorStyles['blue'],
+                                    colorStyles['green']
+                                  ];
+                                });
+                              });
+                            },
                             sessionModel: widget.args['sessionModel'],
                           )
                         ],
@@ -173,8 +224,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                         try {
                           takePhoto(
                               cameraController: cameraController,
-                              serviceId: sessionModel.serviceId,
-                              galleryBloc: _galleryBloc);
+                              galleryBloc: _galleryBloc,
+                              sessionModel: widget.args['sessionModel']);
                         } catch (e) {
                           print(e);
                           //unable to take photo -> might have to do alert dialoug
@@ -185,14 +236,14 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                             DateTime.now().toString().replaceAll(" ", "");
                         startRecording(
                             cameraController: cameraController,
-                            serviceId: 1,
+                            sessionModel: widget.args['sessionModel'],
                             galleryBloc: _galleryBloc,
                             videoFileName: videoFileName);
                       },
                       onStopRecording: () {
                         stopRecording(
                             cameraController: cameraController,
-                            serviceId: 1,
+                            sessionModel: widget.args['sessionModel'],
                             galleryBloc: _galleryBloc,
                             videoFileName: videoFileName);
                         videoFileName = null;
@@ -201,14 +252,22 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   }
 }
 
-void takePhoto({cameraController, serviceId, galleryBloc}) async {
+void takePhoto(
+    {cameraController,
+    SessionModel sessionModel,
+    GalleryBloc galleryBloc,
+    clientId}) async {
   try {
     final p = await getTemporaryDirectory();
     final String name = DateTime.now().toString().replaceAll(" ", "");
     final path = "${p.path}/$name.png";
     await cameraController.takePicture(path);
     final serviceMedia = ServiceMedia(
-        sessionId: 1, serviceId: serviceId, fileType: "image", filePath: path);
+        sessionId: sessionModel.id,
+        serviceId: sessionModel.serviceId,
+        fileType: "image",
+        filePath: path,
+        userId: sessionModel.clientId);
     await serviceMedia.insertServiceMedia(serviceMedia);
     galleryBloc.eventSink.add({GalleryEvent.PhotoCaptured: 1});
   } catch (error) {
@@ -217,8 +276,10 @@ void takePhoto({cameraController, serviceId, galleryBloc}) async {
 }
 
 void startRecording(
-    {cameraController, serviceId, galleryBloc, videoFileName}) async {
-  print("here");
+    {cameraController,
+    SessionModel sessionModel,
+    galleryBloc,
+    videoFileName}) async {
   final p = await getTemporaryDirectory();
   final path = "${p.path}/$videoFileName.mp4";
   print("#tag Started reocording");
@@ -226,14 +287,20 @@ void startRecording(
 }
 
 void stopRecording(
-    {cameraController, serviceId, galleryBloc, videoFileName}) async {
+    {cameraController,
+    SessionModel sessionModel,
+    galleryBloc,
+    videoFileName}) async {
   try {
     print("#tag Finished reocording");
     final p = await getTemporaryDirectory();
     final path = "${p.path}/$videoFileName.mp4";
     await cameraController.stopVideoRecording();
     final serviceMedia = ServiceMedia(
-        sessionId: 1, serviceId: serviceId, fileType: "video", filePath: path);
+        sessionId: sessionModel.id,
+        serviceId: sessionModel.serviceId,
+        fileType: "video",
+        filePath: path);
     await serviceMedia.insertServiceMedia(serviceMedia);
     // galleryBloc.eventSink.add({GalleryEvent.VideoCaptured: 1});
   } catch (error) {

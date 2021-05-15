@@ -121,7 +121,7 @@ class _FullScreenImageState extends State<FullScreenImage>
                             duration: Duration(milliseconds: 300),
                             opacity: bottomBarVisible ? 0.2 : 1,
                             child: Hero(
-                                tag: "full_screen_image_hero",
+                                tag: "arguments['hero_index']",
                                 child: (imageSrc == null &&
                                             arguments['imageSrc'] == null) ||
                                         (imageSrc == null &&
@@ -147,6 +147,7 @@ class _FullScreenImageState extends State<FullScreenImage>
                         return;
                       }
                       AreYouSureAlertDialog(
+                        context: context,
                         message: "Are you sure you want to remove this image?",
                         leftButtonText: "no",
                         rightButtonText: "yes",

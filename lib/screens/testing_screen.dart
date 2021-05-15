@@ -295,7 +295,6 @@ class _CameraPreviewTestState extends State<CameraPreviewTest> {
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     availableCameras().then((value) {
       cameras = value;
@@ -341,7 +340,7 @@ class _CameraPreviewTestState extends State<CameraPreviewTest> {
                         final String name =
                             DateTime.now().toString().replaceAll(" ", "");
                         final path = "${p.path}/$name.png";
-                        cameraController.takePicture(path).then((value) {
+                        cameraController.takePicture().then((value) {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -365,7 +364,7 @@ class _CameraPreviewTestState extends State<CameraPreviewTest> {
                             videoPathName = name;
                             videoPath = path;
                             print("#tag Started reocording");
-                            await cameraController.startVideoRecording(path);
+                            await cameraController.startVideoRecording();
                             isRecording = true;
                           } else {
                             print("#tag Finished reocording");

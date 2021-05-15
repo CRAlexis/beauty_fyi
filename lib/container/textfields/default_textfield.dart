@@ -19,6 +19,7 @@ class DefaultTextField extends StatelessWidget {
   final double labelPadding;
   final String suffixText;
   final int validationStringLength;
+  final int maxLength;
   DefaultTextField(
       {this.defaultTextFieldController,
       this.onSaved,
@@ -34,7 +35,8 @@ class DefaultTextField extends StatelessWidget {
       this.labelPadding = 10,
       this.suffixText,
       this.onChanged,
-      this.validationStringLength = 3});
+      this.validationStringLength = 3,
+      this.maxLength = 255});
 
   @override
   Widget build(BuildContext context) {
@@ -85,6 +87,7 @@ class DefaultTextField extends StatelessWidget {
               textfieldStyles[textFieldStylingListHolder[stylingIndex][0]],
           height: height,
           child: TextFormField(
+            maxLength: maxLength,
             enabled: !disableTextFields,
             keyboardType: textInputType,
             controller: defaultTextFieldController,

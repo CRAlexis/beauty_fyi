@@ -15,7 +15,7 @@ class AreYouSureAlertDialog {
       this.rightButtonText,
       this.onLeftButton,
       this.onRightButton,
-      this.context,
+      @required this.context,
       this.dismissible = false});
 
   Future<void> show() async {

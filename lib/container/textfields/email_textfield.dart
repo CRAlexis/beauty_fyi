@@ -1,4 +1,3 @@
-import 'package:beauty_fyi/styles/colors.dart';
 import 'package:beauty_fyi/styles/text.dart';
 import 'package:beauty_fyi/styles/textfields.dart';
 import 'package:flutter/material.dart';

@@ -1,7 +1,12 @@
 import 'package:dio/dio.dart';
+import 'dart:convert' show utf8, base64;
+
+import 'package:flutter_secure_storage/flutter_secure_storage.dart'
+    as secureStorage;
 
 class HttpService {
   Dio _dio = Dio();
+  final storage = new secureStorage.FlutterSecureStorage();
 
   final baseUrl = "http://192.168.1.245:5000/";
 
@@ -10,12 +15,28 @@ class HttpService {
     initializeInterceptors();
   }
 
-  Future<Response> postRequest(
-      {String endPoint, Map<String, dynamic> data}) async {
+  Future<Response> postRequest({
+    String endPoint,
+    Map<String, dynamic> data,
+  }) async {
     Response response;
-
+    String email = await storage.read(key: 'email') != null
+        ? await storage.read(key: 'email')
+        : "";
+    String password = await storage.read(key: 'password') != null
+        ? await storage.read(key: 'password')
+        : "";
+    String key = await storage.read(key: 'key') != null
+        ? await storage.read(key: 'key')
+        : "";
+    String credentials = base64.encode(utf8.encode('$email:$password'));
     try {
-      response = await _dio.post(endPoint, data: data);
+      response = await _dio.post(endPoint,
+          data: data,
+          options: Options(headers: {
+            'Basic_Token': 'Basic $credentials',
+            'Authorization': 'Token $key',
+          }));
     } on DioError catch (e) {
       print(e.message);
       return Future.error(e, StackTrace.current);

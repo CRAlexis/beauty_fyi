@@ -1,5 +1,4 @@
-import 'dart:convert';
-
+import 'package:beauty_fyi/container/alert_dialoges/message_alert_dialog.dart';
 import 'package:beauty_fyi/container/textfields/email_textfield.dart';
 import 'package:beauty_fyi/container/textfields/password_textfield.dart';
 import 'package:beauty_fyi/container/landing_page/action_button.dart';
@@ -8,6 +7,7 @@ import 'package:beauty_fyi/http/http_service.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 class RegisterScreen extends StatefulWidget {
   @override
@@ -128,7 +128,9 @@ Future signUpUser(
     String passwordValue,
     GlobalKey<FormState> signUpForm,
     BuildContext context}) async {
-  HttpService http = HttpService();
+  final storage = new FlutterSecureStorage();
+  final HttpService http = HttpService();
+  Navigator.pushNamed(context, '/onboarding-screen');
 
   if (!signUpForm.currentState.validate()) {
     //return;
@@ -139,40 +141,24 @@ Future signUpUser(
   try {
     Response response = await http.postRequest(
         endPoint: 'authentication/register/1', data: content);
+
     if (response.statusCode == 200) {
-      print(response.data['key']);
-      final storage = new FlutterSecureStorage();
+      await storage.write(key: "key", value: response.data['key']);
+      await storage.write(key: "email", value: content['email']);
+      await storage.write(key: "password", value: content['password']);
       return;
     } else {
-      throw response;
+      // navigate to onboarding process
+      Navigator.pushNamed(context, '/onboarding-screen');
+      // Navigator.pushNamedAndRemoveUntil(
+      // context, '/onboarding-screen', (route) => false);
+      // throw response;
     }
   } catch (e) {
     print(e);
-    showDialog(
+    MessageAlertDialog(
+        message: "Unable to register, please try again.",
         context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            content: new SingleChildScrollView(
-              child: Center(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text("Unable to sign up. Please try again."),
-                    SizedBox(
-                      height: 10,
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            actions: [
-              TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop();
-                  },
-                  child: Text("ok"))
-            ],
-          );
-        });
+        onPressed: () => Navigator.of(context).pop()).show();
   }
 }

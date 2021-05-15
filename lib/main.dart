@@ -1,9 +1,11 @@
 import 'package:beauty_fyi/container/full_screen_image/full_screen_image.dart';
+import 'package:beauty_fyi/screens/add_client_screen.dart';
 import 'package:beauty_fyi/screens/client_screen.dart';
 import 'package:beauty_fyi/screens/full_screen_media_screen.dart';
 import 'package:beauty_fyi/screens/gallery_screen.dart';
 import 'package:beauty_fyi/screens/landing_screen.dart';
 import 'package:beauty_fyi/screens/live_session_screen.dart';
+import 'package:beauty_fyi/screens/onboarding_screen.dart';
 import 'package:beauty_fyi/screens/register_screen.dart';
 import 'package:beauty_fyi/screens/forgot_password_screen.dart';
 
@@ -27,6 +29,11 @@ void main() async {
     join(await getDatabasesPath(), 'beautyfyi_database.db'),
     onOpen: (db) async {
       print(db);
+
+      // await deleteAllTables(db);
+      await db.execute(
+        "CREATE TABLE IF NOT EXISTS clients(id INTEGER PRIMARY KEY, client_first_name VARCHAR, client_last_name VARCHAR, client_image TEXT, client_email VARCHAR, client_phone_number VARCHAR )",
+      );
       await db.execute(
         "CREATE TABLE IF NOT EXISTS services(id INTEGER PRIMARY KEY, service_name VARCHAR, service_description VARCHAR, service_image TEXT, service_processes TEXT)",
       );
@@ -37,11 +44,9 @@ void main() async {
         "CREATE TABLE IF NOT EXISTS service_media(id INTEGER PRIMARY KEY, session_id INTEGER, service_id INTEGER, user_id INTEGER, file_type VARCHAR, file_path TEXT)",
       );
       await db.execute(
-        "CREATE TABLE IF NOT EXISTS sessions(id INTEGER PRIMARY KEY, client_id INTEGER, service_id INTEGER, date_time TEXT, notes TEXT, active INTEGER, current_process INTEGER)",
+        "CREATE TABLE IF NOT EXISTS sessions(id INTEGER PRIMARY KEY, service_id INTEGER, date_time TEXT, notes TEXT, active INTEGER, current_process INTEGER, client_id VARCHAR)",
       );
-      return db.execute(
-        "CREATE TABLE IF NOT EXISTS clients(id INTEGER PRIMARY KEY, client_name VARCHAR)",
-      );
+      return;
     },
     // Set the version. This executes the onCreate function and provides a
     // path to perform database upgrades and downgrades.
@@ -49,6 +54,15 @@ void main() async {
   );
   WidgetsFlutterBinding.ensureInitialized();
   runApp(MyApp());
+}
+
+Future<void> deleteAllTables(db) async {
+  // await db.execute("DROP TABLE IF EXISTS services");
+  // await db.execute("DROP TABLE IF EXISTS datetimes");
+  // await db.execute("DROP TABLE IF EXISTS service_media");
+  await db.execute("DROP TABLE IF EXISTS sessions");
+  // await db.execute("DROP TABLE IF EXISTS clients");
+  return;
 }
 
 class MyApp extends StatelessWidget {
@@ -65,6 +79,7 @@ class MyApp extends StatelessWidget {
         final routes = <String, WidgetBuilder>{
           '/': (BuildContext context) => LandingScreen(),
           '/register-screen': (BuildContext context) => RegisterScreen(),
+          '/onboarding-screen': (BuildContext context) => OnboardingScreen(),
           '/forgot-password': (BuildContext context) => ForgotPasswordScreen(),
           '/dashboard': (BuildContext context) => DashboardScreen(),
           '/view-service': (BuildContext context) => ViewServiceScreen(
@@ -72,6 +87,7 @@ class MyApp extends StatelessWidget {
               ),
           '/add-service': (BuildContext context) =>
               CreateServiceScreen(args: settings.arguments),
+          '/add-client-screen': (BuildContext context) => AddClientScreen(),
           '/full-screen-image': (BuildContext context) => FullScreenImage(),
           '/full-screen-media': (BuildContext context) =>
               FullScreenMediaScreen(args: settings.arguments),
@@ -79,7 +95,7 @@ class MyApp extends StatelessWidget {
               GalleryScreen(args: settings.arguments),
           '/live-session': (BuildContext context) =>
               LiveSessionScreen(args: settings.arguments),
-          'client-screen': (BuildContext context) =>
+          '/client-screen': (BuildContext context) =>
               ClientScreen(args: settings.arguments),
           '/testing-screen': (BuildContext context) => CameraPreviewTest(),
         };

@@ -30,6 +30,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
   final serviceProcessForm = GlobalKey<FormState>();
   final serviceNameTextFieldController = TextEditingController();
   final serviceDescriptionTextFieldController = TextEditingController();
+  AutovalidateMode autovalidateModeServiceName = AutovalidateMode.disabled;
 
   AnimationController bottomBarAnimationController;
   String serviceNamevalue = "";
@@ -104,8 +105,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
       String processDurationValidationError;
       TextEditingController processNameController = TextEditingController();
       TextEditingController processDurationController = TextEditingController();
-      AutovalidateMode processFormAutovalidateMode =
-          AutovalidateMode.onUserInteraction;
+      AutovalidateMode processFormAutovalidateMode = AutovalidateMode.disabled;
       processNameValidationError = "Invalid name";
       processDurationValidationError = "Invalid duration";
 
@@ -120,52 +120,61 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
             return AlertDialog(
               scrollable: true,
               title: Text("Service process"),
-              content: Container(
-                  child: Form(
-                key: serviceProcessForm,
-                autovalidateMode: processFormAutovalidateMode,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    DefaultTextField(
-                      iconData: null,
-                      hintText: serviceProcesses.length == 0
-                          ? "e.g. Wash clients hair"
-                          : "",
-                      invalidMessage: processNameValidationError,
-                      labelText: "Process name",
-                      textInputType: TextInputType.text,
-                      defaultTextFieldController: processNameController,
-                      onSaved: (String value) {},
-                      onChanged: (String value) {},
-                      disableTextFields: false,
-                      stylingIndex: 2,
-                      regex: r'^[a-zA-Z ]+$',
-                      height: 40,
-                      labelPadding: 0,
-                    ),
-                    SizedBox(
-                      height: 20,
-                    ),
-                    DefaultTextField(
+              content: StatefulBuilder(
+                  builder: (BuildContext context, StateSetter setState) {
+                return Container(
+                    child: Form(
+                  key: serviceProcessForm,
+                  autovalidateMode: processFormAutovalidateMode,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      DefaultTextField(
                         iconData: null,
-                        hintText: "",
-                        invalidMessage: processDurationValidationError,
-                        labelText: "Process duration",
-                        textInputType: TextInputType.number,
-                        defaultTextFieldController: processDurationController,
+                        hintText: serviceProcesses.length == 0
+                            ? "e.g. Wash clients hair"
+                            : "",
+                        invalidMessage: processNameValidationError,
+                        labelText: "Process name",
+                        textInputType: TextInputType.text,
+                        defaultTextFieldController: processNameController,
                         onSaved: (String value) {},
                         onChanged: (String value) {},
                         disableTextFields: false,
                         stylingIndex: 2,
-                        regex: r'[1-9]',
+                        regex: r'^[a-zA-Z0-9 +&]+$',
+                        maxLength: 25,
                         height: 40,
                         labelPadding: 0,
-                        suffixText: "(Minutes)",
-                        validationStringLength: 1),
-                  ],
-                ),
-              )),
+                      ),
+                      SizedBox(
+                        height: 20,
+                      ),
+                      DefaultTextField(
+                          iconData: null,
+                          hintText: "10 minutes",
+                          invalidMessage: processDurationValidationError,
+                          labelText: "Process duration",
+                          textInputType: TextInputType.number,
+                          defaultTextFieldController: processDurationController,
+                          onSaved: (String value) {},
+                          onChanged: (String value) {
+                            setState(() {
+                              processFormAutovalidateMode =
+                                  AutovalidateMode.onUserInteraction;
+                            });
+                          },
+                          disableTextFields: false,
+                          stylingIndex: 2,
+                          regex: r'[1-9]',
+                          height: 40,
+                          labelPadding: 0,
+                          suffixText: "(Minutes)",
+                          validationStringLength: 1),
+                    ],
+                  ),
+                ));
+              }),
               actions: <Widget>[
                 index != null
                     ? TextButton(
@@ -220,6 +229,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           GalleryIconStack(
+            size: GalleryIconSize.Big,
             imageSrc: imageSrc,
             onPreviewImage: () {
               if (bottomBarVisible) {
@@ -267,6 +277,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
       padding: EdgeInsets.symmetric(vertical: 30),
       child: Form(
         key: serviceNameForm,
+        autovalidateMode: autovalidateModeServiceName,
         child: Column(
           children: [
             DefaultTextField(
@@ -281,7 +292,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
               },
               onChanged: (String value) {
                 serviceNamevalue = value;
-                if (!RegExp(r'^[a-zA-Z ]+$').hasMatch(serviceNamevalue) &&
+                if (!RegExp(r'^[a-zA-Z0-9 +&]+$').hasMatch(serviceNamevalue) &&
                     serviceNamevalue.length < 3) {
                   slideValidated = isSlideValid(
                       slideIndex: 1, serviceName: serviceNamevalue);
@@ -292,7 +303,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
               },
               disableTextFields: disableTextFields,
               stylingIndex: 1,
-              regex: r'^[a-zA-Z ]+$',
+              regex: r'^[a-zA-Z0-9 +&]+$',
             ),
             SizedBox(
               height: 10,
@@ -309,6 +320,10 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
               },
               onChanged: (String value) {
                 serviceDescriptionValue = value;
+                setState(() {
+                  autovalidateModeServiceName =
+                      AutovalidateMode.onUserInteraction;
+                });
               },
               disableTextFields: disableTextFields,
               stylingIndex: 1,
@@ -323,7 +338,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
       child: Column(
         children: <Widget>[
           Container(
-            height: 240,
+            height: 260,
             child: serviceProcesses.length == 0
                 ? Align(
                     alignment: Alignment.center,
@@ -429,7 +444,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                 shape: CircleBorder(),
               ),
               Padding(
-                padding: EdgeInsets.only(top: 10),
+                padding: EdgeInsets.only(top: 0),
                 child: Text(
                   "Add process",
                   style: TextStyle(
@@ -462,6 +477,11 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
           if (slideIndex > 0) {
             setState(() {
               slideIndex--;
+              slideValidated = isSlideValid(
+                  slideIndex: slideIndex,
+                  imageSrc: imageSrc,
+                  serviceName: serviceNamevalue,
+                  serviceProcesses: serviceProcesses);
             });
             return Future.value(false);
           } else {
@@ -600,7 +620,9 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                                                         "Creating service");
                                             loadingAlertDialog.show();
                                             final service = ServiceModel(
-                                                id: widget.args['id'],
+                                                id: widget.args != null
+                                                    ? widget.args['id']
+                                                    : null,
                                                 serviceName: serviceNamevalue,
                                                 serviceDescription:
                                                     serviceDescriptionValue,
@@ -675,6 +697,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                         return;
                       }
                       AreYouSureAlertDialog(
+                        context: context,
                         message: "Are you sure you want to remove this image?",
                         leftButtonText: "no",
                         rightButtonText: "yes",
@@ -690,7 +713,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                           });
                           Navigator.of(context).pop();
                         },
-                      );
+                      ).show();
                     },
                     openCamera: () async {
                       File tempImageSrc = imageSrc;

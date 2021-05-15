@@ -1,6 +1,3 @@
-import 'dart:developer';
-import 'dart:io';
-
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
@@ -47,7 +44,7 @@ class ServiceMedia {
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       print(args);
       List<Map<String, dynamic>> query =
-          await db.query('service_media' /*, where: sql, whereArgs: args*/);
+          await db.query('service_media', where: sql, whereArgs: args);
       return List.generate(query.length, (index) {
         return ServiceMedia(
             id: query[index]['id'],

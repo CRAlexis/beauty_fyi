@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:beauty_fyi/models/client_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
-import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 
 class ClientListAlertDialog {
@@ -14,7 +13,7 @@ class ClientListAlertDialog {
   Future<List<ClientModel>> clients;
 
   Future<Map<String, int>> show() async {
-    int indexFocused;
+    int clientId;
     return showDialog(
         barrierDismissible: true,
         context: context,
@@ -23,42 +22,54 @@ class ClientListAlertDialog {
               contentPadding: EdgeInsets.zero,
               content: StatefulBuilder(
                   builder: (BuildContext context, StateSetter setState) {
-                return Container(
-                    constraints: BoxConstraints(maxHeight: double.infinity),
+                return Stack(children: [
+                  Container(
+                      child: SingleChildScrollView(
+                    physics: BouncingScrollPhysics(),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
+                        SizedBox(
+                          height: 20,
+                        ),
+                        Text(
+                          "choose a client",
+                          style: TextStyle(fontSize: 20),
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
                         FutureBuilder<List<ClientModel>>(
                             future: clients,
                             builder: (context, snapshot) {
                               if (snapshot.hasData) {
                                 return ListView.builder(
-                                  physics: ClampingScrollPhysics(),
+                                  padding: EdgeInsets.only(bottom: 40),
+                                  physics: BouncingScrollPhysics(),
                                   shrinkWrap: true,
                                   itemCount: snapshot.data.length,
                                   itemBuilder: (context, index) {
                                     return GestureDetector(
-                                      onTap: () {
-                                        print("here");
-                                        setState(() => indexFocused !=
-                                                snapshot.data[index].clientId
-                                            ? indexFocused =
-                                                snapshot.data[index].clientId
-                                            : indexFocused = null);
-                                        print("$indexFocused, $index");
-                                      },
-                                      child: Container(
-                                          decoration: BoxDecoration(
-                                              color: indexFocused ==
-                                                      snapshot
-                                                          .data[index].clientId
-                                                  ? colorStyles['green']
-                                                  : Colors.white),
-                                          child: Container(
+                                        onTap: () {
+                                          print("here");
+                                          setState(() => clientId !=
+                                                  snapshot.data[index].id
+                                              ? clientId =
+                                                  snapshot.data[index].id
+                                              : clientId = null);
+                                          print(" clientId $clientId");
+                                        },
+                                        child: Container(
+                                            decoration: BoxDecoration(
+                                                color: clientId ==
+                                                        snapshot.data[index].id
+                                                    ? colorStyles['green']
+                                                    : Colors.white),
+                                            child: Container(
                                               padding: EdgeInsets.all(15),
                                               child: Text(
-                                                  "${snapshot.data[index].clientName}"))),
-                                    );
+                                                  "${snapshot.data[index].clientFirstName} ${snapshot.data[index].clientLastName}"),
+                                            )));
                                   },
                                 );
                               }
@@ -67,31 +78,35 @@ class ClientListAlertDialog {
                               });
                               return Container();
                             }),
-                        Container(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            style: ButtonStyle(
-                                elevation: MaterialStateProperty.all(1),
-                                padding: MaterialStateProperty.all(
-                                    EdgeInsets.all(15.0)),
-                                backgroundColor:
-                                    MaterialStateProperty.all(Colors.white)),
-                            onPressed: () {
-                              Navigator.of(context)
-                                  .pop({'clientId': indexFocused});
-                            },
-                            child: Text(
-                              indexFocused != null ? "confirm" : "",
-                              style: TextStyle(
-                                color: Colors.black,
-                                fontSize: 20,
-                                fontFamily: 'OpenSans',
-                              ),
-                            ),
-                          ),
-                        )
                       ],
-                    ));
+                    ),
+                  )),
+                  Align(
+                    alignment: Alignment.bottomCenter,
+                    child: Container(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        style: ButtonStyle(
+                            elevation: MaterialStateProperty.all(1),
+                            padding:
+                                MaterialStateProperty.all(EdgeInsets.all(15.0)),
+                            backgroundColor:
+                                MaterialStateProperty.all(Colors.white)),
+                        onPressed: () {
+                          Navigator.of(context).pop({'clientId': clientId});
+                        },
+                        child: Text(
+                          clientId != null ? "confirm" : "",
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 20,
+                            fontFamily: 'OpenSans',
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                ]);
               }));
         });
   }

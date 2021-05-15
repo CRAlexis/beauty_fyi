@@ -41,7 +41,7 @@ class _GalleryScreenState extends State<GalleryScreen> {
             builder: (context, snapshot) {
               if (snapshot.hasData) {
                 snapshot.data.toList().forEach((element) {
-                  print(element.toMap());
+                  // print(element.toMap());
                 });
                 return Container(
                     color: Colors.white,

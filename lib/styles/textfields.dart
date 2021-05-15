@@ -65,14 +65,14 @@ Map<String, InputDecoration> textfieldInputDecoration(
         errorStyle: TextStyle(),
         border: InputBorder.none,
         contentPadding: iconData == null
-            ? EdgeInsets.symmetric(vertical: .0, horizontal: 7)
-            : EdgeInsets.only(top: 14.0),
+            ? EdgeInsets.only(top: 0.0, left: 7)
+            : EdgeInsets.only(top: 10.0),
         prefixIcon: iconData == null
             ? null
             : Icon(
                 iconData,
                 color: Colors.grey.shade700,
-                size: double.parse('30'),
+                size: double.parse('25'),
               ),
         hintText: hintText,
         hintStyle: textStyles[hintTextStyle],

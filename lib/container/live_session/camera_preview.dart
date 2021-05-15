@@ -16,7 +16,6 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen>
     with AutomaticKeepAliveClientMixin<CameraPreviewScreen> {
   @override
   bool get wantKeepAlive => false;
-
   @override
   Widget build(BuildContext context) {
     super.build(context);
