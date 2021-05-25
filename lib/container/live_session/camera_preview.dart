@@ -4,8 +4,8 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 
 class CameraPreviewScreen extends StatefulWidget {
-  final CameraController cameraController;
-  final Future<void> initialiseCameraControllerFuture;
+  final CameraController? cameraController;
+  final Future<void>? initialiseCameraControllerFuture;
   CameraPreviewScreen(
       {this.cameraController, this.initialiseCameraControllerFuture});
   @override
@@ -23,7 +23,7 @@ class _CameraPreviewScreenState extends State<CameraPreviewScreen>
         future: widget.initialiseCameraControllerFuture,
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
-            return CameraPreview(widget.cameraController);
+            return CameraPreview(widget.cameraController!);
           } else {
             return Text("");
           }

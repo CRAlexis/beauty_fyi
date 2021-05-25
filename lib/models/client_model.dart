@@ -5,12 +5,12 @@ import 'package:path/path.dart';
 import 'package:beauty_fyi/extensions/string_extension.dart';
 
 class ClientModel {
-  final int id;
-  final String clientFirstName;
-  final String clientLastName;
-  final String clientEmail;
-  final String clientPhoneNumber;
-  final File clientImage;
+  final int? id;
+  final String? clientFirstName;
+  final String? clientLastName;
+  final String? clientEmail;
+  final String? clientPhoneNumber;
+  final File? clientImage;
 
   ClientModel(
       {this.id,
@@ -22,11 +22,11 @@ class ClientModel {
 
   Map<String, dynamic> get map {
     return {
-      'client_first_name': clientFirstName.trim().capitalize(),
-      'client_last_name': clientLastName.trim().capitalize(),
-      'client_email': clientEmail.trim(),
-      'client_phone_number': clientPhoneNumber.trim(),
-      'client_image': clientImage != null ? clientImage.path : null
+      'client_first_name': clientFirstName!.trim().capitalize(),
+      'client_last_name': clientLastName!.trim().capitalize(),
+      'client_email': clientEmail!.trim(),
+      'client_phone_number': clientPhoneNumber!.trim(),
+      'client_image': clientImage != null ? clientImage!.path : null
     };
   }
 

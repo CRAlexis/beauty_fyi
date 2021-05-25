@@ -19,7 +19,7 @@ class AddClientScreen extends StatefulWidget {
 
 class _AddClientScreenState extends State<AddClientScreen>
     with TickerProviderStateMixin {
-  AnimationController bottomBarAnimationController;
+  AnimationController? bottomBarAnimationController;
   final GlobalKey<FormState> formKey = GlobalKey();
   final firstNameController = TextEditingController();
   final lastNameController = TextEditingController();
@@ -27,13 +27,13 @@ class _AddClientScreenState extends State<AddClientScreen>
   final phoneNumberController = TextEditingController();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
 
-  List<Color> backgroundColours = [
+  List<Color?> backgroundColours = [
     colorStyles['dark_purple'],
     colorStyles['light_purple'],
     colorStyles['blue'],
     colorStyles['green']
   ];
-  File imageSrc;
+  File? imageSrc;
   String firstName = "";
   String lastName = "";
   String emailAddress = "";
@@ -51,7 +51,7 @@ class _AddClientScreenState extends State<AddClientScreen>
 
   @override
   void dispose() {
-    bottomBarAnimationController.dispose();
+    bottomBarAnimationController!.dispose();
     super.dispose();
   }
 
@@ -83,19 +83,19 @@ class _AddClientScreenState extends State<AddClientScreen>
                     gradient: true
                         ? LinearGradient(
                             colors: [
-                                colorStyles['dark_purple'],
-                                colorStyles['light_purple'],
-                                colorStyles['blue'],
-                                colorStyles['green']
+                                colorStyles['dark_purple']!,
+                                colorStyles['light_purple']!,
+                                colorStyles['blue']!,
+                                colorStyles['green']!
                               ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight)
                         : LinearGradient(
                             colors: [
-                                backgroundColours[2],
-                                backgroundColours[1],
-                                backgroundColours[3],
-                                backgroundColours[0]
+                                backgroundColours[2]!,
+                                backgroundColours[1]!,
+                                backgroundColours[3]!,
+                                backgroundColours[0]!
                               ],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight)),
@@ -158,16 +158,14 @@ class _AddClientScreenState extends State<AddClientScreen>
                                                                       imageSrc
                                                                 }).then(
                                                                 (value) {
-                                                              File
+                                                              File?
                                                                   returnedImage =
                                                                   (value as Map<
                                                                           String,
                                                                           dynamic>)[
                                                                       'imageSrc'];
-                                                              bool override =
-                                                                  (value as Map<
-                                                                          String,
-                                                                          dynamic>)[
+                                                              bool? override =
+                                                                  value[
                                                                       'override'];
                                                               setState(() {
                                                                 if (returnedImage !=
@@ -175,7 +173,7 @@ class _AddClientScreenState extends State<AddClientScreen>
                                                                   imageSrc =
                                                                       returnedImage;
                                                                 } else {
-                                                                  if (override) {
+                                                                  if (override!) {
                                                                     imageSrc =
                                                                         null;
                                                                   }
@@ -212,8 +210,8 @@ class _AddClientScreenState extends State<AddClientScreen>
                                                           textInputType:
                                                               TextInputType
                                                                   .name,
-                                                          onSaved:
-                                                              (String value) {},
+                                                          onSaved: (String?
+                                                              value) {},
                                                           onChanged:
                                                               (String value) {
                                                             firstName = value;
@@ -243,8 +241,8 @@ class _AddClientScreenState extends State<AddClientScreen>
                                                           textInputType:
                                                               TextInputType
                                                                   .name,
-                                                          onSaved:
-                                                              (String value) {},
+                                                          onSaved: (String?
+                                                              value) {},
                                                           onChanged:
                                                               (String value) {
                                                             lastName = value;
@@ -273,8 +271,8 @@ class _AddClientScreenState extends State<AddClientScreen>
                                                           textInputType:
                                                               TextInputType
                                                                   .emailAddress,
-                                                          onSaved:
-                                                              (String value) {},
+                                                          onSaved: (String?
+                                                              value) {},
                                                           onChanged:
                                                               (String value) {
                                                             emailAddress =
@@ -304,8 +302,8 @@ class _AddClientScreenState extends State<AddClientScreen>
                                                           textInputType:
                                                               TextInputType
                                                                   .phone,
-                                                          onSaved:
-                                                              (String value) {},
+                                                          onSaved: (String?
+                                                              value) {},
                                                           onChanged:
                                                               (String value) {
                                                             phoneNumber = value;
@@ -388,7 +386,7 @@ class _AddClientScreenState extends State<AddClientScreen>
                       visble: bottomBarVisible,
                       controller: bottomBarAnimationController,
                       deleteImage: () {
-                        print(imageSrc.path);
+                        print(imageSrc!.path);
                         if (imageSrc == null) {
                           setState(() {
                             bottomBarVisible = false;
@@ -415,7 +413,7 @@ class _AddClientScreenState extends State<AddClientScreen>
                         ).show();
                       },
                       openCamera: () async {
-                        File tempImageSrc = imageSrc;
+                        File? tempImageSrc = imageSrc;
                         imageSrc =
                             await FileAndImageFunctions.openNativeCamera();
                         setState(() {
@@ -427,7 +425,7 @@ class _AddClientScreenState extends State<AddClientScreen>
                         });
                       },
                       openGallery: () async {
-                        File tempImageSrc = imageSrc;
+                        File? tempImageSrc = imageSrc;
                         imageSrc =
                             await FileAndImageFunctions.openImagePicker();
                         setState(() {
@@ -443,15 +441,15 @@ class _AddClientScreenState extends State<AddClientScreen>
 }
 
 Future<bool> addClient({
-  String firstName,
-  String lastName,
-  String email,
-  String phoneNumber,
-  File clientImage,
-  GlobalKey<FormState> formKey,
+  String? firstName,
+  String? lastName,
+  String? email,
+  String? phoneNumber,
+  File? clientImage,
+  required GlobalKey<FormState> formKey,
 }) async {
   try {
-    if (!formKey.currentState.validate()) {
+    if (!formKey.currentState!.validate()) {
       return false;
     }
     final ClientModel clientModel = ClientModel(
@@ -470,5 +468,6 @@ Future<bool> addClient({
     return query;
   } catch (e) {
     print(e);
+    return false;
   }
 }

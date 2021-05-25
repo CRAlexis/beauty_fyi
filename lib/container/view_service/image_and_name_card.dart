@@ -5,8 +5,8 @@ import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 
 class ImageAndNameCard extends StatelessWidget {
-  final String serviceName;
-  final File serviceImage;
+  final String? serviceName;
+  final File? serviceImage;
   final onEdit;
   final onDelete;
   ImageAndNameCard(
@@ -35,7 +35,7 @@ class ImageAndNameCard extends StatelessWidget {
                           image: DecorationImage(
                         fit: BoxFit.cover,
                         image: FileImage(
-                          serviceImage,
+                          serviceImage!,
                         ),
                       )),
                     ),
@@ -50,7 +50,7 @@ class ImageAndNameCard extends StatelessWidget {
                         padding:
                             EdgeInsets.symmetric(horizontal: 5, vertical: 10),
                         child: Text(
-                          serviceName,
+                          serviceName!,
                           style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontFamily: 'OpenSans',

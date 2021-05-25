@@ -3,10 +3,10 @@ import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 
 class ActionButton extends StatelessWidget {
-  final VoidCallback onPressed;
-  final String buttonText;
-  final bool isLoading;
-  final String backgroundColor;
+  final VoidCallback? onPressed;
+  final String? buttonText;
+  final bool? isLoading;
+  final String? backgroundColor;
   ActionButton({
     this.onPressed,
     this.buttonText,
@@ -26,19 +26,19 @@ class ActionButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(30.0),
             )),
             backgroundColor:
-                MaterialStateProperty.all(colorStyles[backgroundColor])),
+                MaterialStateProperty.all(colorStyles[backgroundColor!])),
         onPressed: () {
-          onPressed();
+          onPressed!();
         },
         // color: Colors.white,
-        child: isLoading
+        child: isLoading!
             ? SizedBox(
                 child: CircularProgressIndicator(),
                 height: 20,
                 width: 20,
               )
             : Text(
-                buttonText,
+                buttonText!,
                 style: textStyles['button_label_white'],
               ),
       ),

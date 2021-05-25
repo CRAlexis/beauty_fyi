@@ -25,10 +25,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   final passwordTextFieldController = TextEditingController();
   AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
-  String firstNameValue;
-  String lastNameValue;
-  String emailValue;
-  String passwordValue;
+  String? firstNameValue;
+  String? lastNameValue;
+  String? emailValue;
+  String? passwordValue;
   bool disableTextFields = false;
   @override
   Widget build(BuildContext context) {
@@ -44,10 +44,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
                           colors: [
-                        colorStyles['dark_purple'],
-                        colorStyles['light_purple'],
-                        colorStyles['blue'],
-                        colorStyles['green']
+                        colorStyles['dark_purple']!,
+                        colorStyles['light_purple']!,
+                        colorStyles['blue']!,
+                        colorStyles['green']!
                       ]))),
               Container(
                   height: double.infinity,
@@ -79,7 +79,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                                 disableTextFields: disableTextFields,
                                 emailTextFieldController:
                                     emailTextFieldController,
-                                onSaved: (String value) {
+                                onSaved: (String? value) {
                                   emailValue = value;
                                 },
                               ),
@@ -124,15 +124,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
 }
 
 Future signUpUser(
-    {String emailValue,
-    String passwordValue,
-    GlobalKey<FormState> signUpForm,
-    BuildContext context}) async {
+    {String? emailValue,
+    String? passwordValue,
+    required GlobalKey<FormState> signUpForm,
+    required BuildContext context}) async {
   final storage = new FlutterSecureStorage();
   final HttpService http = HttpService();
   Navigator.pushNamed(context, '/onboarding-screen');
 
-  if (!signUpForm.currentState.validate()) {
+  if (!signUpForm.currentState!.validate()) {
     //return;
   }
   final content = new Map<String, dynamic>();

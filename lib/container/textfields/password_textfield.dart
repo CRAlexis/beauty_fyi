@@ -3,9 +3,9 @@ import 'package:beauty_fyi/styles/textfields.dart';
 import 'package:flutter/material.dart';
 
 class PasswordTextField extends StatelessWidget {
-  final TextEditingController passwordTextFieldController;
-  final ValueSetter onSaved;
-  final bool disableTextFields;
+  final TextEditingController? passwordTextFieldController;
+  final ValueSetter? onSaved;
+  final bool? disableTextFields;
   PasswordTextField(
       {this.passwordTextFieldController, this.onSaved, this.disableTextFields});
   @override
@@ -23,9 +23,9 @@ class PasswordTextField extends StatelessWidget {
           decoration: textfieldStyles['blue_textfield'],
           height: 50.0,
           child: TextFormField(
-            enabled: !disableTextFields,
+            enabled: !disableTextFields!,
             onSaved: (newValue) {
-              onSaved(newValue);
+              onSaved!(newValue);
             },
             validator: (value) {
               if (value.toString().isEmpty) {

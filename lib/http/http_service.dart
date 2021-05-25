@@ -16,17 +16,17 @@ class HttpService {
   }
 
   Future<Response> postRequest({
-    String endPoint,
-    Map<String, dynamic> data,
+    required String endPoint,
+    Map<String, dynamic>? data,
   }) async {
     Response response;
-    String email = await storage.read(key: 'email') != null
+    String? email = await storage.read(key: 'email') != null
         ? await storage.read(key: 'email')
         : "";
-    String password = await storage.read(key: 'password') != null
+    String? password = await storage.read(key: 'password') != null
         ? await storage.read(key: 'password')
         : "";
-    String key = await storage.read(key: 'key') != null
+    String? key = await storage.read(key: 'key') != null
         ? await storage.read(key: 'key')
         : "";
     String credentials = base64.encode(utf8.encode('$email:$password'));

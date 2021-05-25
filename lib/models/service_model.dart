@@ -1,14 +1,15 @@
 import 'dart:io';
 
+import 'package:beauty_fyi/models/service_media.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class ServiceModel {
-  final int id;
-  final String serviceName;
-  final String serviceDescription;
-  final File imageSrc;
-  final String serviceProcesses;
+  final int? id;
+  final String? serviceName;
+  final String? serviceDescription;
+  final File? imageSrc;
+  final String? serviceProcesses;
 
   ServiceModel(
       {this.id,
@@ -19,10 +20,10 @@ class ServiceModel {
 
   Map<String, dynamic> toMap() {
     return {
-      "service_name": serviceName.isNotEmpty ? serviceName : "Unnamed",
+      "service_name": serviceName!.isNotEmpty ? serviceName : "Unnamed",
       "service_description":
-          serviceDescription.isNotEmpty ? serviceDescription : "",
-      "service_image": imageSrc.path,
+          serviceDescription!.isNotEmpty ? serviceDescription : "",
+      "service_image": imageSrc!.path,
       "service_processes": serviceProcesses,
     };
   }
@@ -68,13 +69,18 @@ class ServiceModel {
     }
   }
 
-  Future<Map<String, dynamic>> readService() async {
+  Future<ServiceModel> readService() async {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       final List<Map<String, dynamic>> map =
           await db.query('services', where: "id = ?", whereArgs: [id]);
-      return map.first;
+      return ServiceModel(
+          id: map.first['id'],
+          serviceName: map.first['service_name'],
+          serviceDescription: map.first['service_description'],
+          serviceProcesses: map.first['service_processes'],
+          imageSrc: File(map.first['service_image']));
     } catch (e) {
       return Future.error(e, StackTrace.fromString(""));
     }

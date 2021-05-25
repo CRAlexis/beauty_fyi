@@ -11,7 +11,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   final List<OnboardingModel> _data = OnboardingModel().getData;
   int _currentIndex = 0;
-  createCircle({int index}) {
+  createCircle({int? index}) {
     return AnimatedContainer(
         duration: Duration(milliseconds: 100),
         margin: EdgeInsets.only(right: 4),
@@ -54,7 +54,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 height: 20,
                               ),
                               Text(
-                                _data[index].title,
+                                _data[index].title!,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 55.0,
@@ -66,7 +66,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 height: 5,
                               ),
                               Text(
-                                _data[index].subTitle,
+                                _data[index].subTitle!,
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 25.0,
@@ -77,7 +77,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                                 height: 250,
                               ),
                               Text(
-                                _data[index].description,
+                                _data[index].description!,
                                 textAlign: TextAlign.center,
                                 style: TextStyle(
                                   color: Colors.white,

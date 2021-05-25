@@ -2,11 +2,11 @@ import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class OnboardingModel {
-  final String title;
-  final String subTitle;
-  final String description;
-  final String localImage;
-  final Color backgroundColor;
+  final String? title;
+  final String? subTitle;
+  final String? description;
+  final String? localImage;
+  final Color? backgroundColor;
   OnboardingModel(
       {this.title,
       this.subTitle,

@@ -1,4 +1,5 @@
 import 'package:beauty_fyi/container/full_screen_image/full_screen_image.dart';
+import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/screens/add_client_screen.dart';
 import 'package:beauty_fyi/screens/client_screen.dart';
 import 'package:beauty_fyi/screens/full_screen_media_screen.dart';
@@ -6,6 +7,7 @@ import 'package:beauty_fyi/screens/gallery_screen.dart';
 import 'package:beauty_fyi/screens/landing_screen.dart';
 import 'package:beauty_fyi/screens/live_session_screen.dart';
 import 'package:beauty_fyi/screens/onboarding_screen.dart';
+import 'package:beauty_fyi/screens/post_session_screen.dart';
 import 'package:beauty_fyi/screens/register_screen.dart';
 import 'package:beauty_fyi/screens/forgot_password_screen.dart';
 
@@ -97,12 +99,14 @@ class MyApp extends StatelessWidget {
               LiveSessionScreen(args: settings.arguments),
           '/client-screen': (BuildContext context) =>
               ClientScreen(args: settings.arguments),
-          '/testing-screen': (BuildContext context) => CameraPreviewTest(),
+          '/post-session-screen': (BuildContext context) =>
+              PostSessionScreen(args: settings.arguments)
+          // '/testing-screen': (BuildContext context) => CameraPreviewTest(),
         };
-        WidgetBuilder builder = routes[settings.name];
+        WidgetBuilder? builder = routes[settings.name!];
         return MaterialPageRoute(
           builder: (ctx) {
-            return builder(ctx);
+            return builder!(ctx);
           },
           settings: settings,
         );

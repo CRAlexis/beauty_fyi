@@ -2,9 +2,9 @@ import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class ProgressCircles extends StatefulWidget {
-  final int circleAmount;
-  final int currentIndex;
-  const ProgressCircles({Key key, this.circleAmount, this.currentIndex})
+  final int? circleAmount;
+  final int? currentIndex;
+  const ProgressCircles({Key? key, this.circleAmount, this.currentIndex})
       : super(key: key);
   @override
   _ProgressCirclesState createState() => _ProgressCirclesState();

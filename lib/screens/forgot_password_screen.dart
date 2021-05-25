@@ -11,8 +11,8 @@ class ForgotPasswordScreen extends StatefulWidget {
 
 class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
   final emailTextFieldController = TextEditingController();
-  String emailValue;
-  GlobalKey<FormState> resetPasswordForm;
+  String? emailValue;
+  GlobalKey<FormState>? resetPasswordForm;
   bool disableTextFields = false;
   @override
   Widget build(BuildContext context) {
@@ -32,7 +32,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                       gradient: LinearGradient(
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
-                          colors: [colorStyles['purple'], Colors.blue]))),
+                          colors: [colorStyles['purple']!, Colors.blue]))),
               Container(
                   height: double.infinity,
                   child: SingleChildScrollView(
@@ -63,7 +63,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                     disableTextFields: disableTextFields,
                                     emailTextFieldController:
                                         emailTextFieldController,
-                                    onSaved: (String value) {
+                                    onSaved: (String? value) {
                                       emailValue = value;
                                     },
                                   ),

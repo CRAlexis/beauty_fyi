@@ -16,14 +16,14 @@ class TestingScreen extends StatefulWidget {
 }
 
 class _TestingScreenState extends State<TestingScreen> {
-  File _video;
+  File? _video;
   bool filePicked = false;
   bool isPlaying = false;
   bool fullUpdate = true;
 
   Future getImage() async {
     ImagePicker picker = ImagePicker();
-    PickedFile pickedFile = await picker.getVideo(source: ImageSource.gallery);
+    PickedFile? pickedFile = await picker.getVideo(source: ImageSource.gallery);
     setState(() {
       if (pickedFile != null) {
         filePicked = true;
@@ -86,10 +86,10 @@ class _TestingScreenState extends State<TestingScreen> {
 }
 
 class VideoPlayerScreen extends StatefulWidget {
-  final File videoFile;
-  final bool isPlaying;
-  final bool fullUpdate;
-  VideoPlayerScreen({Key key, this.videoFile, this.isPlaying, this.fullUpdate})
+  final File? videoFile;
+  final bool? isPlaying;
+  final bool? fullUpdate;
+  VideoPlayerScreen({Key? key, this.videoFile, this.isPlaying, this.fullUpdate})
       : super(key: key);
 
   @override
@@ -97,13 +97,13 @@ class VideoPlayerScreen extends StatefulWidget {
 }
 
 class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
-  VideoPlayerController _controller;
-  Future<void> _initialiseVideoPlayerFuture;
+  late VideoPlayerController _controller;
+  Future<void>? _initialiseVideoPlayerFuture;
   @override
   void initState() {
     print("#tag Video player controller initialised");
-    print("#tag file: ${widget.videoFile.path}");
-    _controller = VideoPlayerController.file(widget.videoFile);
+    print("#tag file: ${widget.videoFile!.path}");
+    _controller = VideoPlayerController.file(widget.videoFile!);
     _initialiseVideoPlayerFuture = _controller.initialize();
     _controller.setLooping(true);
     super.initState();
@@ -111,8 +111,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
 
   @override
   void didUpdateWidget(VideoPlayerScreen oldWidget) {
-    if (widget.fullUpdate) {
-      _controller = VideoPlayerController.file(widget.videoFile);
+    if (widget.fullUpdate!) {
+      _controller = VideoPlayerController.file(widget.videoFile!);
       _initialiseVideoPlayerFuture = _controller.initialize();
       _controller.setLooping(true);
       super.didUpdateWidget(oldWidget);
@@ -157,7 +157,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
   }
 
   Widget build(BuildContext context) {
-    if (!widget.isPlaying) {
+    if (!widget.isPlaying!) {
       _controller.pause();
     } else {
       // If the video is paused, play it.
@@ -189,7 +189,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                 bool result = await Record.hasPermission();
                                 bool isRecording = await Record.isRecording();
                                 if (!result && !isRecording) {
-                                  return false;
+                                  return;
                                 }
                                 final p = await getTemporaryDirectory();
                                 final String name = DateTime.now()
@@ -198,9 +198,9 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                 final path = "${p.path}/$name.m4a";
 
                                 var info = await executeInfo(
-                                    File(widget.videoFile.path));
+                                    File(widget.videoFile!.path));
                                 double duration = double.parse(
-                                    info.getMediaProperties()['duration']);
+                                    info.getMediaProperties()!['duration']);
                                 int seconds = duration.toInt();
                                 int milli =
                                     ((duration - seconds.toDouble()) * 1000)
@@ -221,7 +221,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                   await Record.stop();
                                 }).then((value) async {
                                   Directory directory =
-                                      await getExternalStorageDirectory();
+                                      await (getExternalStorageDirectory()
+                                          as Future<Directory>);
                                   String name = DateTime.now()
                                       .toString()
                                       .replaceAll(" ", "");
@@ -229,8 +230,8 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                       "${directory.path}/$name.mp4";
                                   executeCommand(
                                       // "-i ${widget.videoFile.path} -i $path -vcodec copy -acodec copy -map 0:0 -map 1:0 $outputPath");
-                                      "-i ${widget.videoFile.path} -i $path -map 0:0 -map 1:0 -c:v copy -c:a aac -b:a 256k -shortest $outputPath");
-                                });
+                                      "-i ${widget.videoFile!.path} -i $path -map 0:0 -map 1:0 -c:v copy -c:a aac -b:a 256k -shortest $outputPath");
+                                } as Future Function(Null));
                               },
                               child: Text("Record audio"))
                         ],
@@ -255,37 +256,37 @@ class CameraPreviewTest extends StatefulWidget {
 }
 
 class _CameraPreviewTestState extends State<CameraPreviewTest> {
-  CameraController cameraController;
-  List cameras;
-  int selectedCameraIndex;
+  CameraController? cameraController;
+  late List cameras;
+  late int selectedCameraIndex;
   bool isRecording = false;
-  String videoPath;
-  String videoPathName;
+  String? videoPath;
+  String? videoPathName;
 
   Future initCamera(
       CameraDescription cameraDescription /*Which camera to show*/) async {
     if (cameraController != null) {
-      await cameraController.dispose();
+      await cameraController!.dispose();
     }
 
     cameraController =
         CameraController(cameraDescription, ResolutionPreset.high);
 
-    cameraController.addListener(() {
+    cameraController!.addListener(() {
       if (mounted) {
         setState(() {});
       }
     });
 
-    if (cameraController.value.hasError) {
-      print('Camera Error ${cameraController.value.errorDescription}');
+    if (cameraController!.value.hasError) {
+      print('Camera Error ${cameraController!.value.errorDescription}');
     }
 
     try {
-      await cameraController.initialize();
+      await cameraController!.initialize();
     } catch (e) {
-      String errorText = 'Error ${e.code} \nError message: ${e.description}';
-      print(errorText);
+      // String errorText = 'Error ${e.code} \nError message: ${e.description}';
+      print(e);
     }
 
     if (mounted) {
@@ -340,7 +341,7 @@ class _CameraPreviewTestState extends State<CameraPreviewTest> {
                         final String name =
                             DateTime.now().toString().replaceAll(" ", "");
                         final path = "${p.path}/$name.png";
-                        cameraController.takePicture().then((value) {
+                        cameraController!.takePicture().then((value) {
                           Navigator.push(
                               context,
                               MaterialPageRoute(
@@ -364,11 +365,11 @@ class _CameraPreviewTestState extends State<CameraPreviewTest> {
                             videoPathName = name;
                             videoPath = path;
                             print("#tag Started reocording");
-                            await cameraController.startVideoRecording();
+                            await cameraController!.startVideoRecording();
                             isRecording = true;
                           } else {
                             print("#tag Finished reocording");
-                            await cameraController.stopVideoRecording();
+                            await cameraController!.stopVideoRecording();
                             isRecording = false;
                             Navigator.push(
                                 context,
@@ -404,12 +405,12 @@ class _CameraPreviewTestState extends State<CameraPreviewTest> {
 }
 
 class CameraPreviewMine extends StatelessWidget {
-  final CameraController cameraController;
+  final CameraController? cameraController;
 
-  const CameraPreviewMine({Key key, this.cameraController}) : super(key: key);
+  const CameraPreviewMine({Key? key, this.cameraController}) : super(key: key);
 
   Widget build(BuildContext context) {
-    if (cameraController == null || !cameraController.value.isInitialized) {
+    if (cameraController == null || !cameraController!.value.isInitialized) {
       return Text(
         'Loading',
         style: TextStyle(
@@ -417,14 +418,14 @@ class CameraPreviewMine extends StatelessWidget {
       );
     }
     return AspectRatio(
-      aspectRatio: cameraController.value.aspectRatio,
-      child: CameraPreview(cameraController),
+      aspectRatio: cameraController!.value.aspectRatio,
+      child: CameraPreview(cameraController!),
     );
   }
 }
 
 class ActionButton extends StatefulWidget {
-  final VoidCallback takePhoto;
+  final VoidCallback? takePhoto;
   ActionButton({this.takePhoto});
   @override
   _ActionButtonState createState() => _ActionButtonState();
@@ -445,8 +446,8 @@ class _ActionButtonState extends State<ActionButton> {
 }
 
 class RecordButton extends StatefulWidget {
-  final VoidCallback buttonClicked;
-  const RecordButton({Key key, this.buttonClicked}) : super(key: key);
+  final VoidCallback? buttonClicked;
+  const RecordButton({Key? key, this.buttonClicked}) : super(key: key);
   @override
   _RecordButtonState createState() => _RecordButtonState();
 }
@@ -466,8 +467,8 @@ class _RecordButtonState extends State<RecordButton> {
 }
 
 class SwitchCameraButton extends StatelessWidget {
-  final VoidCallback switchCamera;
-  SwitchCameraButton({Key key, this.switchCamera}) : super(key: key);
+  final VoidCallback? switchCamera;
+  SwitchCameraButton({Key? key, this.switchCamera}) : super(key: key);
   @override
   Widget build(BuildContext context) {
     return Expanded(
@@ -482,16 +483,16 @@ class SwitchCameraButton extends StatelessWidget {
 }
 
 class PreviewImageScreen extends StatefulWidget {
-  final String mediaPath;
-  final String fileName;
-  final bool isImage;
+  final String? mediaPath;
+  final String? fileName;
+  final bool? isImage;
   PreviewImageScreen({this.mediaPath, this.fileName, this.isImage});
   @override
   _PreviewImageScreenState createState() => _PreviewImageScreenState();
 }
 
 class _PreviewImageScreenState extends State<PreviewImageScreen> {
-  String editedImage;
+  String? editedImage;
   @override
   Widget build(BuildContext context) {
     void shareImage() {
@@ -500,15 +501,15 @@ class _PreviewImageScreenState extends State<PreviewImageScreen> {
 
     return Scaffold(
         body: Container(
-            child: widget.isImage
+            child: widget.isImage!
                 ? Stack(
                     children: <Widget>[
                       Align(
                         alignment: Alignment.center,
                         child: Image.file(
                           File(editedImage == null
-                              ? widget.mediaPath
-                              : editedImage),
+                              ? widget.mediaPath!
+                              : editedImage!),
                           fit: BoxFit.cover,
                         ),
                       ),
@@ -550,7 +551,7 @@ class _PreviewImageScreenState extends State<PreviewImageScreen> {
                 : Stack(children: <Widget>[
                     VideoPlayerScreen(
                       fullUpdate: true,
-                      videoFile: File(widget.mediaPath),
+                      videoFile: File(widget.mediaPath!),
                       isPlaying: true,
                     ),
                   ])));
@@ -558,7 +559,7 @@ class _PreviewImageScreenState extends State<PreviewImageScreen> {
 }
 
 Future<String> _localPath(int index) async {
-  Directory directory;
+  Directory? directory;
   switch (index) {
     case 0:
       directory = await getExternalStorageDirectory();
@@ -567,7 +568,7 @@ Future<String> _localPath(int index) async {
       directory = await getTemporaryDirectory();
       break;
   }
-  return directory.path;
+  return directory!.path;
 }
 
 Future<File> _localFile(String fileName, int index) async {
@@ -575,7 +576,7 @@ Future<File> _localFile(String fileName, int index) async {
   return File('$path/$fileName');
 }
 
-Future<String> ffmpegGray(String inputPath) async {
+Future<String> ffmpegGray(String? inputPath) async {
   File outputPath = await _localFile("edited_image.png", 1);
   print("#tag $inputPath");
   await executeCommand("-y -i $inputPath -vf format=gray ${outputPath.path}");

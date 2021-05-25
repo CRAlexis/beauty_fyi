@@ -19,7 +19,7 @@ import 'package:beauty_fyi/extensions/string_extension.dart';
 
 class CreateServiceScreen extends StatefulWidget {
   final args;
-  const CreateServiceScreen({Key key, this.args}) : super(key: key);
+  const CreateServiceScreen({Key? key, this.args}) : super(key: key);
   @override
   _CreateServiceScreenState createState() => _CreateServiceScreenState();
 }
@@ -32,16 +32,16 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
   final serviceDescriptionTextFieldController = TextEditingController();
   AutovalidateMode autovalidateModeServiceName = AutovalidateMode.disabled;
 
-  AnimationController bottomBarAnimationController;
-  String serviceNamevalue = "";
-  String serviceDescriptionValue = "";
+  AnimationController? bottomBarAnimationController;
+  String? serviceNamevalue = "";
+  String? serviceDescriptionValue = "";
   bool disableTextFields = false;
   bool bottomBarVisible = false;
   bool slideValidated = false;
   bool switchColours = false;
-  File imageSrc;
+  File? imageSrc;
   bool pageHasAlreadyRecalled = false;
-  List<Color> backgroundColours = [
+  List<Color?> backgroundColours = [
     colorStyles['dark_purple'],
     colorStyles['light_purple'],
     colorStyles['blue'],
@@ -55,7 +55,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
   // servicePrcossMap['test'] = 10;
   int slideIndex = 0;
 
-  List<Map<String, int>> serviceProcesses = [];
+  List<Map<String?, int?>> serviceProcesses = [];
 
   void initState() {
     super.initState();
@@ -67,19 +67,20 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
 
   @override
   void dispose() {
-    bottomBarAnimationController.dispose();
+    bottomBarAnimationController!.dispose();
     super.dispose();
   }
 
   Future<void> recallServiceData({id}) async {
     final service = await fetchService(id: id);
     // print(service);
-    serviceNameTextFieldController.text = service['service_name'];
-    serviceDescriptionTextFieldController.text = service['service_description'];
-    serviceNamevalue = service['service_name'];
-    serviceDescriptionValue = service['service_description'];
-    imageSrc = File(service['service_image']);
-    List<dynamic> list = json.decode(service['service_processes']);
+    serviceNameTextFieldController.text = service.serviceName as String;
+    serviceDescriptionTextFieldController.text =
+        service.serviceDescription as String;
+    serviceNamevalue = service.serviceName as String;
+    serviceDescriptionValue = service.serviceDescription as String;
+    imageSrc = File(service.imageSrc as String);
+    List<dynamic> list = json.decode(service.serviceProcesses as String);
     for (var map in list) {
       var key;
       var value;
@@ -100,7 +101,8 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
         setState(() {});
       });
     }
-    Future<void> displayProcessTextInput({BuildContext context, index}) {
+    Future<void> displayProcessTextInput(
+        {required BuildContext context, index}) {
       String processNameValidationError;
       String processDurationValidationError;
       TextEditingController processNameController = TextEditingController();
@@ -110,7 +112,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
       processDurationValidationError = "Invalid duration";
 
       if (index != null) {
-        processNameController.text = serviceProcesses[index].keys.first;
+        processNameController.text = serviceProcesses[index].keys.first!;
         processDurationController.text =
             serviceProcesses[index].values.first.toString();
       }
@@ -118,107 +120,107 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
           context: context,
           builder: (context) {
             return AlertDialog(
-              scrollable: true,
-              title: Text("Service process"),
-              content: StatefulBuilder(
-                  builder: (BuildContext context, StateSetter setState) {
-                return Container(
-                    child: Form(
-                  key: serviceProcessForm,
-                  autovalidateMode: processFormAutovalidateMode,
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      DefaultTextField(
-                        iconData: null,
-                        hintText: serviceProcesses.length == 0
-                            ? "e.g. Wash clients hair"
-                            : "",
-                        invalidMessage: processNameValidationError,
-                        labelText: "Process name",
-                        textInputType: TextInputType.text,
-                        defaultTextFieldController: processNameController,
-                        onSaved: (String value) {},
-                        onChanged: (String value) {},
-                        disableTextFields: false,
-                        stylingIndex: 2,
-                        regex: r'^[a-zA-Z0-9 +&]+$',
-                        maxLength: 25,
-                        height: 40,
-                        labelPadding: 0,
-                      ),
-                      SizedBox(
-                        height: 20,
-                      ),
-                      DefaultTextField(
+                scrollable: true,
+                title: Text("Service process"),
+                content: StatefulBuilder(
+                    builder: (BuildContext context, StateSetter setState) {
+                  return Container(
+                      child: Form(
+                    key: serviceProcessForm,
+                    autovalidateMode: processFormAutovalidateMode,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        DefaultTextField(
                           iconData: null,
-                          hintText: "10 minutes",
-                          invalidMessage: processDurationValidationError,
-                          labelText: "Process duration",
-                          textInputType: TextInputType.number,
-                          defaultTextFieldController: processDurationController,
-                          onSaved: (String value) {},
-                          onChanged: (String value) {
-                            setState(() {
-                              processFormAutovalidateMode =
-                                  AutovalidateMode.onUserInteraction;
-                            });
-                          },
+                          hintText: serviceProcesses.length == 0
+                              ? "e.g. Wash clients hair"
+                              : "",
+                          invalidMessage: processNameValidationError,
+                          labelText: "Process name",
+                          textInputType: TextInputType.text,
+                          defaultTextFieldController: processNameController,
+                          onSaved: (String? value) {},
+                          onChanged: (String value) {},
                           disableTextFields: false,
                           stylingIndex: 2,
-                          regex: r'[1-9]',
+                          regex: r'^[a-zA-Z0-9 +&]+$',
+                          maxLength: 25,
                           height: 40,
                           labelPadding: 0,
-                          suffixText: "(Minutes)",
-                          validationStringLength: 1),
-                    ],
-                  ),
-                ));
-              }),
-              actions: <Widget>[
-                index != null
-                    ? TextButton(
-                        child: Text('REMOVE'),
-                        onPressed: () {
-                          setState(() {
+                        ),
+                        SizedBox(
+                          height: 20,
+                        ),
+                        DefaultTextField(
+                            iconData: null,
+                            hintText: "10 minutes",
+                            invalidMessage: processDurationValidationError,
+                            labelText: "Process duration",
+                            textInputType: TextInputType.number,
+                            defaultTextFieldController:
+                                processDurationController,
+                            onSaved: (String? value) {},
+                            onChanged: (String value) {
+                              setState(() {
+                                processFormAutovalidateMode =
+                                    AutovalidateMode.onUserInteraction;
+                              });
+                            },
+                            disableTextFields: false,
+                            stylingIndex: 2,
+                            regex: r'[1-9]',
+                            height: 40,
+                            labelPadding: 0,
+                            suffixText: "(Minutes)",
+                            validationStringLength: 1),
+                      ],
+                    ),
+                  ));
+                }),
+                actions: <Widget>[
+                  true
+                      ? TextButton(
+                          child: Text('REMOVE'),
+                          onPressed: () {
+                            setState(() {
+                              serviceProcesses.removeAt(index);
+                              processDurationController.text = "";
+                              processNameController.text = "";
+                              Navigator.pop(context);
+                            });
+                          },
+                        )
+                      : Container(),
+                  TextButton(
+                    child: Text('ADD'),
+                    onPressed: () {
+                      setState(() {
+                        serviceProcessForm.currentState!.validate();
+                        if (serviceProcessForm.currentState!.validate()) {
+                          if (index != null) {
                             serviceProcesses.removeAt(index);
-                            processDurationController.text = "";
-                            processNameController.text = "";
-                            Navigator.pop(context);
-                          });
-                        },
-                      )
-                    : null,
-                TextButton(
-                  child: Text('ADD'),
-                  onPressed: () {
-                    setState(() {
-                      serviceProcessForm.currentState.validate();
-                      if (serviceProcessForm.currentState.validate()) {
-                        if (index != null) {
-                          serviceProcesses.removeAt(index);
-                          serviceProcesses.insert(index, {
-                            processNameController.text:
-                                int.parse(processDurationController.text)
-                          });
-                        } else {
-                          serviceProcesses.add({
-                            processNameController.text:
-                                int.parse(processDurationController.text)
-                          });
+                            serviceProcesses.insert(index, {
+                              processNameController.text:
+                                  int.parse(processDurationController.text)
+                            });
+                          } else {
+                            serviceProcesses.add({
+                              processNameController.text:
+                                  int.parse(processDurationController.text)
+                            });
+                          }
+                          if (serviceProcesses.length > 0) {
+                            slideValidated = isSlideValid(
+                                slideIndex: 2,
+                                serviceProcesses: serviceProcesses);
+                          }
+                          Navigator.pop(context);
                         }
-                        if (serviceProcesses.length > 0) {
-                          slideValidated = isSlideValid(
-                              slideIndex: 2,
-                              serviceProcesses: serviceProcesses);
-                        }
-                        Navigator.pop(context);
-                      }
-                    });
-                  },
-                ),
-              ],
-            );
+                      });
+                    },
+                  ),
+                ]);
           });
     }
 
@@ -240,16 +242,16 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
               }
               Navigator.pushNamed(context, "/full-screen-image",
                   arguments: {'imageSrc': imageSrc}).then((value) {
-                File returnedImage =
+                File? returnedImage =
                     (value as Map<String, dynamic>)['imageSrc'];
-                bool override = (value as Map<String, dynamic>)['override'];
+                bool? override = value['override'];
                 setState(() {
                   if (returnedImage != null) {
                     imageSrc = returnedImage;
                     slideValidated =
                         isSlideValid(slideIndex: 0, imageSrc: imageSrc);
                   } else {
-                    if (override) {
+                    if (override!) {
                       imageSrc = null;
                       slideValidated =
                           isSlideValid(slideIndex: 0, imageSrc: imageSrc);
@@ -287,13 +289,13 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
               labelText: "Service name",
               textInputType: TextInputType.name,
               defaultTextFieldController: serviceNameTextFieldController,
-              onSaved: (String value) {
+              onSaved: (String? value) {
                 serviceNamevalue = value;
               },
               onChanged: (String value) {
                 serviceNamevalue = value;
-                if (!RegExp(r'^[a-zA-Z0-9 +&]+$').hasMatch(serviceNamevalue) &&
-                    serviceNamevalue.length < 3) {
+                if (!RegExp(r'^[a-zA-Z0-9 +&]+$').hasMatch(serviceNamevalue!) &&
+                    serviceNamevalue!.length < 3) {
                   slideValidated = isSlideValid(
                       slideIndex: 1, serviceName: serviceNamevalue);
                 } else {
@@ -315,7 +317,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
               labelText: "Service description",
               textInputType: TextInputType.name,
               defaultTextAreaController: serviceDescriptionTextFieldController,
-              onSaved: (String value) {
+              onSaved: (String? value) {
                 serviceNamevalue = value;
               },
               onChanged: (String value) {
@@ -375,7 +377,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                                       children: <TextSpan>[
                                         TextSpan(
                                           text:
-                                              ' ${serviceProcesses[index].keys.first.capitalize()}',
+                                              ' ${serviceProcesses[index].keys.first!.capitalize()}',
                                           style: TextStyle(
                                               color: Colors.black,
                                               fontWeight: FontWeight.bold,
@@ -524,17 +526,17 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
               decoration: BoxDecoration(
                   gradient: switchColours
                       ? LinearGradient(colors: [
-                          colorStyles['dark_purple'],
-                          colorStyles['light_purple'],
-                          colorStyles['blue'],
-                          colorStyles['green']
+                          colorStyles['dark_purple']!,
+                          colorStyles['light_purple']!,
+                          colorStyles['blue']!,
+                          colorStyles['green']!
                         ], begin: Alignment.topLeft, end: Alignment.bottomRight)
                       : LinearGradient(
                           colors: [
-                              backgroundColours[2],
-                              backgroundColours[1],
-                              backgroundColours[3],
-                              backgroundColours[0]
+                              backgroundColours[2]!,
+                              backgroundColours[1]!,
+                              backgroundColours[3]!,
+                              backgroundColours[0]!
                             ],
                           begin: Alignment.topLeft,
                           end: Alignment.bottomRight)),
@@ -606,7 +608,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                                           break;
                                         case 1:
                                           //validate form
-                                          serviceNameForm.currentState
+                                          serviceNameForm.currentState!
                                               .validate();
                                           slideIndex++;
                                           slideValidated = false;
@@ -716,7 +718,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                       ).show();
                     },
                     openCamera: () async {
-                      File tempImageSrc = imageSrc;
+                      File? tempImageSrc = imageSrc;
                       imageSrc = await FileAndImageFunctions.openNativeCamera();
                       setState(() {
                         if (imageSrc == null) {
@@ -729,7 +731,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
                       });
                     },
                     openGallery: () async {
-                      File tempImageSrc = imageSrc;
+                      File? tempImageSrc = imageSrc;
                       imageSrc = await FileAndImageFunctions.openImagePicker();
                       setState(() {
                         if (imageSrc == null) {
@@ -776,17 +778,18 @@ bool isSlideValid(
   return false;
 }
 
-Future<Map<String, dynamic>> fetchService({id}) async {
+Future<ServiceModel> fetchService({id}) async {
   final serviceModel = new ServiceModel(id: id);
   print("refreshing future");
   return await serviceModel.readService();
 }
 
-Future<void> sendQuery({ServiceModel servicemodel, bool updating}) async {
+Future<void> sendQuery(
+    {ServiceModel? servicemodel, required bool updating}) async {
   try {
     updating
-        ? await servicemodel.updateService(servicemodel)
-        : await servicemodel.insertService(servicemodel);
+        ? await servicemodel!.updateService(servicemodel)
+        : await servicemodel!.insertService(servicemodel);
     return;
   } catch (e) {
     Future.error(e, StackTrace.fromString(""));

@@ -3,13 +3,13 @@ import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class BottomBar extends StatefulWidget {
-  final bool visble;
-  final AnimationController controller;
+  final bool? visble;
+  final AnimationController? controller;
   final deleteImage;
   final openCamera;
   final openGallery;
   const BottomBar(
-      {Key key,
+      {Key? key,
       this.visble,
       this.controller,
       this.deleteImage,

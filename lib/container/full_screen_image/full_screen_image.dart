@@ -16,8 +16,8 @@ class _FullScreenImageState extends State<FullScreenImage>
     with TickerProviderStateMixin {
   bool appBarVisible = false;
   bool bottomBarVisible = false;
-  AnimationController appBarAnimationController;
-  AnimationController bottomBarAnimationController;
+  AnimationController? appBarAnimationController;
+  AnimationController? bottomBarAnimationController;
 
   @override
   void initState() {
@@ -34,18 +34,18 @@ class _FullScreenImageState extends State<FullScreenImage>
 
   @override
   void dispose() {
-    appBarAnimationController.dispose();
-    bottomBarAnimationController.dispose();
+    appBarAnimationController!.dispose();
+    bottomBarAnimationController!.dispose();
     super.dispose();
   }
 
-  File imageSrc;
+  File? imageSrc;
   bool imageHasUpdated = false;
 
   @override
   Widget build(BuildContext context) {
     final arguments =
-        ModalRoute.of(context).settings.arguments as Map<String, dynamic>;
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>?;
     return new WillPopScope(
         onWillPop: () {
           if (bottomBarVisible) {
@@ -56,12 +56,12 @@ class _FullScreenImageState extends State<FullScreenImage>
           } else {
             Navigator.pop(context, {
               'override': imageHasUpdated,
-              'imageSrc': (imageSrc == null && arguments['imageSrc'] == null) ||
+              'imageSrc': (imageSrc == null && arguments!['imageSrc'] == null) ||
                       (imageSrc == null && imageHasUpdated == true)
                   ? null
                   : imageSrc != null
                       ? imageSrc
-                      : arguments['imageSrc']
+                      : arguments!['imageSrc']
             });
             return Future.value(true);
           }
@@ -87,12 +87,12 @@ class _FullScreenImageState extends State<FullScreenImage>
                       Navigator.pop(context, {
                         'override': imageHasUpdated,
                         'imageSrc': (imageSrc == null &&
-                                    arguments['imageSrc'] == null) ||
+                                    arguments!['imageSrc'] == null) ||
                                 (imageSrc == null && imageHasUpdated == true)
                             ? null
                             : imageSrc != null
                                 ? imageSrc
-                                : arguments['imageSrc'],
+                                : arguments!['imageSrc'],
                       });
                     }
                   },
@@ -123,7 +123,7 @@ class _FullScreenImageState extends State<FullScreenImage>
                             child: Hero(
                                 tag: "arguments['hero_index']",
                                 child: (imageSrc == null &&
-                                            arguments['imageSrc'] == null) ||
+                                            arguments!['imageSrc'] == null) ||
                                         (imageSrc == null &&
                                             imageHasUpdated == true)
                                     ? Icon(
@@ -132,15 +132,15 @@ class _FullScreenImageState extends State<FullScreenImage>
                                         color: Colors.white,
                                       )
                                     : imageSrc != null
-                                        ? Image.file(imageSrc)
-                                        : Image.file(arguments['imageSrc'])),
+                                        ? Image.file(imageSrc!)
+                                        : Image.file(arguments!['imageSrc'])),
                           ))),
                 ),
                 BottomBar(
                     visble: bottomBarVisible,
                     controller: bottomBarAnimationController,
                     deleteImage: () {
-                      if (imageSrc == null && arguments['imageSrc'] == null) {
+                      if (imageSrc == null && arguments!['imageSrc'] == null) {
                         setState(() {
                           bottomBarVisible = false;
                         });
@@ -165,8 +165,8 @@ class _FullScreenImageState extends State<FullScreenImage>
                       ).show();
                     },
                     openCamera: () async {
-                      File tempImageSrc =
-                          imageSrc != null ? imageSrc : arguments['imageSrc'];
+                      File? tempImageSrc =
+                          imageSrc != null ? imageSrc : arguments!['imageSrc'];
                       imageSrc = await FileAndImageFunctions.openNativeCamera();
                       setState(() {
                         if (imageSrc == null) {
@@ -178,8 +178,8 @@ class _FullScreenImageState extends State<FullScreenImage>
                       });
                     },
                     openGallery: () async {
-                      File tempImageSrc =
-                          imageSrc != null ? imageSrc : arguments['imageSrc'];
+                      File? tempImageSrc =
+                          imageSrc != null ? imageSrc : arguments!['imageSrc'];
                       imageSrc = await FileAndImageFunctions.openImagePicker();
                       setState(() {
                         if (imageSrc == null) {

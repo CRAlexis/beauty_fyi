@@ -2,10 +2,10 @@ import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 
 class ActionButton extends StatelessWidget {
-  final GlobalKey<FormState> form;
-  final VoidCallback onPressed;
-  final String buttonText;
-  final bool disableTextFields;
+  final GlobalKey<FormState>? form;
+  final VoidCallback? onPressed;
+  final String? buttonText;
+  final bool? disableTextFields;
   ActionButton(
       {this.form, this.onPressed, this.buttonText, this.disableTextFields});
   @override
@@ -22,20 +22,20 @@ class ActionButton extends StatelessWidget {
             )),
             backgroundColor: MaterialStateProperty.all(Colors.white)),
         onPressed: () {
-          onPressed();
-          if (!form.currentState.validate()) {
+          onPressed!();
+          if (!form!.currentState!.validate()) {
             //return false;
           }
         },
         // color: Colors.white,
-        child: disableTextFields
+        child: disableTextFields!
             ? SizedBox(
                 child: CircularProgressIndicator(),
                 height: 20,
                 width: 20,
               )
             : Text(
-                buttonText,
+                buttonText!,
                 style: textStyles['button_label_blue'],
               ),
       ),

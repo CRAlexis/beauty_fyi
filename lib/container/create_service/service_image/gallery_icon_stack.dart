@@ -9,12 +9,12 @@ enum GalleryIconSize {
 }
 
 class GalleryIconStack extends StatefulWidget {
-  final File imageSrc;
+  final File? imageSrc;
   final onPreviewImage;
   final onOpenGalleryOrCamera;
-  final GalleryIconSize size;
+  final GalleryIconSize? size;
   const GalleryIconStack(
-      {Key key,
+      {Key? key,
       this.imageSrc,
       this.onPreviewImage,
       this.onOpenGalleryOrCamera,
@@ -74,7 +74,7 @@ class _GalleryIconStackState extends State<GalleryIconStack> {
                                       ? 40
                                       : 80,
                           backgroundImage: FileImage(
-                            widget.imageSrc,
+                            widget.imageSrc!,
                           ),
                         )),
                   )),

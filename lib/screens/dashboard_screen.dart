@@ -11,7 +11,7 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen>
     with SingleTickerProviderStateMixin {
-  TabController tabController;
+  TabController? tabController;
 
   @override
   void initState() {
@@ -22,7 +22,7 @@ class _DashboardScreenState extends State<DashboardScreen>
   @override
   void dispose() {
     super.dispose();
-    tabController.dispose();
+    tabController!.dispose();
   }
 
   @override
@@ -62,9 +62,9 @@ class _DashboardScreenState extends State<DashboardScreen>
         ],
         labelColor: colorStyles['green'],
         unselectedLabelColor: Colors.grey.shade300,
-        indicatorSize: TabBarIndicatorSize.label,
+        indicatorSize: TabBarIndicatorSize.tab,
         indicatorPadding: EdgeInsets.all(3.0),
-        indicatorColor: Colors.white,
+        indicatorColor: Colors.transparent,
       ),
     );
   }

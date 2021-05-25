@@ -1,26 +1,23 @@
 import 'dart:io';
 
+import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class ServiceCard extends StatefulWidget {
-  final File imageSrc;
-  final String serviceName;
-  final int numberOfSessions;
-  final VoidCallback viewService;
+  final ServiceModel serviceModel;
+  final int? numberOfSessions;
+  final VoidCallback? viewService;
   final serviceCardTapped;
-  final int serviceToFocus;
-  final int serviceId;
+  final int? serviceToFocus;
   final refresh;
   const ServiceCard(
-      {Key key,
-      this.imageSrc,
-      this.serviceName,
+      {Key? key,
+      required this.serviceModel,
       this.numberOfSessions,
       this.viewService,
       this.serviceCardTapped,
       this.serviceToFocus,
-      this.serviceId,
       this.refresh})
       : super(key: key);
   @override
@@ -28,8 +25,15 @@ class ServiceCard extends StatefulWidget {
 }
 
 class _ServiceCardState extends State<ServiceCard> {
-  final List<Color> defaultColourList = [Colors.white, colorStyles['cream']];
-  final List<Color> activeColorList = [
+  late final File serviceImage;
+  @override
+  void initState() {
+    super.initState();
+    serviceImage = widget.serviceModel.imageSrc as File;
+  }
+
+  final List<Color?> defaultColourList = [Colors.white, colorStyles['cream']];
+  final List<Color?> activeColorList = [
     colorStyles['green'],
     colorStyles['blue']
   ];
@@ -43,35 +47,35 @@ class _ServiceCardState extends State<ServiceCard> {
         padding: EdgeInsets.all(5),
         child: GestureDetector(
           onTapUp: (tapDownDetails) {
-            widget.serviceCardTapped(widget.serviceId);
+            // widget.serviceCardTapped(widget.serviceModel.id);
             Future.delayed(Duration(milliseconds: 200)).then((value) {
-              Navigator.pushNamed(context, "/view-service",
-                      arguments: {'id': widget.serviceId})
-                  .then((value) => widget.refresh());
+              Navigator.pushNamed(context, "/view-service", arguments: {
+                'sessionModel': widget.serviceModel,
+              }).then((value) => widget.refresh());
             });
           },
           child: Card(
-            elevation: widget.serviceToFocus == widget.serviceId ? 15 : 10,
+            elevation:
+                widget.serviceToFocus == widget.serviceModel.id ? 15 : 10,
             child: AnimatedContainer(
               duration: Duration(milliseconds: 300),
               decoration: BoxDecoration(
                   gradient: LinearGradient(
                 begin: Alignment.topRight,
                 end: Alignment.bottomLeft,
-                colors: widget.serviceToFocus == widget.serviceId
-                    ? [activeColorList[0], activeColorList[1]]
-                    : [defaultColourList[0], defaultColourList[1]],
+                colors: widget.serviceToFocus == widget.serviceModel.id
+                    ? [activeColorList[0]!, activeColorList[1]!]
+                    : [defaultColourList[0]!, defaultColourList[1]!],
               )),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Container(
                     child: CircleAvatar(
-                      radius: 45,
-                      backgroundImage: FileImage(
-                        widget.imageSrc,
-                      ),
-                    ),
+                        radius: 45,
+                        backgroundImage: serviceImage.existsSync()
+                            ? FileImage(serviceImage)
+                            : null),
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border:
@@ -81,9 +85,9 @@ class _ServiceCardState extends State<ServiceCard> {
                     height: 5,
                   ),
                   Text(
-                    widget.serviceName,
+                    widget.serviceModel.serviceName as String,
                     style: TextStyle(
-                        color: widget.serviceToFocus == widget.serviceId
+                        color: widget.serviceToFocus == widget.serviceModel.id
                             ? Colors.white
                             : Colors.black54,
                         fontWeight: FontWeight.bold,
@@ -98,9 +102,10 @@ class _ServiceCardState extends State<ServiceCard> {
                       ? Text(
                           "${widget.numberOfSessions.toString()} session",
                           style: TextStyle(
-                            color: widget.serviceToFocus == widget.serviceId
-                                ? Colors.white
-                                : Colors.grey.shade300,
+                            color:
+                                widget.serviceToFocus == widget.serviceModel.id
+                                    ? Colors.white
+                                    : Colors.grey.shade300,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'OpenSans',
                           ),
@@ -108,9 +113,10 @@ class _ServiceCardState extends State<ServiceCard> {
                       : Text(
                           "${widget.numberOfSessions.toString()} sessions",
                           style: TextStyle(
-                            color: widget.serviceToFocus == widget.serviceId
-                                ? Colors.white
-                                : Colors.grey.shade300,
+                            color:
+                                widget.serviceToFocus == widget.serviceModel.id
+                                    ? Colors.white
+                                    : Colors.grey.shade300,
                             fontWeight: FontWeight.bold,
                             fontFamily: 'OpenSans',
                           ),
@@ -129,9 +135,9 @@ class _ServiceCardState extends State<ServiceCard> {
 }
 
 class AddNewServiceCard extends StatefulWidget {
-  final VoidCallback refresh;
+  final VoidCallback? refresh;
   final bool constrained;
-  const AddNewServiceCard({Key key, this.refresh, this.constrained = false})
+  const AddNewServiceCard({Key? key, this.refresh, this.constrained = false})
       : super(key: key);
 
   @override
@@ -156,7 +162,7 @@ class _AddNewServiceCardState extends State<AddNewServiceCard> {
                   });
                   Future.delayed(const Duration(milliseconds: 300), () {
                     Navigator.pushNamed(context, "/add-service")
-                        .then((value) => widget.refresh());
+                        .then((value) => widget.refresh!());
                   });
                 },
                 child: Card(
@@ -169,16 +175,16 @@ class _AddNewServiceCardState extends State<AddNewServiceCard> {
                               end: Alignment.bottomLeft,
                               colors: transitionToNextPage
                                   ? [
-                                      colorStyles['light_purple'],
-                                      colorStyles['green'],
-                                      colorStyles['blue'],
-                                      colorStyles['dark_purple'],
+                                      colorStyles['light_purple']!,
+                                      colorStyles['green']!,
+                                      colorStyles['blue']!,
+                                      colorStyles['dark_purple']!,
                                     ]
                                   : [
-                                      colorStyles['green'],
-                                      colorStyles['blue'],
-                                      colorStyles['dark_purple'],
-                                      colorStyles['light_purple'],
+                                      colorStyles['green']!,
+                                      colorStyles['blue']!,
+                                      colorStyles['dark_purple']!,
+                                      colorStyles['light_purple']!,
                                     ])),
                       child: Stack(
                         children: [
@@ -223,7 +229,7 @@ class _AddNewServiceCardState extends State<AddNewServiceCard> {
                     });
                     Future.delayed(const Duration(milliseconds: 300), () {
                       Navigator.pushNamed(context, "/add-service")
-                          .then((value) => widget.refresh());
+                          .then((value) => widget.refresh!());
                     });
                   },
                   child: Card(
@@ -236,16 +242,16 @@ class _AddNewServiceCardState extends State<AddNewServiceCard> {
                                 end: Alignment.bottomLeft,
                                 colors: transitionToNextPage
                                     ? [
-                                        colorStyles['light_purple'],
-                                        colorStyles['green'],
-                                        colorStyles['blue'],
-                                        colorStyles['dark_purple'],
+                                        colorStyles['light_purple']!,
+                                        colorStyles['green']!,
+                                        colorStyles['blue']!,
+                                        colorStyles['dark_purple']!,
                                       ]
                                     : [
-                                        colorStyles['green'],
-                                        colorStyles['blue'],
-                                        colorStyles['dark_purple'],
-                                        colorStyles['light_purple'],
+                                        colorStyles['green']!,
+                                        colorStyles['blue']!,
+                                        colorStyles['dark_purple']!,
+                                        colorStyles['light_purple']!,
                                       ])),
                         child: Stack(
                           children: [

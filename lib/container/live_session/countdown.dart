@@ -11,7 +11,7 @@ class CountDown extends StatefulWidget {
   final secondCallBack;
   final sessionFinished;
   final startingNextProcess;
-  final SessionModel sessionModel;
+  final SessionModel? sessionModel;
   CountDown(
       {this.secondCallBack,
       this.sessionFinished,
@@ -24,17 +24,18 @@ class CountDown extends StatefulWidget {
 class _CountDownState extends State<CountDown>
     with WidgetsBindingObserver, AutomaticKeepAliveClientMixin<CountDown> {
   Duration timerDuration = Duration(seconds: 1);
-  DateTime pausedTime;
-  Tween<double> tween;
-  Timer timer;
-  String formattedTime;
-  String processName;
-  int timeInSeconds;
-  int processTimeInSeconds;
+  DateTime? pausedTime;
+  Tween<double>? tween;
+  late Timer timer;
+  String? formattedTime;
+  late String processName;
+  late int timeInSeconds = -2;
+  late int processTimeInSeconds;
   int processIndex = 0; // Will need to fetch this from database
   bool timerIsPaused = false;
   bool processFinished = false;
   bool sessionFinished = false;
+  bool startNextProcessLock = false;
 
   @override
   bool get wantKeepAlive => true;
@@ -43,11 +44,11 @@ class _CountDownState extends State<CountDown>
     super.initState();
 
     start();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
   }
 
   void start() async {
-    processIndex = widget.sessionModel.currentProcess;
+    processIndex = widget.sessionModel?.currentProcess as int;
     await fetchServiceData(overwrite: false);
   }
 
@@ -55,7 +56,7 @@ class _CountDownState extends State<CountDown>
   void dispose() {
     super.dispose();
     try {
-      WidgetsBinding.instance.removeObserver(this);
+      WidgetsBinding.instance!.removeObserver(this);
       timer.cancel();
     } catch (e) {}
   }
@@ -78,45 +79,49 @@ class _CountDownState extends State<CountDown>
     final dateTime = DateTimeModel(className: 'countdown');
     final value = await dateTime.readDateTime();
     final now = DateTime.now();
-    final timeElapsed = now.difference(value.dateTime).inSeconds;
+    final timeElapsed = now.difference(value.dateTime as DateTime).inSeconds;
     timeInSeconds = processTimeInSeconds - timeElapsed;
   }
 
-  Future<void> fetchServiceData({overwrite}) async {
-    final serviceModel = new ServiceModel(id: widget.sessionModel.serviceId);
+  // will need to do some sort of error catching in this function
+  // This function does not run on app resume
+  Future<void> fetchServiceData({required bool overwrite, int debt = 0}) async {
+    final serviceModel = new ServiceModel(id: widget.sessionModel!.serviceId);
     final service = await serviceModel.readService();
     final dateTime =
         DateTimeModel(dateTime: DateTime.now(), className: 'countdown');
-    List<Map<String, dynamic>> processes =
-        (jsonDecode(service['service_processes']) as List)
+    List<Map<String, dynamic>>? processes =
+        (jsonDecode(service.serviceProcesses as String) as List)
             .map((e) => e as Map<String, dynamic>)
-            ?.toList();
+            .toList();
 
-    if (processes.length == widget.sessionModel.currentProcess) {
-      widget.sessionModel.setCurrentProcess =
-          widget.sessionModel.currentProcess--;
+    print(
+        "#A proccess length: ${processes.length}, current: ${widget.sessionModel!.currentProcess}");
+    if (processes.length == widget.sessionModel!.currentProcess) {
       widget.sessionFinished();
       sessionFinished = true;
-      widget.sessionModel.setActive = false;
-      await widget.sessionModel.endSession();
+      widget.sessionModel!.setActive = false;
+      await widget.sessionModel!.endSession();
       return;
     } else {
-      processName = processes[widget.sessionModel.currentProcess].keys.first;
+      processName = processes[widget.sessionModel!.currentProcess!].keys.first;
       timeInSeconds =
-          processes[widget.sessionModel.currentProcess].values.first * 60;
+          processes[widget.sessionModel!.currentProcess!].values.first * 60;
       processTimeInSeconds =
-          processes[widget.sessionModel.currentProcess].values.first * 60;
+          processes[widget.sessionModel!.currentProcess!].values.first * 60;
+      await widget.sessionModel!.updateSession(widget.sessionModel!);
 
       await dateTime.insertDateTime(
           dateTimeModel: dateTime, overwrite: overwrite);
       final value = await dateTime.readDateTime();
       if (value.dateTime == null) {
+        //first time its running
         return;
       }
-
-      final timeElapsed = DateTime.now().difference(value.dateTime).inSeconds;
+      final timeElapsed = DateTime.now().difference(value.dateTime!).inSeconds;
+      print("#A timeElapsed: $timeElapsed");
       timeInSeconds = processTimeInSeconds - timeElapsed;
-      await widget.sessionModel.updateSession(widget.sessionModel);
+      timeInSeconds -= debt;
       return;
     }
   }
@@ -127,9 +132,9 @@ class _CountDownState extends State<CountDown>
         DateTimeModel dateTimeModel =
             await DateTimeModel(className: 'countdown').readDateTime();
         final pausedDifference =
-            DateTime.now().difference(pausedTime).inSeconds;
+            DateTime.now().difference(pausedTime!).inSeconds;
         dateTimeModel.setDateTime =
-            dateTimeModel.dateTime.add(Duration(seconds: pausedDifference));
+            dateTimeModel.dateTime!.add(Duration(seconds: pausedDifference));
         await dateTimeModel.insertDateTime(
             dateTimeModel: dateTimeModel, overwrite: true);
         pausedTime = null;
@@ -138,9 +143,7 @@ class _CountDownState extends State<CountDown>
         timer = new Timer(timerDuration, () {
           if (!timerIsPaused) {
             timeInSeconds--;
-            timeInSeconds < 0
-                ? timeInSeconds = 0
-                : widget.secondCallBack(timeInSeconds);
+            timeInSeconds < 0 ? null : widget.secondCallBack(timeInSeconds);
             timer.cancel();
             setState(() {
               formattedTime = formatTime(timeInSeconds);
@@ -159,7 +162,7 @@ class _CountDownState extends State<CountDown>
   }
 
   void vibration() {
-    Timer vibrationTimer;
+    late Timer vibrationTimer;
     Vibration.cancel();
     int i = 0;
     vibrationTimer = new Timer.periodic(Duration(seconds: 1), (callback) {
@@ -170,12 +173,15 @@ class _CountDownState extends State<CountDown>
   }
 
   Future<void> startNextProcess() async {
-    if (!sessionFinished && timeInSeconds < 1) {
+    if (!sessionFinished && timeInSeconds < 1 && !startNextProcessLock) {
+      startNextProcessLock = true;
+      print("#A debt: $timeInSeconds");
       vibration();
-      widget.sessionModel.setCurrentProcess =
-          widget.sessionModel.currentProcess + 1;
-      await fetchServiceData(overwrite: true);
+      widget.sessionModel!.setCurrentProcess =
+          widget.sessionModel!.currentProcess! + 1;
+      await fetchServiceData(overwrite: true, debt: timeInSeconds);
       widget.startingNextProcess();
+      startNextProcessLock = false;
     }
     return;
   }
@@ -197,7 +203,7 @@ class _CountDownState extends State<CountDown>
 
   Widget build(BuildContext context) {
     super.build(context);
-    if (timeInSeconds == null) {
+    if (timeInSeconds == -2) {
       return CountDownRefresh(
         refresher: () {
           setState(() {});
@@ -232,7 +238,7 @@ class _CountDownState extends State<CountDown>
                 ),
                 formattedTime != "0"
                     ? Text(
-                        formattedTime == null ? "" : formattedTime,
+                        formattedTime == null ? "" : formattedTime!,
                         textAlign: TextAlign.center,
                         style: TextStyle(
                             fontSize: 45,
@@ -250,69 +256,68 @@ class _CountDownState extends State<CountDown>
                 SizedBox(
                   height: 30,
                 ),
-                true
-                    ? Column(
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              MaterialButton(
-                                onPressed: () {
-                                  setState(() {
-                                    timerIsPaused = !timerIsPaused;
-                                  });
-                                },
-                                child: timerIsPaused
-                                    ? Icon(
-                                        Icons.play_arrow,
-                                        color: Colors.white,
-                                        size: 40,
-                                      )
-                                    : Icon(
-                                        Icons.pause,
-                                        color: Colors.white,
-                                        size: 40,
-                                      ),
-                              ),
-                            ],
-                          ),
-                          Text(
-                            'or',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 18,
-                                color: Colors.white,
-                                fontFamily: 'OpenSans'),
-                          ),
-                          TextButton(
-                            onPressed: () async {
-                              timerIsPaused = false;
-                              await endCurrentProcess();
-                              setState(() {});
-                            },
-                            child: Text(
-                              'start next process',
-                              textAlign: TextAlign.center,
-                              style: TextStyle(
-                                  fontSize: 17,
+                Column(
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        MaterialButton(
+                          onPressed: () {
+                            setState(() {
+                              timerIsPaused = !timerIsPaused;
+                            });
+                          },
+                          child: timerIsPaused
+                              ? Icon(
+                                  Icons.play_arrow,
                                   color: Colors.white,
-                                  fontFamily: 'OpenSans'),
-                            ),
-                          ),
-                          SizedBox(
-                            height: 30,
-                          ),
-                          Text(
-                            'Remeber to capture your progress during the session',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                                fontSize: 14,
-                                color: Colors.white70,
-                                fontFamily: 'OpenSans'),
-                          ),
-                        ],
-                      )
-                    : null /*Column(
+                                  size: 40,
+                                )
+                              : Icon(
+                                  Icons.pause,
+                                  color: Colors.white,
+                                  size: 40,
+                                ),
+                        ),
+                      ],
+                    ),
+                    Text(
+                      'or',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 18,
+                          color: Colors.white,
+                          fontFamily: 'OpenSans'),
+                    ),
+                    TextButton(
+                      onPressed: () async {
+                        timerIsPaused = false;
+                        await endCurrentProcess();
+                        setState(() {});
+                      },
+                      child: Text(
+                        'start next process',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            fontSize: 17,
+                            color: Colors.white,
+                            fontFamily: 'OpenSans'),
+                      ),
+                    ),
+                    SizedBox(
+                      height: 30,
+                    ),
+                    Text(
+                      'Remeber to capture your progress during the session',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.white70,
+                          fontFamily: 'OpenSans'),
+                    ),
+                  ],
+                )
+                /*Column(
                         children: [
                           Text(
                             'Capture your progress then continue to the next process',
@@ -392,7 +397,7 @@ class CountDownRefresh extends StatelessWidget {
 }
 
 String formatTime(timeInSeconds) {
-  if (timeInSeconds == 0) {
+  if (timeInSeconds <= 0) {
     return '0';
   }
   final hours = (timeInSeconds / 3600).floor();
