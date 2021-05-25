@@ -10,7 +10,7 @@ class ServicesTab extends StatefulWidget {
 
 class _ServicesTabState extends State<ServicesTab> {
   int serviceToFocus = 1;
-  Future services;
+  late Future<List<ServiceModel>> services;
   @override
   void initState() {
     super.initState();
@@ -34,8 +34,8 @@ class _ServicesTabState extends State<ServicesTab> {
                     end: Alignment.bottomRight,
                     colors: [
                   // colorStyles['blue'],
-                  colorStyles['cream'],
-                  colorStyles['cream'],
+                  colorStyles['cream']!,
+                  colorStyles['cream']!,
                 ]))),
         Container(
           height: double.infinity,
@@ -49,10 +49,11 @@ class _ServicesTabState extends State<ServicesTab> {
               children: <Widget>[
                 FutureBuilder(
                   future: services,
-                  builder: (context, services) {
+                  builder:
+                      (context, AsyncSnapshot<List<ServiceModel>> services) {
                     if (services.connectionState == ConnectionState.none ||
                         !services.hasData ||
-                        services.data.length == 0) {
+                        services.data?.length == 0) {
                       return AddNewServiceCard(
                         constrained: true,
                         refresh: () {
@@ -63,7 +64,7 @@ class _ServicesTabState extends State<ServicesTab> {
                     return ListView.builder(
                         physics: NeverScrollableScrollPhysics(),
                         shrinkWrap: true,
-                        itemCount: ((services.data.length / 2) + 1).floor(),
+                        itemCount: ((services.data!.length / 2) + 1).floor(),
                         itemBuilder: (context, index) {
                           return index == 0
                               ? Row(
@@ -74,10 +75,8 @@ class _ServicesTabState extends State<ServicesTab> {
                                       });
                                     }),
                                     ServiceCard(
-                                      serviceId: services.data[index].id,
-                                      imageSrc: services.data[index].imageSrc,
-                                      serviceName:
-                                          services.data[index].serviceName,
+                                      serviceModel:
+                                          services.data?[index] as ServiceModel,
                                       numberOfSessions: 18,
                                       serviceToFocus: serviceToFocus,
                                       serviceCardTapped: (serviceId) {
@@ -94,12 +93,8 @@ class _ServicesTabState extends State<ServicesTab> {
                               : Row(
                                   children: [
                                     ServiceCard(
-                                      serviceId:
-                                          services.data[(index * 2) - 1].id,
-                                      imageSrc: services
-                                          .data[(index * 2) - 1].imageSrc,
-                                      serviceName: services
-                                          .data[(index * 2) - 1].serviceName,
+                                      serviceModel:
+                                          services.data?[index] as ServiceModel,
                                       numberOfSessions: 18,
                                       serviceToFocus: serviceToFocus,
                                       serviceCardTapped: (serviceId) {
@@ -111,14 +106,10 @@ class _ServicesTabState extends State<ServicesTab> {
                                         refreshFuture();
                                       },
                                     ),
-                                    (index * 2) < services.data.length
+                                    (index * 2) < services.data!.length
                                         ? ServiceCard(
-                                            serviceId:
-                                                services.data[index * 2].id,
-                                            imageSrc: services
-                                                .data[index * 2].imageSrc,
-                                            serviceName: services
-                                                .data[index * 2].serviceName,
+                                            serviceModel: services.data?[index]
+                                                as ServiceModel,
                                             numberOfSessions: 18,
                                             serviceToFocus: serviceToFocus,
                                             serviceCardTapped: (serviceId) {
@@ -154,6 +145,6 @@ class _ServicesTabState extends State<ServicesTab> {
   }
 }
 
-Future fetchServices() async {
+Future<List<ServiceModel>> fetchServices() async {
   return await ServiceModel().readServices();
 }

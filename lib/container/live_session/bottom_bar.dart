@@ -7,13 +7,13 @@ import 'package:flutter/material.dart';
 import 'package:simple_animations/simple_animations.dart';
 
 class LiveSessionBottomBar extends StatefulWidget {
-  final TabController tabController;
+  final TabController? tabController;
   final onTakePhoto;
   final onStartRecording;
   final onStopRecording;
   final switchCamera;
-  final GalleryBloc galleryBloc;
-  final SessionModel sessionModel;
+  final GalleryBloc? galleryBloc;
+  final SessionModel? sessionModel;
   LiveSessionBottomBar(
       {this.tabController,
       this.onTakePhoto,
@@ -33,9 +33,9 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
       CustomAnimationControl.STOP;
   @override
   Widget build(BuildContext context) {
-    widget.tabController.addListener(() {
+    widget.tabController!.addListener(() {
       setState(() {
-        if (widget.tabController.index == 0) {
+        if (widget.tabController!.index == 0) {
           customAnimationControlTabBar = CustomAnimationControl.PLAY_REVERSE;
           customAnimationControlCamera = CustomAnimationControl.STOP;
         } else {
@@ -133,13 +133,16 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
                                   child: Align(
                                     alignment: Alignment.centerLeft,
                                     child: GalleryIcon(
-                                        galleryBloc: widget.galleryBloc,
-                                        sessionModel: widget.sessionModel),
+                                        galleryBloc:
+                                            widget.galleryBloc as GalleryBloc,
+                                        sessionModel: widget.sessionModel
+                                            as SessionModel),
                                   ),
                                 ),
                                 Align(
                                   alignment: Alignment.center,
                                   child: CircleButton(onTakePhoto: () {
+                                    print("widget.onTakePhoto() 2");
                                     widget.onTakePhoto();
                                   }, onStartRecording: () {
                                     widget.onStartRecording();
@@ -225,6 +228,7 @@ class _CircleButtonState extends State<CircleButton> {
             animate = true;
             buffer = true;
             widget.onTakePhoto();
+            print("widget.onTakePhoto() 1");
           });
           Timer(Duration(milliseconds: 100), () {
             setState(() {
@@ -250,6 +254,7 @@ class _CircleButtonState extends State<CircleButton> {
             animate = true;
             buffer = true;
             widget.onTakePhoto();
+            print("widget.onTakePhoto() 1 (2)");
           });
           Timer(Duration(milliseconds: 100), () {
             setState(() {
@@ -283,7 +288,8 @@ class GalleryIcon extends StatefulWidget {
   final GalleryBloc galleryBloc;
   final SessionModel sessionModel;
 
-  const GalleryIcon({Key key, this.galleryBloc, this.sessionModel})
+  const GalleryIcon(
+      {Key? key, required this.galleryBloc, required this.sessionModel})
       : super(key: key);
   @override
   _GalleryIconState createState() => _GalleryIconState();
@@ -297,9 +303,10 @@ class _GalleryIconState extends State<GalleryIcon> {
   }
 
   void refresh() {
+    print("id: ${widget.sessionModel.id}");
     Timer(Duration(seconds: 1), () {
       widget.galleryBloc.eventSink.add({
-        GalleryEvent.PhotoCaptured: widget.sessionModel.id
+        GalleryEvent.PhotoCaptured: widget.sessionModel.id as int
       }); // This does not run on very first instance
     });
   }
@@ -325,7 +332,7 @@ class _GalleryIconState extends State<GalleryIcon> {
                       color: Color.fromRGBO(255, 255, 255, 0.2),
                       image: DecorationImage(
                         fit: BoxFit.cover,
-                        image: FileImage(snapshot.data),
+                        image: FileImage(snapshot.data as File),
                       ),
                     )));
           } else {

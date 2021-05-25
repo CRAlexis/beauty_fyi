@@ -19,7 +19,7 @@ class StartSessionButton extends StatelessWidget {
                     MaterialStateProperty.all(colorStyles['green'])),
             onPressed: () => onPressed(),
             child: Text(
-              "Start session",
+              "Start or resume session",
               style: textStyles['button_label_white'],
             ),
           ),

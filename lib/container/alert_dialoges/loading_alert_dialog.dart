@@ -1,14 +1,14 @@
 import 'package:flutter/material.dart';
 
 class LoadingAlertDialog {
-  final String message;
-  final BuildContext context;
+  final String? message;
+  final BuildContext? context;
   LoadingAlertDialog({this.message, this.context});
 
   Future<void> show() async {
     return showDialog(
         barrierDismissible: false,
-        context: context,
+        context: context!,
         builder: (BuildContext context) {
           return AlertDialog(
               content: Container(
@@ -17,7 +17,7 @@ class LoadingAlertDialog {
                     alignment: Alignment.center,
                     child: Column(
                       children: [
-                        Text(message),
+                        Text(message!),
                         SizedBox(
                           height: 20,
                         ),
@@ -33,6 +33,6 @@ class LoadingAlertDialog {
   }
 
   pop() {
-    Navigator.of(context).pop();
+    Navigator.of(context!).pop();
   }
 }

@@ -5,7 +5,7 @@ import 'package:beauty_fyi/models/session_model.dart';
 import 'package:flutter/material.dart';
 
 class NotesSection extends StatefulWidget {
-  final SessionModel sessionModel;
+  final SessionModel? sessionModel;
   NotesSection({this.sessionModel});
   @override
   _NotesSectionState createState() => _NotesSectionState();
@@ -14,19 +14,19 @@ class NotesSection extends StatefulWidget {
 class _NotesSectionState extends State<NotesSection> {
   final TextEditingController textAreaController = TextEditingController();
   String sessionNotesValue = "";
-  Timer timer;
+  late Timer timer;
   @override
   void dispose() {
     super.dispose();
-    widget.sessionModel.setNotes = sessionNotesValue;
-    widget.sessionModel.updateSession(widget.sessionModel);
+    widget.sessionModel!.setNotes = sessionNotesValue;
+    widget.sessionModel!.updateSession(widget.sessionModel!);
     try {
       timer.cancel();
     } catch (e) {}
   }
 
   Widget build(BuildContext context) {
-    textAreaController.text = widget.sessionModel.notes;
+    textAreaController.text = widget.sessionModel!.notes!;
     return Container(
       padding: EdgeInsets.symmetric(vertical: 60, horizontal: 20),
       child: SingleChildScrollView(
@@ -39,17 +39,15 @@ class _NotesSectionState extends State<NotesSection> {
               labelText: "",
               textInputType: TextInputType.name,
               defaultTextAreaController: textAreaController,
-              onSaved: (String value) {
-                sessionNotesValue = value;
-              },
+              onSaved: (String? value) {},
               onChanged: (String value) {
                 sessionNotesValue = value;
                 try {
                   timer.cancel();
                 } catch (e) {}
                 timer = new Timer(Duration(seconds: 5), () {
-                  widget.sessionModel.setNotes = sessionNotesValue;
-                  widget.sessionModel.updateSession(widget.sessionModel);
+                  widget.sessionModel!.setNotes = sessionNotesValue;
+                  widget.sessionModel!.updateSession(widget.sessionModel!);
                 });
               },
               disableTextFields: false,

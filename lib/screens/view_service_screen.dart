@@ -1,3 +1,4 @@
+import 'dart:developer';
 import 'dart:io';
 
 import 'package:beauty_fyi/container/alert_dialoges/are_you_sure_alert_dialog.dart';
@@ -10,35 +11,55 @@ import 'package:beauty_fyi/container/view_service/tab_card.dart';
 import 'package:beauty_fyi/models/datetime_model.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
+import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class ViewServiceScreen extends StatefulWidget {
   final args;
-  const ViewServiceScreen({Key key, this.args}) : super(key: key);
+  const ViewServiceScreen({Key? key, this.args}) : super(key: key);
   @override
   _ViewServiceScreenState createState() => _ViewServiceScreenState();
 }
 
 class _ViewServiceScreenState extends State<ViewServiceScreen> {
-  Future service;
-  String serviceName;
+  late final ServiceModel serviceModel;
+  String? serviceName;
+  ScrollController _pageScrollController = ScrollController();
+  double elevation = 0;
   @override
   void initState() {
     super.initState();
-    service = fetchService(id: widget.args['id']);
+    // service = fetchService(id: widget.args['id']);
+    serviceModel = widget.args['sessionModel'];
+    _pageScrollController.addListener(_scrollListener);
   }
 
-  void refreshFuture() {
-    service = fetchService(id: widget.args['id']);
+  @override
+  void dispose() {
+    super.dispose();
+    _pageScrollController.dispose();
   }
 
-  void newSession({SessionModel sessionModel}) async {
+  _scrollListener() {
+    if (_pageScrollController.position.pixels > 50) {
+      setState(() {
+        elevation = 20;
+      });
+    } else {
+      setState(() {
+        elevation = 0;
+      });
+    }
+  }
+
+  void newSession({required SessionModel sessionModel}) async {
     final result =
         await ClientListAlertDialog(context: context, onConfirm: () {}).show();
-    if (result != null) {
-      print(result.values.first);
+    if (result?.values.first != null) {
+      print("result $result");
+      print(result?.values.first);
       await DateTimeModel(className: 'countdown').removeDateTime();
-      sessionModel.setClientId = result.values.first;
+      sessionModel.setClientId = result?.values.first as int;
       int sessionId = await sessionModel.startSession(sessionModel);
       sessionModel.setSessionId = sessionId;
       Navigator.pushNamed(context, "/live-session", arguments: {
@@ -49,11 +70,9 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
 
   void navigateToSessionPage() async {
     try {
-      print("args ${widget.args['id']}");
-
       SessionModel sessionModel = SessionModel(
           clientId: null,
-          serviceId: widget.args['id'],
+          serviceId: serviceModel.id,
           dateTime: DateTime.now(),
           notes: "",
           active: true,
@@ -91,7 +110,7 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
         appBar: CustomAppBar(
           focused: true,
           transparent: false,
-          titleText: serviceName != null ? serviceName : "Beauty-fyi",
+          titleText: serviceModel.serviceName,
           leftIcon: Icons.arrow_back,
           rightIcon: Icons.more_vert,
           leftIconClicked: () {
@@ -99,33 +118,76 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
           },
           rightIconClicked: () {},
           automaticallyImplyLeading: false,
-          centerTitle: false,
+          centerTitle: true,
+          elevation: elevation,
         ),
-        body: FutureBuilder(
-            future: service,
-            builder: (context, snapshot) {
-              if (snapshot.hasData) {
-                serviceName = snapshot.data['service_name'];
-                return Stack(
-                  children: [
-                    Container(
-                        height: double.infinity,
-                        child: SingleChildScrollView(
-                            physics: ClampingScrollPhysics(),
-                            padding: EdgeInsets.symmetric(
-                              horizontal: 10.0,
-                              vertical: 20.0,
-                            ),
-                            child: Column(children: [
-                              ImageAndNameCard(
-                                  serviceImage:
-                                      File(snapshot.data['service_image']),
-                                  serviceName: snapshot.data['service_name'],
+        body: Stack(
+          children: [
+            Container(
+                height: double.infinity,
+                child: SingleChildScrollView(
+                    controller: _pageScrollController,
+                    physics: ScrollPhysics(),
+                    child: Column(children: [
+                      _serviceScreenHeader(
+                          context: context, serviceData: serviceModel),
+                      TabCard(
+                        serviceDescription:
+                            serviceModel.serviceDescription as String,
+                        serviceId: serviceModel.id as int,
+                      ),
+                    ]))),
+            StartSessionButton(
+              onPressed: () {
+                navigateToSessionPage();
+              },
+            )
+          ],
+        ));
+  }
+}
+
+Widget _serviceScreenHeader(
+    {required BuildContext context, required ServiceModel serviceData}) {
+  File serviceImage = serviceData.imageSrc as File;
+  return Stack(
+    alignment: Alignment.topCenter,
+    children: [
+      Container(
+        height: MediaQuery.of(context).size.height / 7,
+        color: colorStyles['blue'],
+      ),
+      Container(
+          padding: EdgeInsets.only(top: 0),
+          child: Card(
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(
+                    MediaQuery.of(context).size.height / 8),
+              ),
+              elevation: 5,
+              child: CircleAvatar(
+                radius: MediaQuery.of(context).size.height / 8,
+                backgroundColor: Colors.white,
+                child: CircleAvatar(
+                  radius: MediaQuery.of(context).size.height / 9,
+                  backgroundColor: colorStyles['blue'],
+                  backgroundImage: serviceImage.existsSync()
+                      ? FileImage(serviceImage)
+                      : null,
+                ),
+              ))),
+    ],
+  );
+}
+
+/*
+ImageAndNameCard(
+                                  serviceImage: serviceData.imageSrc,
+                                  serviceName: serviceData.serviceName,
                                   onEdit: () {
                                     Navigator.pushNamed(context, "/add-service",
-                                        arguments: {
-                                          'id': snapshot.data['id']
-                                        }).then((value) {
+                                            arguments: {'id': serviceData.id})
+                                        .then((value) {
                                       refreshFuture();
                                     });
                                   },
@@ -141,8 +203,7 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
                                       },
                                       onRightButton: () async {
                                         try {
-                                          await ServiceModel(
-                                                  id: snapshot.data['id'])
+                                          await ServiceModel(id: serviceData.id)
                                               .deleteService();
                                           Navigator.of(context).pop();
                                           Navigator.of(context).pop();
@@ -159,32 +220,9 @@ class _ViewServiceScreenState extends State<ViewServiceScreen> {
                                       },
                                     ).show();
                                   }),
-                              TabCard(
-                                serviceDescription:
-                                    snapshot.data['service_description'],
-                                serviceId: widget.args['id'],
-                              ),
+
+                                  
                               SizedBox(
                                 height: 100,
                               ),
-                            ]))),
-                    StartSessionButton(
-                      onPressed: () {
-                        navigateToSessionPage();
-                      },
-                    )
-                  ],
-                );
-              } else {
-                return Text(
-                    ""); // probably error message, then return them back to homescreen
-              }
-            }));
-  }
-}
-
-Future<Map<String, dynamic>> fetchService({id}) async {
-  final serviceModel = new ServiceModel(id: id);
-  print("refreshing future");
-  return await serviceModel.readService();
-}
+*/

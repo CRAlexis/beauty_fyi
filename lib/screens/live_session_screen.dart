@@ -16,36 +16,36 @@ import 'package:path_provider/path_provider.dart';
 
 class LiveSessionScreen extends StatefulWidget {
   final args;
-  const LiveSessionScreen({Key key, this.args}) : super(key: key);
+  const LiveSessionScreen({Key? key, this.args}) : super(key: key);
   @override
   _LiveSessionScreenState createState() => _LiveSessionScreenState();
 }
 
 class _LiveSessionScreenState extends State<LiveSessionScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  TabController tabController;
-  CameraDescription camera;
-  CameraController cameraController;
-  Future<void> initialiseCameraControllerFuture;
-  Timer processFinishedTimer;
-  Timer sessionFinishedTimer;
+  TabController? tabController;
+  late CameraDescription camera;
+  CameraController? cameraController;
+  Future<void>? initialiseCameraControllerFuture;
+  late Timer processFinishedTimer;
+  late Timer sessionFinishedTimer;
   bool displayCamera = true;
-  int cameraIndex = 0;
-  String videoFileName;
+  int? cameraIndex = 0;
+  String? videoFileName;
   final GalleryBloc _galleryBloc = GalleryBloc();
   List<Color> backgroundColors = [
-    colorStyles['dark_purple'],
-    colorStyles['light_purple'],
-    colorStyles['blue'],
-    colorStyles['green']
+    colorStyles['dark_purple'] as Color,
+    colorStyles['light_purple'] as Color,
+    colorStyles['blue'] as Color,
+    colorStyles['green'] as Color
   ];
 
   @override
   void initState() {
     super.initState();
-    WidgetsBinding.instance.addObserver(this);
+    WidgetsBinding.instance!.addObserver(this);
     tabController = TabController(length: 3, vsync: this);
-    tabController.index = 1;
+    tabController!.index = 1;
     initCameras(index: cameraIndex);
   }
 
@@ -58,7 +58,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
         break;
       case 'AppLifecycleState.resumed':
         initCameras(index: cameraIndex);
-        if (tabController.index == 0) tabController.index = 1;
+        if (tabController!.index == 0) tabController!.index = 1;
         break;
       default:
     }
@@ -66,9 +66,9 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
   @override
   void dispose() {
-    tabController.dispose();
+    tabController!.dispose();
 
-    WidgetsBinding.instance.removeObserver(this);
+    WidgetsBinding.instance!.removeObserver(this);
     _galleryBloc.dipose();
     try {
       processFinishedTimer.cancel();
@@ -80,7 +80,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
   Future<void> disposeCameras() async {
     try {
       cameraIndex = null;
-      await cameraController.dispose();
+      await cameraController!.dispose();
       return;
     } catch (e) {
       print(e);
@@ -94,23 +94,23 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     // Get a specific camera from the list of available cameras.
     camera = cameras[index];
     cameraController = CameraController(camera, ResolutionPreset.max);
-    initialiseCameraControllerFuture = cameraController.initialize();
+    initialiseCameraControllerFuture = cameraController!.initialize();
     return;
   }
 
   void sessionFinished() {
     backgroundColors = [
-      colorStyles['darker_green'],
-      colorStyles['green'],
-      colorStyles['blue'],
-      colorStyles['green']
+      colorStyles['darker_green'] as Color,
+      colorStyles['green'] as Color,
+      colorStyles['blue'] as Color,
+      colorStyles['green'] as Color
     ];
   }
 
   Widget build(BuildContext context) {
-    tabController.addListener(() {
+    tabController!.addListener(() {
       setState(() {
-        if (tabController.index == 0) {
+        if (tabController!.index == 0) {
           displayCamera = true;
         } else {
           displayCamera = false;
@@ -119,8 +119,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
     });
     return new WillPopScope(
         onWillPop: () async {
-          if (tabController.index == 0) {
-            tabController.animateTo(1,
+          if (tabController!.index == 0) {
+            tabController!.animateTo(1,
                 duration: Duration(milliseconds: 400),
                 curve: Curves.easeOutCirc);
             return Future.value(false);
@@ -138,8 +138,8 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                 leftIcon: Icons.arrow_back,
                 rightIcon: null,
                 leftIconClicked: () async {
-                  if (tabController.index == 0) {
-                    tabController.animateTo(1,
+                  if (tabController!.index == 0) {
+                    tabController!.animateTo(1,
                         duration: Duration(milliseconds: 400),
                         curve: Curves.easeOutCirc);
                   } else {
@@ -156,7 +156,7 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                 height: double.infinity,
                 decoration: BoxDecoration(
                     gradient: LinearGradient(
-                        colors: backgroundColors,
+                        colors: backgroundColors as List<Color>,
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight)),
                 child: Stack(alignment: Alignment.topCenter, children: <Widget>[
@@ -185,20 +185,20 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                             startingNextProcess: () {
                               setState(() {
                                 backgroundColors = [
-                                  colorStyles['blue'],
-                                  colorStyles['cream'],
-                                  colorStyles['green'],
-                                  colorStyles['cream']
+                                  colorStyles['blue'] as Color,
+                                  colorStyles['cream'] as Color,
+                                  colorStyles['green'] as Color,
+                                  colorStyles['cream'] as Color
                                 ];
                               });
                               processFinishedTimer =
                                   Timer(Duration(milliseconds: 1000), () {
                                 setState(() {
                                   backgroundColors = [
-                                    colorStyles['dark_purple'],
-                                    colorStyles['light_purple'],
-                                    colorStyles['blue'],
-                                    colorStyles['green']
+                                    colorStyles['dark_purple'] as Color,
+                                    colorStyles['light_purple'] as Color,
+                                    colorStyles['blue'] as Color,
+                                    colorStyles['green'] as Color
                                   ];
                                 });
                               });
@@ -222,8 +222,10 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                       },
                       onTakePhoto: () async {
                         try {
+                          print("take Photo");
                           takePhoto(
-                              cameraController: cameraController,
+                              cameraController:
+                                  cameraController as CameraController,
                               galleryBloc: _galleryBloc,
                               sessionModel: widget.args['sessionModel']);
                         } catch (e) {
@@ -253,15 +255,17 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 }
 
 void takePhoto(
-    {cameraController,
-    SessionModel sessionModel,
-    GalleryBloc galleryBloc,
+    {required CameraController cameraController,
+    required SessionModel sessionModel,
+    required GalleryBloc galleryBloc,
     clientId}) async {
   try {
+    print("saving photo...");
     final p = await getTemporaryDirectory();
     final String name = DateTime.now().toString().replaceAll(" ", "");
     final path = "${p.path}/$name.png";
-    await cameraController.takePicture(path);
+    XFile file = await cameraController.takePicture();
+    file.saveTo(path);
     final serviceMedia = ServiceMedia(
         sessionId: sessionModel.id,
         serviceId: sessionModel.serviceId,
@@ -269,15 +273,17 @@ void takePhoto(
         filePath: path,
         userId: sessionModel.clientId);
     await serviceMedia.insertServiceMedia(serviceMedia);
-    galleryBloc.eventSink.add({GalleryEvent.PhotoCaptured: 1});
+    galleryBloc.eventSink
+        .add({GalleryEvent.PhotoCaptured: sessionModel.id as int});
   } catch (error) {
+    print(error);
     return Future.error(error, StackTrace.fromString(""));
   }
 }
 
 void startRecording(
-    {cameraController,
-    SessionModel sessionModel,
+    {required cameraController,
+    SessionModel? sessionModel,
     galleryBloc,
     videoFileName}) async {
   final p = await getTemporaryDirectory();
@@ -287,8 +293,8 @@ void startRecording(
 }
 
 void stopRecording(
-    {cameraController,
-    SessionModel sessionModel,
+    {required cameraController,
+    required SessionModel sessionModel,
     galleryBloc,
     videoFileName}) async {
   try {

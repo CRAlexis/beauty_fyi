@@ -7,14 +7,14 @@ import 'package:video_player/video_player.dart';
 
 class FullScreenMediaScreen extends StatefulWidget {
   final args;
-  const FullScreenMediaScreen({Key key, this.args}) : super(key: key);
+  const FullScreenMediaScreen({Key? key, this.args}) : super(key: key);
   @override
   _FullScreenMediaScreenState createState() => _FullScreenMediaScreenState();
 }
 
 class _FullScreenMediaScreenState extends State<FullScreenMediaScreen> {
-  VideoPlayerController _videoPlayerController;
-  Future<void> _initialiseFuturePlayer;
+  late VideoPlayerController _videoPlayerController;
+  Future<void>? _initialiseFuturePlayer;
   final FullScreenMediaBloc _fullScreenMediaBloc = FullScreenMediaBloc();
 
   @override
@@ -96,8 +96,8 @@ class _FullScreenMediaScreenState extends State<FullScreenMediaScreen> {
 }
 
 class _Overlay extends StatefulWidget {
-  final String type;
-  final FullScreenMediaBloc fullScreenMediaBloc;
+  final String? type;
+  final FullScreenMediaBloc? fullScreenMediaBloc;
   final onShareImage;
   _Overlay({this.type, this.fullScreenMediaBloc, this.onShareImage});
   @override
@@ -105,18 +105,18 @@ class _Overlay extends StatefulWidget {
 }
 
 class _OverlayState extends State<_Overlay> {
-  CustomAnimationControl _customAnimationControl = CustomAnimationControl.PLAY;
-  Future<bool> isVideoPlaying;
+  CustomAnimationControl _customAnimationControl = CustomAnimationControl.play;
+  Future<bool>? isVideoPlaying;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
         initialData: true,
-        stream: widget.fullScreenMediaBloc.overlayStateStream,
+        stream: widget.fullScreenMediaBloc!.overlayStateStream,
         builder: (context, snapshot) {
-          snapshot.data
-              ? _customAnimationControl = CustomAnimationControl.PLAY
+          snapshot.data as bool
+              ? _customAnimationControl = CustomAnimationControl.play
               : _customAnimationControl =
-                  CustomAnimationControl.PLAY_REVERSE_FROM_END;
+                  CustomAnimationControl.playReverseFromEnd;
           return CustomAnimation<double>(
               duration: Duration(milliseconds: 200),
               control: _customAnimationControl,
@@ -134,13 +134,13 @@ class _OverlayState extends State<_Overlay> {
                                   alignment: Alignment.center,
                                   child: StreamBuilder(
                                     initialData: true,
-                                    stream: widget.fullScreenMediaBloc
+                                    stream: widget.fullScreenMediaBloc!
                                         .videoPlayPauseStateStream,
                                     builder: (context, snapshot) {
                                       if (snapshot.hasData) {
                                         return IconButton(
                                           icon: Icon(
-                                            snapshot.data
+                                            snapshot.data as bool
                                                 ? Icons.pause
                                                 : Icons.play_arrow,
                                             color: Colors.white,
@@ -150,7 +150,7 @@ class _OverlayState extends State<_Overlay> {
                                                 7,
                                           ),
                                           onPressed: () => widget
-                                              .fullScreenMediaBloc.eventSink
+                                              .fullScreenMediaBloc!.eventSink
                                               .add(FullScreenMediaEvent
                                                   .VideoPlayPauseState),
                                         );

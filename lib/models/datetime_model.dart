@@ -2,8 +2,8 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
 class DateTimeModel {
-  DateTime dateTime;
-  final String className;
+  DateTime? dateTime;
+  final String? className;
   DateTimeModel({this.dateTime, this.className});
 
   Map<String, dynamic> toMap() {
@@ -15,7 +15,7 @@ class DateTimeModel {
   }
 
   Future<bool> insertDateTime(
-      {DateTimeModel dateTimeModel, bool overwrite}) async {
+      {DateTimeModel? dateTimeModel, required bool overwrite}) async {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
@@ -24,7 +24,7 @@ class DateTimeModel {
       if (overwrite || query.length == 0) {
         await db.delete('datetimes',
             where: "class_name = ?", whereArgs: [className]);
-        int query = await db.insert('datetimes', dateTimeModel.toMap());
+        int query = await db.insert('datetimes', dateTimeModel!.toMap());
         return query == 1;
       }
       return false;

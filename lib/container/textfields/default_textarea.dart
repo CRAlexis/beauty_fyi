@@ -3,17 +3,17 @@ import 'package:beauty_fyi/styles/textfields.dart';
 import 'package:flutter/material.dart';
 
 class DefaultTextArea extends StatelessWidget {
-  final TextEditingController defaultTextAreaController;
-  final String invalidMessage;
-  final String hintText;
-  final String labelText;
-  final ValueSetter<String> onSaved;
-  final ValueSetter<String> onChanged;
-  final TextInputType textInputType;
-  final IconData iconData;
-  final bool disableTextFields;
+  final TextEditingController? defaultTextAreaController;
+  final String? invalidMessage;
+  final String? hintText;
+  final String? labelText;
+  final ValueSetter<String?>? onSaved;
+  final ValueSetter<String>? onChanged;
+  final TextInputType? textInputType;
+  final IconData? iconData;
+  final bool? disableTextFields;
   final int stylingIndex;
-  final int maxLines;
+  final int? maxLines;
   final int maxLength;
   DefaultTextArea(
       {this.defaultTextAreaController,
@@ -46,7 +46,7 @@ class DefaultTextArea extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(bottom: 10),
           child: Text(
-            labelText,
+            labelText!,
             style: textStyles[textFieldStylingListHolder[stylingIndex][1]],
           ),
         ),
@@ -58,13 +58,13 @@ class DefaultTextArea extends StatelessWidget {
             maxLength: maxLength,
             maxLines: maxLines,
             keyboardType: TextInputType.multiline,
-            enabled: !disableTextFields,
+            enabled: !disableTextFields!,
             controller: defaultTextAreaController,
             onSaved: (newValue) {
-              onSaved(newValue);
+              onSaved!(newValue);
             },
             onChanged: (value) {
-              onChanged(value);
+              onChanged!(value);
             },
             validator: (value) {
               return null;

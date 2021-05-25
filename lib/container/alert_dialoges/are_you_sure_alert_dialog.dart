@@ -1,21 +1,21 @@
 import 'package:flutter/material.dart';
 
 class AreYouSureAlertDialog {
-  final String message;
-  final String leftButtonText;
-  final String rightButtonText;
+  final String? message;
+  final String? leftButtonText;
+  final String? rightButtonText;
   final onLeftButton;
   final onRightButton;
   final BuildContext context;
   final bool dismissible;
   const AreYouSureAlertDialog(
-      {Key key,
+      {Key? key,
       this.message,
       this.leftButtonText,
       this.rightButtonText,
       this.onLeftButton,
       this.onRightButton,
-      @required this.context,
+      required this.context,
       this.dismissible = false});
 
   Future<void> show() async {
@@ -24,15 +24,15 @@ class AreYouSureAlertDialog {
         context: context,
         builder: (BuildContext context) {
           return AlertDialog(
-            content: Text(message),
+            content: Text(message!),
             actions: [
               TextButton(
-                  child: Text(leftButtonText),
+                  child: Text(leftButtonText!),
                   onPressed: () {
                     onLeftButton();
                   }),
               TextButton(
-                  child: Text(rightButtonText),
+                  child: Text(rightButtonText!),
                   onPressed: () {
                     onRightButton();
                   }),

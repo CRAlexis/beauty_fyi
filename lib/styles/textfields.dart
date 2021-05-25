@@ -43,10 +43,10 @@ Map<String, BoxDecoration> textfieldStyles = {
 };
 
 Map<String, InputDecoration> textfieldInputDecoration(
-        {IconData iconData,
-        String hintText,
-        String hintTextStyle,
-        String suffixText}) =>
+        {IconData? iconData,
+        String? hintText,
+        String? hintTextStyle,
+        String? suffixText}) =>
     {
       "white_text_decoration": InputDecoration(
         errorStyle: TextStyle(),
@@ -58,7 +58,7 @@ Map<String, InputDecoration> textfieldInputDecoration(
           size: double.parse('30'),
         ),
         hintText: hintText,
-        hintStyle: textStyles[hintTextStyle],
+        hintStyle: textStyles[hintTextStyle!],
         suffixText: suffixText,
       ),
       "black_text_decoration": InputDecoration(

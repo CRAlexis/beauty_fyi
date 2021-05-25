@@ -6,17 +6,17 @@ import 'package:flutter/material.dart';
 
 class ClientListAlertDialog {
   final onConfirm;
-  final BuildContext context;
+  final BuildContext? context;
   ClientListAlertDialog({this.onConfirm, this.context}) {
     clients = ClientModel().readClients();
   }
-  Future<List<ClientModel>> clients;
+  Future<List<ClientModel>>? clients;
 
-  Future<Map<String, int>> show() async {
-    int clientId;
-    return showDialog(
+  Future<Map<String, int?>?> show() async {
+    int? clientId;
+    return await showDialog(
         barrierDismissible: true,
-        context: context,
+        context: context!,
         builder: (BuildContext context) {
           return AlertDialog(
               contentPadding: EdgeInsets.zero,
@@ -47,28 +47,27 @@ class ClientListAlertDialog {
                                   padding: EdgeInsets.only(bottom: 40),
                                   physics: BouncingScrollPhysics(),
                                   shrinkWrap: true,
-                                  itemCount: snapshot.data.length,
+                                  itemCount: snapshot.data!.length,
                                   itemBuilder: (context, index) {
                                     return GestureDetector(
                                         onTap: () {
-                                          print("here");
                                           setState(() => clientId !=
-                                                  snapshot.data[index].id
+                                                  snapshot.data![index].id
                                               ? clientId =
-                                                  snapshot.data[index].id
+                                                  snapshot.data![index].id
                                               : clientId = null);
                                           print(" clientId $clientId");
                                         },
                                         child: Container(
                                             decoration: BoxDecoration(
                                                 color: clientId ==
-                                                        snapshot.data[index].id
+                                                        snapshot.data![index].id
                                                     ? colorStyles['green']
                                                     : Colors.white),
                                             child: Container(
                                               padding: EdgeInsets.all(15),
                                               child: Text(
-                                                  "${snapshot.data[index].clientFirstName} ${snapshot.data[index].clientLastName}"),
+                                                  "${snapshot.data![index].clientFirstName} ${snapshot.data![index].clientLastName}"),
                                             )));
                                   },
                                 );
@@ -112,6 +111,6 @@ class ClientListAlertDialog {
   }
 
   pop() {
-    Navigator.of(context).pop();
+    Navigator.of(context!).pop();
   }
 }

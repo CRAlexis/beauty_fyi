@@ -12,8 +12,8 @@ class LandingScreen extends StatelessWidget {
   final bool disableTextFields = false;
   @override
   Widget build(BuildContext context) {
-    String emailAddress;
-    String password;
+    String? emailAddress;
+    String? password;
     return Scaffold(
         appBar: false
             ? AppBar(
@@ -31,10 +31,10 @@ class LandingScreen extends StatelessWidget {
                           begin: Alignment.topRight,
                           end: Alignment.bottomLeft,
                           colors: [
-                        colorStyles['dark_purple'],
-                        colorStyles['light_purple'],
-                        colorStyles['blue'],
-                        colorStyles['green']
+                        colorStyles['dark_purple']!,
+                        colorStyles['light_purple']!,
+                        colorStyles['blue']!,
+                        colorStyles['green']!
                       ]))),
               Container(
                   height: double.infinity,
@@ -64,7 +64,7 @@ class LandingScreen extends StatelessWidget {
                                 disableTextFields: disableTextFields,
                                 emailTextFieldController:
                                     emailTextFieldController,
-                                onSaved: (String value) {
+                                onSaved: (String? value) {
                                   emailAddress = value;
                                 },
                               ),

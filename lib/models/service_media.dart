@@ -2,12 +2,12 @@ import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
 
 class ServiceMedia {
-  final int id;
-  final int sessionId;
-  final int serviceId;
-  final int userId;
-  final String fileType;
-  final String filePath;
+  final int? id;
+  final int? sessionId;
+  final int? serviceId;
+  final int? userId;
+  final String? fileType;
+  final String? filePath;
   ServiceMedia(
       {this.id,
       this.sessionId,
@@ -34,6 +34,7 @@ class ServiceMedia {
           conflictAlgorithm: ConflictAlgorithm.replace);
       return query == 1;
     } catch (error) {
+      print(error);
       return Future.error(error, StackTrace.fromString(""));
     }
   }

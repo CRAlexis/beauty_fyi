@@ -4,20 +4,20 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 class DefaultTextField extends StatelessWidget {
-  final TextEditingController defaultTextFieldController;
-  final String invalidMessage;
-  final String hintText;
-  final String labelText;
-  final ValueSetter<String> onSaved;
-  final ValueSetter<String> onChanged;
-  final TextInputType textInputType;
-  final IconData iconData;
-  final bool disableTextFields;
+  final TextEditingController? defaultTextFieldController;
+  final String? invalidMessage;
+  final String? hintText;
+  final String? labelText;
+  final ValueSetter<String?>? onSaved;
+  final ValueSetter<String>? onChanged;
+  final TextInputType? textInputType;
+  final IconData? iconData;
+  final bool? disableTextFields;
   final int stylingIndex;
   final String regex;
   final double height;
   final double labelPadding;
-  final String suffixText;
+  final String? suffixText;
   final int validationStringLength;
   final int maxLength;
   DefaultTextField(
@@ -40,7 +40,7 @@ class DefaultTextField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    String validationErrorMessage = invalidMessage;
+    String? validationErrorMessage = invalidMessage;
     List textFieldStylingListHolder = [
       [
         'blue_textfield',
@@ -77,7 +77,7 @@ class DefaultTextField extends StatelessWidget {
         Padding(
           padding: EdgeInsets.only(bottom: labelPadding),
           child: Text(
-            labelText,
+            labelText!,
             style: textStyles[textFieldStylingListHolder[stylingIndex][4]],
           ),
         ),
@@ -88,14 +88,14 @@ class DefaultTextField extends StatelessWidget {
           height: height,
           child: TextFormField(
             maxLength: maxLength,
-            enabled: !disableTextFields,
+            enabled: !disableTextFields!,
             keyboardType: textInputType,
             controller: defaultTextFieldController,
             onSaved: (newValue) {
-              onSaved(newValue);
+              onSaved!(newValue);
             },
             onChanged: (value) {
-              onChanged(value);
+              onChanged!(value);
             },
             inputFormatters: textInputType == TextInputType.number
                 ? <TextInputFormatter>[

@@ -3,9 +3,9 @@ import 'package:beauty_fyi/styles/textfields.dart';
 import 'package:flutter/material.dart';
 
 class EmailTextField extends StatelessWidget {
-  final TextEditingController emailTextFieldController;
-  final ValueSetter<String> onSaved;
-  final bool disableTextFields;
+  final TextEditingController? emailTextFieldController;
+  final ValueSetter<String?>? onSaved;
+  final bool? disableTextFields;
   EmailTextField(
       {this.emailTextFieldController, this.onSaved, this.disableTextFields});
 
@@ -27,11 +27,11 @@ class EmailTextField extends StatelessWidget {
           decoration: textfieldStyles['blue_textfield'],
           height: 50.0,
           child: TextFormField(
-            enabled: !disableTextFields,
+            enabled: !disableTextFields!,
             keyboardType: TextInputType.emailAddress,
             controller: emailTextFieldController,
             onSaved: (newValue) {
-              onSaved(newValue);
+              onSaved!(newValue);
             },
             onChanged: (value) {},
             validator: (value) {

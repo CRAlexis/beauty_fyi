@@ -2,17 +2,18 @@ import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
-  final String titleText;
-  final IconData leftIcon;
-  final IconData rightIcon;
-  final VoidCallback leftIconClicked;
-  final VoidCallback rightIconClicked;
+  final String? titleText;
+  final IconData? leftIcon;
+  final IconData? rightIcon;
+  final VoidCallback? leftIconClicked;
+  final VoidCallback? rightIconClicked;
   final bool automaticallyImplyLeading;
-  final bool transparent;
+  final bool? transparent;
   final bool dark;
-  final bool focused;
+  final bool? focused;
   final bool centerTitle;
-  final double height;
+  final double? height;
+  final double elevation;
   CustomAppBar(
       {this.titleText = "Beauty-FYI",
       this.leftIcon,
@@ -24,50 +25,52 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       this.dark = false,
       this.focused,
       this.centerTitle = true,
-      this.height});
+      this.height,
+      this.elevation = 10});
   @override
-  Size get preferredSize => const Size.fromHeight(55);
+  Size get preferredSize => const Size.fromHeight(45);
   Widget build(BuildContext context) {
     return AnimatedOpacity(
-        opacity: this.focused ? 1 : 0.3,
+        opacity: this.focused! ? 1 : 0.3,
         duration: Duration(milliseconds: 300),
         child: new AppBar(
           brightness: this.dark ? Brightness.dark : Brightness.light,
           backgroundColor: this.dark
               ? Colors.black
-              : this.transparent
+              : this.transparent!
                   ? Colors.transparent
                   : Colors.black,
-          elevation: this.transparent ? 0 : 10,
+          elevation: this.transparent! ? 0 : this.elevation,
           automaticallyImplyLeading: automaticallyImplyLeading,
           flexibleSpace: Container(
             decoration: BoxDecoration(
-              gradient: this.transparent
+              gradient: this.transparent!
                   ? null
                   : this.dark
                       ? null
                       : LinearGradient(
                           colors: [
-                            colorStyles['dark_purple'],
-                            colorStyles['light_purple'],
-                            colorStyles['blue'],
-                            colorStyles['green']
+                            // colorStyles['dark_purple']!,
+                            // colorStyles['light_purple']!,
+                            colorStyles['blue']!,
+                            colorStyles['blue']!,
+                            // colorStyles['green']!
                           ],
                           // stops: [0.1, 1.0, 0.5],
                         ),
             ),
           ),
           centerTitle: centerTitle,
-          title: Text(titleText, style: TextStyle(color: Colors.white)),
+          title: Text(titleText!, style: TextStyle(color: Colors.white)),
           leading: GestureDetector(
-            onTap: () => leftIconClicked(),
+            onTap: () => leftIconClicked!(),
             child: Icon(
               leftIcon, // add custom icons also
             ),
           ),
           actions: [
             GestureDetector(
-                onTap: () => rightIconClicked(),
+                onTap: () => rightIconClicked!(),
                 child: Container(
                   padding: EdgeInsets.symmetric(horizontal: 20.0),
                   child: Icon(

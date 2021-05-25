@@ -19,13 +19,14 @@ class GalleryBloc {
 
   GalleryBloc() {
     eventStream.listen((Map<GalleryEvent, int> event) async {
+      print("we here");
       final List<ServiceMedia> value = await ServiceMedia().readServiceMedia(
           sql: "session_id = ? AND file_type = ?",
           args: [event.values.first, 'image']);
       /*final List<ServiceMedia> all = await ServiceMedia()
           .readServiceMedia(sql: "session_id = ?", args: [event.values.first]);*/
       if (value.isNotEmpty) {
-        gallerySink.add(File(value.last.filePath));
+        gallerySink.add(File(value.last.filePath!));
       }
     });
   }

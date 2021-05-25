@@ -11,7 +11,7 @@ class ClientsTab extends StatefulWidget {
 }
 
 class _ClientsTabState extends State<ClientsTab> {
-  Future<List<ClientModel>> clients;
+  Future<List<ClientModel>>? clients;
 
   void initState() {
     super.initState();
@@ -40,8 +40,8 @@ class _ClientsTabState extends State<ClientsTab> {
                   end: Alignment.bottomRight,
                   colors: [
                 // colorStyles['blue'],
-                colorStyles['cream'],
-                colorStyles['cream'],
+                colorStyles['cream']!,
+                colorStyles['cream']!,
               ]))),
       Container(
           height: double.infinity,
@@ -51,7 +51,7 @@ class _ClientsTabState extends State<ClientsTab> {
                 builder: (context, clients) {
                   print("client page should have updated");
                   if (!clients.hasData) {
-                    Timer refreshTimer;
+                    late Timer refreshTimer;
                     refreshTimer = Timer(Duration(milliseconds: 500), () {
                       refreshTimer.cancel();
                       refreshFuture();
@@ -61,7 +61,7 @@ class _ClientsTabState extends State<ClientsTab> {
                       child: Text("No clients founds"),
                     );
                   }
-                  if (clients.data.length == 0) {
+                  if (clients.data!.length == 0) {
                     return Align(
                       alignment: Alignment.center,
                       child: GestureDetector(
@@ -77,16 +77,18 @@ class _ClientsTabState extends State<ClientsTab> {
                   return ListView.builder(
                       shrinkWrap: true,
                       physics: BouncingScrollPhysics(),
-                      itemCount: clients.data.length,
+                      itemCount: clients.data!.length,
                       itemBuilder: (context, index) {
                         return GestureDetector(
                             onTap: () => Navigator.pushNamed(
                                     context, '/client-screen', arguments: {
-                                  'clientId': clients.data[index].id,
-                                  'clientName':
-                                      "${clients.data[index].clientFirstName}",
+                                  'clientId': clients.data![index].id,
+                                  'clientFirstName':
+                                      clients.data![index].clientFirstName,
+                                  'clientLastName':
+                                      clients.data![index].clientLastName,
                                   'clientImage':
-                                      clients.data[index].clientImage,
+                                      clients.data![index].clientImage,
                                 }),
                             child: Container(
                                 color: Colors.transparent,
@@ -104,19 +106,19 @@ class _ClientsTabState extends State<ClientsTab> {
                                           radius: 25,
                                           backgroundColor: Colors.grey.shade100,
                                           backgroundImage: File(clients
-                                                      .data[index]
-                                                      .clientImage
+                                                      .data![index]
+                                                      .clientImage!
                                                       .path)
                                                   .existsSync()
                                               ? FileImage(clients
-                                                  .data[index].clientImage)
+                                                  .data![index].clientImage!)
                                               : null,
                                         ),
                                         SizedBox(
                                           width: 15,
                                         ),
                                         Text(
-                                          "${clients.data[index].clientFirstName} ${clients.data[index].clientLastName}",
+                                          "${clients.data![index].clientFirstName} ${clients.data![index].clientLastName}",
                                           style: TextStyle(
                                               color: Colors.grey.shade600,
                                               fontSize: 20),
