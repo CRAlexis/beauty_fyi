@@ -65,7 +65,7 @@ class ServiceModel {
         );
       });
     } catch (e) {
-      return Future.error(e, StackTrace.fromString(""));
+      throw (e);
     }
   }
 

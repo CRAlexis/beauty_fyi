@@ -20,7 +20,6 @@ import 'package:beauty_fyi/screens/view_service_screen.dart';
 import 'package:beauty_fyi/test/change_notifier_widget.dart';
 import 'package:beauty_fyi/test/future_provider_widget.dart';
 import 'package:beauty_fyi/test/provider_widget.dart';
-import 'package:beauty_fyi/test/state_notifier_widget.dart';
 import 'package:beauty_fyi/test/state_provider_widget.dart';
 import 'package:beauty_fyi/test/stream_provider_widget.dart';
 import 'package:flutter/material.dart';
@@ -89,7 +88,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/register-screen',
+      initialRoute: '/test',
       onGenerateRoute: (RouteSettings settings) {
         final routes = <String, WidgetBuilder>{
           '/': (BuildContext context) => LandingScreen(),
@@ -120,7 +119,6 @@ class MyApp extends StatelessWidget {
           '/stream_provider': (BuildContext context) => StreamProviderWidget(),
           '/future_provider': (BuildContext context) => FutureProviderwidget(),
           '/change_notifier': (BuildContext context) => ChangeNotifierWidget(),
-          '/state_notifier': (BuildContext context) => StateNotifierWidget(),
         };
         WidgetBuilder? builder = routes[settings.name!];
         return MaterialPageRoute(

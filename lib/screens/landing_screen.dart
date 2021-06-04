@@ -80,7 +80,6 @@ class LandingScreen extends StatelessWidget {
                               SizedBox(height: 10.0),
                               ActionButton(
                                 buttonText: "login in",
-                                form: loginForm,
                                 onPressed: () {},
                                 disableTextFields: disableTextFields,
                               ),

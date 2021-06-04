@@ -69,7 +69,6 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
                                   ),
                                   ActionButton(
                                     buttonText: "Reset password",
-                                    form: resetPasswordForm,
                                     onPressed: () {},
                                     disableTextFields: disableTextFields,
                                   ),

@@ -117,7 +117,6 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   ),
                   GestureDetector(
                     onTap: () {
-                      print(_currentIndex);
                       _currentIndex != 2
                           ? _currentIndex++
                           : Navigator.pushNamedAndRemoveUntil(

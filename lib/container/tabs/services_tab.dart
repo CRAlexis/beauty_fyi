@@ -1,28 +1,20 @@
 import 'package:beauty_fyi/models/service_model.dart';
+import 'package:beauty_fyi/providers/services_provider.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:beauty_fyi/container/tabs/service_tab/service_card.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class ServicesTab extends StatefulWidget {
+final servicesNotifierProvider =
+    StateNotifierProvider.autoDispose<ServicesNotifier, ServicesState>(
+        (ref) => ServicesNotifier());
+
+class ServicesTab extends ConsumerWidget {
+  final int serviceToFocus = -1;
   @override
-  _ServicesTabState createState() => _ServicesTabState();
-}
-
-class _ServicesTabState extends State<ServicesTab> {
-  int serviceToFocus = 1;
-  late Future<List<ServiceModel>> services;
-  @override
-  void initState() {
-    super.initState();
-    refreshFuture();
-  }
-
-  void refreshFuture() {
-    services = fetchServices();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ScopedReader watch) {
+    final servicesProviderController = watch(servicesNotifierProvider.notifier);
+    final state = watch(servicesNotifierProvider);
     return Stack(
       children: <Widget>[
         Container(
@@ -38,113 +30,84 @@ class _ServicesTabState extends State<ServicesTab> {
                   colorStyles['cream']!,
                 ]))),
         Container(
-          height: double.infinity,
-          child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.symmetric(
-              horizontal: 10.0,
-              vertical: 20.0,
-            ),
-            child: Column(
-              children: <Widget>[
-                FutureBuilder(
-                  future: services,
-                  builder:
-                      (context, AsyncSnapshot<List<ServiceModel>> services) {
-                    if (services.connectionState == ConnectionState.none ||
-                        !services.hasData ||
-                        services.data?.length == 0) {
-                      return AddNewServiceCard(
-                        constrained: true,
-                        refresh: () {
-                          setState(() {});
-                        },
-                      );
-                    }
-                    return ListView.builder(
-                        physics: NeverScrollableScrollPhysics(),
-                        shrinkWrap: true,
-                        itemCount: ((services.data!.length / 2) + 1).floor(),
-                        itemBuilder: (context, index) {
-                          return index == 0
-                              ? Row(
-                                  children: [
-                                    AddNewServiceCard(refresh: () {
-                                      setState(() {
-                                        refreshFuture();
-                                      });
-                                    }),
-                                    ServiceCard(
-                                      serviceModel:
-                                          services.data?[index] as ServiceModel,
-                                      numberOfSessions: 18,
-                                      serviceToFocus: serviceToFocus,
-                                      serviceCardTapped: (serviceId) {
-                                        setState(() {
-                                          setServiceCardFocus(serviceId);
-                                        });
-                                      },
-                                      refresh: () {
-                                        refreshFuture();
-                                      },
-                                    ),
-                                  ],
-                                )
-                              : Row(
-                                  children: [
-                                    ServiceCard(
-                                      serviceModel:
-                                          services.data?[index] as ServiceModel,
-                                      numberOfSessions: 18,
-                                      serviceToFocus: serviceToFocus,
-                                      serviceCardTapped: (serviceId) {
-                                        setState(() {
-                                          setServiceCardFocus(serviceId);
-                                        });
-                                      },
-                                      refresh: () {
-                                        refreshFuture();
-                                      },
-                                    ),
-                                    (index * 2) < services.data!.length
-                                        ? ServiceCard(
-                                            serviceModel: services.data?[index]
-                                                as ServiceModel,
-                                            numberOfSessions: 18,
-                                            serviceToFocus: serviceToFocus,
-                                            serviceCardTapped: (serviceId) {
-                                              setState(() {
-                                                setServiceCardFocus(serviceId);
-                                              });
-                                            },
-                                            refresh: () {
-                                              refreshFuture();
-                                            },
-                                          )
-                                        : Expanded(
-                                            child: AspectRatio(
-                                            aspectRatio: 4 / 5,
-                                          ))
-                                  ],
-                                );
-                        });
-                  },
+            height: double.infinity,
+            child: SingleChildScrollView(
+                physics: AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.symmetric(
+                  horizontal: 10.0,
+                  vertical: 20.0,
                 ),
-              ],
-            ),
-          ),
-        ),
+                child: Column(
+                  children: [
+                    state is ServicesLoading
+                        ? Center(
+                            child: CircularProgressIndicator(),
+                          )
+                        : state is ServicesLoaded
+                            ? ListView.builder(
+                                physics: NeverScrollableScrollPhysics(),
+                                shrinkWrap: true,
+                                itemCount:
+                                    ((state.services.length / 2) + 1).floor(),
+                                itemBuilder: (context, index) {
+                                  return index == 0
+                                      ? Row(
+                                          children: [
+                                            AddNewServiceCard(),
+                                            ServiceCard(
+                                              serviceModel:
+                                                  state.services[index],
+                                              numberOfSessions: 18,
+                                              serviceToFocus: serviceToFocus,
+                                              serviceCardTapped: (serviceId) {},
+                                            ),
+                                          ],
+                                        )
+                                      : Row(
+                                          children: [
+                                            ServiceCard(
+                                              serviceModel:
+                                                  state.services[index],
+                                              serviceToFocus: serviceToFocus,
+                                              serviceCardTapped: (serviceId) {},
+                                            ),
+                                            (index * 2) < state.services.length
+                                                ? ServiceCard(
+                                                    serviceModel:
+                                                        state.services[index],
+                                                    numberOfSessions: 18,
+                                                    serviceToFocus:
+                                                        serviceToFocus,
+                                                    serviceCardTapped:
+                                                        (serviceId) {},
+                                                  )
+                                                : Expanded(
+                                                    child: AspectRatio(
+                                                    aspectRatio: 4 / 5,
+                                                  ))
+                                          ],
+                                        );
+                                })
+                            : Container(),
+                    ProviderListener(
+                      onChange: (context, state) {
+                        if (state is ServicesError)
+                          ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                            content: Text(state.message),
+                            duration: Duration(minutes: 2),
+                            action: SnackBarAction(
+                              label: "refresh",
+                              onPressed: () =>
+                                  {servicesProviderController.getServices()},
+                            ),
+                          ));
+                      },
+                      provider: servicesNotifierProvider,
+                      child: Container(),
+                    ),
+                  ],
+                ))),
       ],
     );
   }
-
-  void setServiceCardFocus(serviceId) {
-    serviceToFocus == serviceId
-        ? serviceToFocus = 0
-        : serviceToFocus = serviceId;
-  }
-}
-
-Future<List<ServiceModel>> fetchServices() async {
-  return await ServiceModel().readServices();
 }
