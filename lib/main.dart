@@ -72,9 +72,9 @@ Future<void> initDatabases() async {
 }
 
 Future<void> deleteAllTables(db) async {
-  // await db.execute("DROP TABLE IF EXISTS services");
+  await db.execute("DROP TABLE IF EXISTS services");
   // await db.execute("DROP TABLE IF EXISTS datetimes");
-  // await db.execute("DROP TABLE IF EXISTS service_media");
+  await db.execute("DROP TABLE IF EXISTS service_media");
   await db.execute("DROP TABLE IF EXISTS sessions");
   // await db.execute("DROP TABLE IF EXISTS clients");
   return;

@@ -44,50 +44,63 @@ class ServicesTab extends ConsumerWidget {
                             child: CircularProgressIndicator(),
                           )
                         : state is ServicesLoaded
-                            ? ListView.builder(
-                                physics: NeverScrollableScrollPhysics(),
-                                shrinkWrap: true,
-                                itemCount:
-                                    ((state.services.length / 2) + 1).floor(),
-                                itemBuilder: (context, index) {
-                                  return index == 0
-                                      ? Row(
-                                          children: [
-                                            AddNewServiceCard(),
-                                            ServiceCard(
-                                              serviceModel:
-                                                  state.services[index],
-                                              numberOfSessions: 18,
-                                              serviceToFocus: serviceToFocus,
-                                              serviceCardTapped: (serviceId) {},
-                                            ),
-                                          ],
-                                        )
-                                      : Row(
-                                          children: [
-                                            ServiceCard(
-                                              serviceModel:
-                                                  state.services[index],
-                                              serviceToFocus: serviceToFocus,
-                                              serviceCardTapped: (serviceId) {},
-                                            ),
-                                            (index * 2) < state.services.length
-                                                ? ServiceCard(
-                                                    serviceModel:
-                                                        state.services[index],
-                                                    numberOfSessions: 18,
-                                                    serviceToFocus:
-                                                        serviceToFocus,
-                                                    serviceCardTapped:
-                                                        (serviceId) {},
-                                                  )
-                                                : Expanded(
-                                                    child: AspectRatio(
-                                                    aspectRatio: 4 / 5,
-                                                  ))
-                                          ],
-                                        );
-                                })
+                            ? state.services.length == 0
+                                ? Row(children: [
+                                    Container(
+                                        width:
+                                            MediaQuery.of(context).size.width /
+                                                2,
+                                        child: AddNewServiceCard()),
+                                  ])
+                                : ListView.builder(
+                                    physics: NeverScrollableScrollPhysics(),
+                                    shrinkWrap: true,
+                                    itemCount: ((state.services.length / 2) + 1)
+                                        .floor(),
+                                    itemBuilder: (context, index) {
+                                      return index == 0
+                                          ? Row(
+                                              children: [
+                                                AddNewServiceCard(),
+                                                ServiceCard(
+                                                  serviceModel:
+                                                      state.services[index],
+                                                  numberOfSessions: 18,
+                                                  serviceToFocus:
+                                                      serviceToFocus,
+                                                  serviceCardTapped:
+                                                      (serviceId) {},
+                                                ),
+                                              ],
+                                            )
+                                          : Row(
+                                              children: [
+                                                ServiceCard(
+                                                  serviceModel:
+                                                      state.services[index],
+                                                  serviceToFocus:
+                                                      serviceToFocus,
+                                                  serviceCardTapped:
+                                                      (serviceId) {},
+                                                ),
+                                                (index * 2) <
+                                                        state.services.length
+                                                    ? ServiceCard(
+                                                        serviceModel: state
+                                                            .services[index],
+                                                        numberOfSessions: 18,
+                                                        serviceToFocus:
+                                                            serviceToFocus,
+                                                        serviceCardTapped:
+                                                            (serviceId) {},
+                                                      )
+                                                    : Expanded(
+                                                        child: AspectRatio(
+                                                        aspectRatio: 4 / 5,
+                                                      ))
+                                              ],
+                                            );
+                                    })
                             : Container(),
                     ProviderListener(
                       onChange: (context, state) {

@@ -8,20 +8,20 @@ import 'package:path/path.dart';
 class SessionModel {
   int? id;
   int? clientId;
-  DateTime dateTime;
+  DateTime? dateTime;
   String? notes;
-  bool active;
+  bool? active;
   int? currentProcess;
   int? serviceId;
   String? serviceName;
   SessionModel({
     this.id,
     required this.clientId,
-    required this.serviceId,
-    required this.dateTime,
-    required this.notes,
-    required this.active,
-    required this.currentProcess,
+    this.serviceId,
+    this.dateTime,
+    this.notes,
+    this.active,
+    this.currentProcess,
     this.serviceName,
   });
 
@@ -31,7 +31,7 @@ class SessionModel {
       'service_id': serviceId,
       'date_time': dateTime.toString(),
       'notes': notes,
-      'active': active ? 1 : 0,
+      'active': active ?? false ? 1 : 0,
       'current_process': currentProcess,
     };
   }
@@ -185,9 +185,7 @@ class SessionModel {
           currentProcess: session['current_process'],
         ));
         i++;
-        print("index $i");
       });
-      print("length: ${serviceMedias.length}");
       return SessionBundleModel(
           sessionModel: sessions,
           serviceModel: services,

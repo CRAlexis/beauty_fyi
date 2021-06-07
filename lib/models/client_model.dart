@@ -30,6 +30,16 @@ class ClientModel {
     };
   }
 
+  ClientModel _toModel(Map<String, dynamic> query) {
+    return ClientModel(
+        id: query['id'],
+        clientFirstName: query['client_first_name'] ?? "",
+        clientLastName: query['client_last_name'] ?? "",
+        clientEmail: query['client_email'] ?? "",
+        clientPhoneNumber: query['client_phone_number'] ?? "",
+        clientImage: File(query['client_image'] ?? ""));
+  }
+
   Future<bool> insertClient(ClientModel clientModel) async {
     try {
       Database db = await openDatabase(
@@ -75,15 +85,7 @@ class ClientModel {
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       List<Map<String, dynamic>> query = await db.query('clients');
       return List.generate(query.length, (index) {
-        return ClientModel(
-            id: query[index]['id'],
-            clientFirstName: query[index]['client_first_name'],
-            clientLastName: query[index]['client_last_name'],
-            clientEmail: query[index]['client_email'],
-            clientPhoneNumber: query[index]['client_phone_number'],
-            clientImage: query[index]['client_image'] != null
-                ? File(query[index]['client_image'])
-                : new File(""));
+        return _toModel(query[index]);
       });
     } catch (error) {
       print("error $error");
@@ -97,15 +99,9 @@ class ClientModel {
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       List<Map<String, dynamic>> query =
           await db.query('clients', where: "id = ?", whereArgs: [id]);
-      return ClientModel(
-          id: query[0]['id'],
-          clientFirstName: query[0]['client_first_name'],
-          clientLastName: query[0]['client_last_name'],
-          clientEmail: query[0]['client_email'],
-          clientPhoneNumber: query[0]['client_phone_number'],
-          clientImage: File(query[0]['client_image']));
+      return _toModel(query[0]);
     } catch (error) {
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 }
