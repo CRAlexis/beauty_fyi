@@ -13,9 +13,14 @@ import 'package:beauty_fyi/container/textfields/default_textarea.dart';
 import 'package:beauty_fyi/container/textfields/default_textfield.dart';
 import 'package:beauty_fyi/functions/file_and_image_functions.dart';
 import 'package:beauty_fyi/models/service_model.dart';
+import 'package:beauty_fyi/providers/add_service_provider.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:beauty_fyi/extensions/string_extension.dart';
+import 'package:riverpod/riverpod.dart';
+
+final addServiceNotifierProvider =
+    StateNotifierProvider((ref) => AddServiceNotifier());
 
 class CreateServiceScreen extends StatefulWidget {
   final args;
@@ -225,7 +230,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
     }
 
     final height = MediaQuery.of(context).size.height - 170;
-    Widget chooseImageWidget = Column(
+    Widget _chooseImageWidget = Column(
         key: ValueKey<int>(0),
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -463,7 +468,7 @@ class _CreateServiceScreenState extends State<CreateServiceScreen>
       key: ValueKey<int>(2),
     );
     List<Widget> slides = [
-      chooseImageWidget,
+      _chooseImageWidget,
       serviceNameWidget,
       serviceProcessWidget
     ];
