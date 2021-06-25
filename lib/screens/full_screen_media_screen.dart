@@ -1,44 +1,25 @@
+import 'dart:io';
+
 import 'package:beauty_fyi/bloc/full_screen_media_bloc.dart';
 import 'package:beauty_fyi/container/app_bar/app_bar.dart';
+import 'package:beauty_fyi/models/service_media.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_animations/simple_animations.dart';
 import 'package:social_share/social_share.dart';
 import 'package:video_player/video_player.dart';
 
 class FullScreenMediaScreen extends StatefulWidget {
-  final args;
-  const FullScreenMediaScreen({Key? key, this.args}) : super(key: key);
+  final List<ServiceMedia> args;
+  const FullScreenMediaScreen({Key? key, required this.args}) : super(key: key);
   @override
   _FullScreenMediaScreenState createState() => _FullScreenMediaScreenState();
 }
 
 class _FullScreenMediaScreenState extends State<FullScreenMediaScreen> {
-  late VideoPlayerController _videoPlayerController;
-  Future<void>? _initialiseFuturePlayer;
-  final FullScreenMediaBloc _fullScreenMediaBloc = FullScreenMediaBloc();
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.args['file_type'] == "video") {
-      _videoPlayerController =
-          VideoPlayerController.file(widget.args['file_path']);
-      _initialiseFuturePlayer = _videoPlayerController.initialize();
-      _videoPlayerController.setLooping(true);
-      _videoPlayerController.play();
-    }
-    _fullScreenMediaBloc.videoPlayPauseStateStream.listen((event) {
-      event ? _videoPlayerController.play() : _videoPlayerController.pause();
-    });
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
-    widget.args['file_type'] == "video"
-        ? _videoPlayerController.dispose()
-        : _fullScreenMediaBloc.dispose();
-  }
+  // will need to take in a list
+  // page view builder
+  // will need to take index, to know which image to start on
+  // will need to stop vidoes if you scroll of the page -> might be automatic
 
   @override
   Widget build(BuildContext context) {
@@ -52,11 +33,10 @@ class _FullScreenMediaScreenState extends State<FullScreenMediaScreen> {
                 transparent: true,
                 titleText: "",
                 leftIcon: Icons.arrow_back,
-                rightIcon: null,
+                showMenuIcon: false,
                 leftIconClicked: () {
                   Navigator.pop(context);
                 },
-                rightIconClicked: () {},
                 automaticallyImplyLeading: false),
             body: Container(
               width: double.infinity,
@@ -65,30 +45,11 @@ class _FullScreenMediaScreenState extends State<FullScreenMediaScreen> {
               child: Stack(
                 children: [
                   widget.args['file_type'] == "video"
-                      ? FutureBuilder(
-                          future: _initialiseFuturePlayer,
-                          builder: (context, snapshot) {
-                            if (snapshot.connectionState ==
-                                ConnectionState.done) {
-                              return Align(
-                                alignment: Alignment.center,
-                                child: VideoPlayer(_videoPlayerController),
-                              );
-                            } else {
-                              return Container();
-                            }
-                          })
-                      : Align(
-                          alignment: Alignment.center,
-                          child: Image.file(widget.args['file_path'])),
-                  _Overlay(
-                    type: widget.args['file_type'],
-                    fullScreenMediaBloc: _fullScreenMediaBloc,
-                    onShareImage: () {
-                      SocialShare.shareOptions("Shared from Beauty-FYI",
-                          imagePath: widget.args['file_path'].path);
-                    },
-                  )
+                      ? //video
+                      : //photo
+                      //overlay will need to go inside individual page
+                      // invidividual page will need to cover entire screen
+                  
                 ],
               ),
             )));
@@ -105,8 +66,6 @@ class _Overlay extends StatefulWidget {
 }
 
 class _OverlayState extends State<_Overlay> {
-  CustomAnimationControl _customAnimationControl = CustomAnimationControl.play;
-  Future<bool>? isVideoPlaying;
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -191,5 +150,75 @@ class _OverlayState extends State<_Overlay> {
                 );
               });
         });
+  }
+}
+
+class _VideoScreen extends StatefulWidget {
+  final ServiceMedia serviceMedia;
+  const _VideoScreen({Key? key, required this.serviceMedia}) : super(key: key);
+
+  @override
+  __VideoScreenState createState() => __VideoScreenState();
+}
+
+class __VideoScreenState extends State<_VideoScreen> {
+  CustomAnimationControl _customAnimationControl = CustomAnimationControl.play;
+  Future<bool>? isVideoPlaying;
+  late VideoPlayerController _videoPlayerController;
+  Future<void>? _initialiseFuturePlayer;
+  final FullScreenMediaBloc _fullScreenMediaBloc = FullScreenMediaBloc();
+
+  @override
+  void initState() {
+    super.initState();
+    _videoPlayerController = VideoPlayerController.file(
+        File(widget.serviceMedia.filePath as String));
+    _initialiseFuturePlayer = _videoPlayerController.initialize();
+    _videoPlayerController.setLooping(true);
+    _videoPlayerController.play();
+
+    _fullScreenMediaBloc.videoPlayPauseStateStream.listen((event) {
+      event ? _videoPlayerController.play() : _videoPlayerController.pause();
+    });
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
+    _videoPlayerController.dispose();
+    _fullScreenMediaBloc.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: double.infinity,
+      width: double.infinity,
+      child: Stack(
+        children: [
+          FutureBuilder(
+                          future: _initialiseFuturePlayer,
+                          builder: (context, snapshot) {
+                            if (snapshot.connectionState ==
+                                ConnectionState.done) {
+                              return Align(
+                                alignment: Alignment.center,
+                                child: VideoPlayer(_videoPlayerController),
+                              );
+                            } else {
+                              return Container();
+                            }
+                          }),
+          _Overlay(
+                    type: widget.serviceMedia.fileType,
+                    fullScreenMediaBloc: _fullScreenMediaBloc,
+                    onShareImage: () {
+                      SocialShare.shareOptions("Shared from Beauty-FYI",
+                          imagePath: widget.serviceMedia.filePath);
+                    },
+                  )
+        ],
+      ),
+    );
   }
 }
