@@ -12,8 +12,6 @@ class LandingScreen extends StatelessWidget {
   final bool disableTextFields = false;
   @override
   Widget build(BuildContext context) {
-    String? emailAddress;
-    String? password;
     return Scaffold(
         appBar: false
             ? AppBar(
@@ -64,18 +62,14 @@ class LandingScreen extends StatelessWidget {
                                 disableTextFields: disableTextFields,
                                 emailTextFieldController:
                                     emailTextFieldController,
-                                onSaved: (String? value) {
-                                  emailAddress = value;
-                                },
+                                onSaved: (String? value) {},
                               ),
                               SizedBox(height: 10.0),
                               PasswordTextField(
                                   disableTextFields: disableTextFields,
                                   passwordTextFieldController:
                                       passwordTextFieldController,
-                                  onSaved: (value) {
-                                    password = value;
-                                  }),
+                                  onSaved: (value) {}),
                               // ForgotPasswordLabel(),
                               SizedBox(height: 10.0),
                               ActionButton(

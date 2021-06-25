@@ -7,21 +7,22 @@ class ActionButton extends StatelessWidget {
   final String? buttonText;
   final bool? isLoading;
   final String? backgroundColor;
-  ActionButton({
-    this.onPressed,
-    this.buttonText,
-    this.isLoading,
-    this.backgroundColor,
-  });
+  final IconData? iconData;
+  ActionButton(
+      {this.onPressed,
+      this.buttonText,
+      this.isLoading,
+      this.backgroundColor,
+      this.iconData});
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.symmetric(vertical: 25.0),
+      padding: EdgeInsets.symmetric(vertical: 10.0),
       width: double.infinity,
       child: ElevatedButton(
         style: ButtonStyle(
             elevation: MaterialStateProperty.all(0),
-            padding: MaterialStateProperty.all(EdgeInsets.all(15.0)),
+            padding: MaterialStateProperty.all(EdgeInsets.all(5.0)),
             shape: MaterialStateProperty.all(RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(30.0),
             )),
@@ -37,10 +38,15 @@ class ActionButton extends StatelessWidget {
                 height: 20,
                 width: 20,
               )
-            : Text(
-                buttonText!,
-                style: textStyles['button_label_white'],
-              ),
+            : iconData != null
+                ? Icon(
+                    iconData,
+                    size: 30,
+                  )
+                : Text(
+                    buttonText!,
+                    style: textStyles['button_label_white'],
+                  ),
       ),
     );
   }

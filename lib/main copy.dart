@@ -1,5 +1,4 @@
 import 'package:beauty_fyi/container/full_screen_image/full_screen_image.dart';
-import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/screens/add_client_screen.dart';
 import 'package:beauty_fyi/screens/client_screen.dart';
 import 'package:beauty_fyi/screens/full_screen_media_screen.dart';
@@ -15,7 +14,6 @@ import 'package:beauty_fyi/screens/dashboard_screen.dart';
 import 'package:beauty_fyi/screens/add_service_screen.dart';
 import 'package:beauty_fyi/screens/test2.dart';
 
-import 'package:beauty_fyi/screens/testing_screen.dart';
 import 'package:beauty_fyi/screens/view_service_screen.dart';
 import 'package:beauty_fyi/test/change_notifier_widget.dart';
 import 'package:beauty_fyi/test/future_provider_widget.dart';

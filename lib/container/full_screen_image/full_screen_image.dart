@@ -56,12 +56,13 @@ class _FullScreenImageState extends State<FullScreenImage>
           } else {
             Navigator.pop(context, {
               'override': imageHasUpdated,
-              'imageSrc': (imageSrc == null && arguments!['imageSrc'] == null) ||
-                      (imageSrc == null && imageHasUpdated == true)
-                  ? null
-                  : imageSrc != null
-                      ? imageSrc
-                      : arguments!['imageSrc']
+              'imageSrc':
+                  (imageSrc == null && arguments!['imageSrc'] == null) ||
+                          (imageSrc == null && imageHasUpdated == true)
+                      ? null
+                      : imageSrc != null
+                          ? imageSrc
+                          : arguments!['imageSrc']
             });
             return Future.value(true);
           }
@@ -75,9 +76,18 @@ class _FullScreenImageState extends State<FullScreenImage>
               child: CustomAppBar(
                   focused: !bottomBarVisible,
                   transparent: true,
-                  titleText: "Service image",
+                  titleText: "",
                   leftIcon: Icons.arrow_back,
-                  rightIcon: Icons.edit,
+                  showMenuIcon: true,
+                  menuOptions: ['edit'],
+                  menuIconClicked: (String val) {
+                    switch (val) {
+                      case 'edit':
+                        setState(() => bottomBarVisible = !bottomBarVisible);
+                        break;
+                      default:
+                    }
+                  },
                   leftIconClicked: () {
                     if (bottomBarVisible) {
                       setState(() {
@@ -85,7 +95,7 @@ class _FullScreenImageState extends State<FullScreenImage>
                       });
                     } else {
                       Navigator.pop(context, {
-                        'override': imageHasUpdated,
+                        'imageHasUpdated': imageHasUpdated,
                         'imageSrc': (imageSrc == null &&
                                     arguments!['imageSrc'] == null) ||
                                 (imageSrc == null && imageHasUpdated == true)
@@ -95,9 +105,6 @@ class _FullScreenImageState extends State<FullScreenImage>
                                 : arguments!['imageSrc'],
                       });
                     }
-                  },
-                  rightIconClicked: () {
-                    setState(() => bottomBarVisible = !bottomBarVisible);
                   },
                   automaticallyImplyLeading: false),
             ),

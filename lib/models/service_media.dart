@@ -5,14 +5,14 @@ class ServiceMedia {
   final int? id;
   final int? sessionId;
   final int? serviceId;
-  final int? userId;
+  final int? clientId;
   final String? fileType;
   final String? filePath;
   ServiceMedia(
       {this.id,
       this.sessionId,
       this.serviceId,
-      this.userId,
+      this.clientId,
       this.fileType,
       this.filePath});
 
@@ -20,7 +20,7 @@ class ServiceMedia {
     return {
       'session_id': sessionId,
       'service_id': serviceId,
-      'user_id': userId,
+      'client_id': clientId,
       'file_type': fileType,
       'file_path': filePath,
     };
@@ -51,7 +51,7 @@ class ServiceMedia {
             id: query[index]['id'],
             sessionId: query[index]['session_id'],
             serviceId: query[index]['service_id'],
-            userId: query[index]['user_id'],
+            clientId: query[index]['client_id'],
             fileType: query[index]['file_type'],
             filePath: query[index]['file_path']);
       });

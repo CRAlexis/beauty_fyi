@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:beauty_fyi/http/http_service.dart';
 import 'package:dio/dio.dart';
-import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart'
     as secureStorage;
@@ -39,11 +38,18 @@ class RegisterError extends RegisterState {
 }
 
 class RegisterNotifier extends StateNotifier<RegisterState> {
-  RegisterNotifier([RegisterNotifier? state]) : super(RegisterInitial());
+  RegisterNotifier([RegisterNotifier? state]) : super(RegisterInitial()) {
+    init();
+  }
   final form = GlobalKey<FormState>();
   final emailTextFieldController = TextEditingController();
   final passwordTextFieldController = TextEditingController();
   final AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
+  String testString = "";
+  init() {
+    Timer(Duration(seconds: 3),
+        () => {testString = "this is a test", state = RegisterLoaded()});
+  }
 
   Future<void> register(BuildContext context) async {
     try {

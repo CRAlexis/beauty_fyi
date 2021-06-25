@@ -231,7 +231,7 @@ class _VideoPlayerScreenState extends State<VideoPlayerScreen> {
                                   executeCommand(
                                       // "-i ${widget.videoFile.path} -i $path -vcodec copy -acodec copy -map 0:0 -map 1:0 $outputPath");
                                       "-i ${widget.videoFile!.path} -i $path -map 0:0 -map 1:0 -c:v copy -c:a aac -b:a 256k -shortest $outputPath");
-                                } as Future Function(Null));
+                                });
                               },
                               child: Text("Record audio"))
                         ],

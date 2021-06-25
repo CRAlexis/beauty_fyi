@@ -5,7 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
 class GridMedia extends StatefulWidget {
-  final Future<List<ServiceMedia>>? images;
+  final List<ServiceMedia> images;
   GridMedia({required this.images});
   @override
   _GridMediaState createState() => _GridMediaState();
@@ -14,81 +14,67 @@ class GridMedia extends StatefulWidget {
 class _GridMediaState extends State<GridMedia> {
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<ServiceMedia>>(
-        future: widget.images,
-        builder: (context, snapshot) {
-          if (snapshot.hasData) {
-            snapshot.data!.toList().forEach((element) {
-              // print(element.toMap());
-            });
-            return Container(
-                height: double.infinity,
-                width: double.infinity,
-                child: ListView.builder(
-                    physics: BouncingScrollPhysics(),
-                    shrinkWrap: true,
-                    itemCount: (snapshot.data!.length / 4).ceil(),
-                    itemBuilder: (context, index) {
-                      return Row(
-                        children: [
-                          snapshot.data![index * 4].fileType == "image"
-                              ? _ImageSqaure(
-                                  imageFile:
-                                      File(snapshot.data![index * 4].filePath!),
-                                  isEnd: false,
-                                )
-                              : _VideoSqaure(
-                                  videoFile:
-                                      File(snapshot.data![index * 4].filePath!),
-                                  isEnd: false,
-                                ),
-                          snapshot.data!.length > (index * 4) + 1
-                              ? snapshot.data![(index * 4) + 1].fileType ==
-                                      "image"
-                                  ? _ImageSqaure(
-                                      imageFile: File(snapshot
-                                          .data![(index * 4) + 1].filePath!),
-                                      isEnd: false,
-                                    )
-                                  : _VideoSqaure(
-                                      videoFile: File(snapshot
-                                          .data![(index * 4) + 1].filePath!),
-                                      isEnd: false,
-                                    )
-                              : _PlaceholderSqaure(isEnd: false),
-                          snapshot.data!.length > (index * 4) + 2
-                              ? snapshot.data![index].fileType == "image"
-                                  ? _ImageSqaure(
-                                      imageFile: File(snapshot
-                                          .data![(index * 4) + 2].filePath!),
-                                      isEnd: false,
-                                    )
-                                  : _VideoSqaure(
-                                      videoFile: File(snapshot
-                                          .data![(index * 4) + 2].filePath!),
-                                      isEnd: false,
-                                    )
-                              : _PlaceholderSqaure(isEnd: false),
-                          snapshot.data!.length > (index * 4) + 3
-                              ? snapshot.data![index].fileType == "image"
-                                  ? _ImageSqaure(
-                                      imageFile: File(snapshot
-                                          .data![(index * 4) + 3].filePath!),
-                                      isEnd: true,
-                                    )
-                                  : _VideoSqaure(
-                                      videoFile: File(snapshot
-                                          .data![(index * 4) + 3].filePath!),
-                                      isEnd: true,
-                                    )
-                              : _PlaceholderSqaure(isEnd: true)
-                        ],
-                      );
-                    }));
-          } else {
-            return Container();
-          }
-        });
+    return Container(
+        height: double.infinity,
+        width: double.infinity,
+        child: ListView.builder(
+            physics: BouncingScrollPhysics(),
+            shrinkWrap: true,
+            itemCount: (widget.images.length / 4).ceil(),
+            itemBuilder: (context, index) {
+              return Row(
+                children: [
+                  widget.images[index * 4].fileType == "image"
+                      ? _ImageSqaure(
+                          imageFile: File(widget.images[index * 4].filePath!),
+                          isEnd: false,
+                        )
+                      : _VideoSqaure(
+                          videoFile: File(widget.images[index * 4].filePath!),
+                          isEnd: false,
+                        ),
+                  widget.images.length > (index * 4) + 1
+                      ? widget.images[(index * 4) + 1].fileType == "image"
+                          ? _ImageSqaure(
+                              imageFile: File(
+                                  widget.images[(index * 4) + 1].filePath!),
+                              isEnd: false,
+                            )
+                          : _VideoSqaure(
+                              videoFile: File(
+                                  widget.images[(index * 4) + 1].filePath!),
+                              isEnd: false,
+                            )
+                      : _PlaceholderSqaure(isEnd: false),
+                  widget.images.length > (index * 4) + 2
+                      ? widget.images[index].fileType == "image"
+                          ? _ImageSqaure(
+                              imageFile: File(
+                                  widget.images[(index * 4) + 2].filePath!),
+                              isEnd: false,
+                            )
+                          : _VideoSqaure(
+                              videoFile: File(
+                                  widget.images[(index * 4) + 2].filePath!),
+                              isEnd: false,
+                            )
+                      : _PlaceholderSqaure(isEnd: false),
+                  widget.images.length > (index * 4) + 3
+                      ? widget.images[index].fileType == "image"
+                          ? _ImageSqaure(
+                              imageFile: File(
+                                  widget.images[(index * 4) + 3].filePath!),
+                              isEnd: true,
+                            )
+                          : _VideoSqaure(
+                              videoFile: File(
+                                  widget.images[(index * 4) + 3].filePath!),
+                              isEnd: true,
+                            )
+                      : _PlaceholderSqaure(isEnd: true)
+                ],
+              );
+            }));
   }
 }
 

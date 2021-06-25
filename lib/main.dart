@@ -1,5 +1,4 @@
 import 'package:beauty_fyi/container/full_screen_image/full_screen_image.dart';
-import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/screens/add_client_screen.dart';
 import 'package:beauty_fyi/screens/client_screen.dart';
 import 'package:beauty_fyi/screens/full_screen_media_screen.dart';
@@ -15,7 +14,6 @@ import 'package:beauty_fyi/screens/dashboard_screen.dart';
 import 'package:beauty_fyi/screens/add_service_screen.dart';
 import 'package:beauty_fyi/screens/test2.dart';
 
-import 'package:beauty_fyi/screens/testing_screen.dart';
 import 'package:beauty_fyi/screens/view_service_screen.dart';
 import 'package:beauty_fyi/test/change_notifier_widget.dart';
 import 'package:beauty_fyi/test/future_provider_widget.dart';
@@ -54,26 +52,26 @@ Future<void> initDatabases() async {
         "CREATE TABLE IF NOT EXISTS services(id INTEGER PRIMARY KEY, service_name VARCHAR, service_description VARCHAR, service_image TEXT, service_processes TEXT)",
       );
       await db.execute(
-        "CREATE TABLE IF NOT EXISTS datetimes(id INTEGER PRIMARY KEY, class_name VARCHAR, date_time VARCHAR)",
+        "CREATE TABLE IF NOT EXISTS datetimes(id INTEGER PRIMARY KEY, meta VARCHAR, date_time VARCHAR)",
       );
       await db.execute(
-        "CREATE TABLE IF NOT EXISTS service_media(id INTEGER PRIMARY KEY, session_id INTEGER, service_id INTEGER, user_id INTEGER, file_type VARCHAR, file_path TEXT)",
+        "CREATE TABLE IF NOT EXISTS service_media(id INTEGER PRIMARY KEY, session_id INTEGER, service_id INTEGER, client_id INTEGER, file_type VARCHAR, file_path TEXT)",
       );
       await db.execute(
-        "CREATE TABLE IF NOT EXISTS sessions(id INTEGER PRIMARY KEY, service_id INTEGER, date_time TEXT, notes TEXT, active INTEGER, current_process INTEGER, client_id VARCHAR)",
+        "CREATE TABLE IF NOT EXISTS sessions(id INTEGER PRIMARY KEY, service_id INTEGER, client_id VARCHAR, date_time TEXT, notes TEXT, active INTEGER, current_process INTEGER)",
       );
       return;
     },
     // Set the version. This executes the onCreate function and provides a
     // path to perform database upgrades and downgrades.
-    version: 3,
+    version: 1,
   );
   return;
 }
 
 Future<void> deleteAllTables(db) async {
   await db.execute("DROP TABLE IF EXISTS services");
-  // await db.execute("DROP TABLE IF EXISTS datetimes");
+  await db.execute("DROP TABLE IF EXISTS datetimes");
   await db.execute("DROP TABLE IF EXISTS service_media");
   await db.execute("DROP TABLE IF EXISTS sessions");
   // await db.execute("DROP TABLE IF EXISTS clients");
@@ -89,7 +87,7 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.blue,
       ),
-      initialRoute: '/register-screen',
+      initialRoute: '/dashboard',
       onGenerateRoute: (RouteSettings settings) {
         final routes = <String, WidgetBuilder>{
           '/': (BuildContext context) => LandingScreen(),

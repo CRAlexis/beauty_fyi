@@ -16,7 +16,7 @@ class SessionModel {
   String? serviceName;
   SessionModel({
     this.id,
-    required this.clientId,
+    this.clientId,
     this.serviceId,
     this.dateTime,
     this.notes,
@@ -40,7 +40,7 @@ class SessionModel {
     this.id = sessionId;
   }
 
-  set setCurrentProcess(int? currentProcess) {
+  set setCurrentProcess(int currentProcess) {
     this.currentProcess = currentProcess;
   }
 
@@ -56,7 +56,7 @@ class SessionModel {
     this.active = active;
   }
 
-  Future<List> sessionInit() async {
+  Future<Map<String, dynamic>> sessionInit() async {
     try {
       bool sessionIsActive = false;
       String? clientName;
@@ -67,7 +67,12 @@ class SessionModel {
       final List<Map<String, dynamic>> query = await db.query("sessions");
 
       if (query.isEmpty) {
-        return [false, null, null];
+        return {
+          'activeSession': false,
+          'clientName': null,
+          'serviceName': null,
+          'previousSession': null
+        };
       }
 
       query.every((element) {
@@ -95,14 +100,18 @@ class SessionModel {
             where: "id = ?", whereArgs: [previousSession!.serviceId]);
         serviceName = serviceQuery.first['service_name'];
       }
-      return [sessionIsActive, clientName, serviceName, previousSession];
+      return {
+        'activeSession': sessionIsActive,
+        'clientName': clientName,
+        'serviceName': serviceName,
+        'previousSession': previousSession
+      };
     } catch (error) {
-      print("error $error");
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 
-  Future<int> startSession(SessionModel sessionModel) async {
+  Future<SessionModel> startSession() async {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), "beautyfyi_database.db"));
@@ -111,44 +120,64 @@ class SessionModel {
       if (sessions.isNotEmpty) {
         sessions.every((element) {
           if (element['active'] == 1) {
-            db.update(
-                'sessions',
-                SessionModel(
-                        id: element['id'],
-                        clientId: element['user_id'],
-                        serviceId: element['service_id'],
-                        dateTime: DateTime.parse(element['date_time']),
-                        notes: element['notes'],
-                        active: false,
-                        currentProcess: element['current_process'])
-                    ._toMap,
-                where: "id = ?",
-                whereArgs: [element['id']]);
+            print(element);
+            try {
+              db.update(
+                  'sessions',
+                  SessionModel(
+                          id: element['id'],
+                          clientId: int.parse(element['client_id']),
+                          serviceId: element['service_id'],
+                          dateTime: DateTime.parse(element['date_time']),
+                          notes: element['notes'],
+                          active: false,
+                          currentProcess: 0)
+                      ._toMap,
+                  where: "id = ?",
+                  whereArgs: [element['id']]);
+            } catch (e) {
+              db.update(
+                  'sessions',
+                  SessionModel(
+                          id: element['id'],
+                          clientId: 0,
+                          serviceId: element['service_id'],
+                          dateTime: DateTime.now(),
+                          notes: "",
+                          active: false,
+                          currentProcess: 0)
+                      ._toMap,
+                  where: "id = ?",
+                  whereArgs: [element['id']]);
+            }
           }
           return true;
         });
       }
-      await db.insert('sessions', sessionModel._toMap);
-      return sessions.length + 1;
+      await db.insert('sessions', this._toMap);
+      this.id = sessions.length + 1;
+      return this;
     } catch (error) {
-      return Future.error(error, StackTrace.fromString(""));
+      print(error);
+      throw error;
     }
   }
 
-  Future<void> updateSession(SessionModel sessionModel) async {
+  Future<void> updateSession() async {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), "beautyfyi_database.db"));
-      await db.update('sessions', sessionModel._toMap,
-          where: "id = ?", whereArgs: [sessionModel.id]);
+      await db.update('sessions', this._toMap,
+          where: "id = ?", whereArgs: [this.id]);
       return;
     } catch (e) {
-      return Future.error(e, StackTrace.current);
+      throw (e);
     }
   }
 
   Future<void> endSession() async {
     try {
+      this.active = false;
       final Database db = await openDatabase(
           join(await getDatabasesPath(), "beautyfyi_database.db"));
       await db.update('sessions', this._toMap,
@@ -168,7 +197,6 @@ class SessionModel {
       List<SessionModel> sessions = [];
       List<ServiceModel> services = [];
       List<List<ServiceMedia>> serviceMedias = [];
-      int i = 0;
       await Future.forEach(query, (Map<String, dynamic> session) async {
         services
             .add(await ServiceModel(id: session['service_id']).readService());
@@ -184,7 +212,6 @@ class SessionModel {
           active: session['active'] == 1,
           currentProcess: session['current_process'],
         ));
-        i++;
       });
       return SessionBundleModel(
           sessionModel: sessions,

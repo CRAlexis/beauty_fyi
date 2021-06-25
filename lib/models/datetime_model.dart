@@ -3,51 +3,51 @@ import 'package:path/path.dart';
 
 class DateTimeModel {
   DateTime? dateTime;
-  final String? className;
-  DateTimeModel({this.dateTime, this.className});
+  final String? meta;
+  DateTimeModel({this.dateTime, this.meta});
 
   Map<String, dynamic> toMap() {
-    return {'class_name': className, 'date_time': dateTime.toString()};
+    return {'meta': meta, 'date_time': dateTime.toString()};
   }
 
   set setDateTime(DateTime dateTime) {
     this.dateTime = dateTime;
   }
 
-  Future<bool> insertDateTime(
-      {DateTimeModel? dateTimeModel, required bool overwrite}) async {
+  Future<void> insertDateTime(bool overwrite) async {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       List<Map<String, dynamic>> query = await db
-          .query('datetimes', where: 'class_name = ?', whereArgs: [className]);
+          .query('datetimes', where: 'meta = ?', whereArgs: [this.meta]);
       if (overwrite || query.length == 0) {
-        await db.delete('datetimes',
-            where: "class_name = ?", whereArgs: [className]);
-        int query = await db.insert('datetimes', dateTimeModel!.toMap());
-        return query == 1;
+        await db.delete('datetimes', where: "meta = ?", whereArgs: [this.meta]);
+        await db.insert('datetimes', this.toMap());
       }
-      return false;
+      return;
     } catch (error) {
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 
+  ///
+  ///If no datetime is found, then the insertDateTime function will run
   Future<DateTimeModel> readDateTime() async {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       List<Map<String, dynamic>> query = await db
-          .query('datetimes', where: 'class_name = ?', whereArgs: [className]);
+          .query('datetimes', where: 'meta = ?', whereArgs: [this.meta]);
       if (query.length == 0) {
-        print("are we in here");
-        throw 'no entries found';
+        this.dateTime = DateTime.now();
+        await insertDateTime(true);
+        return this;
       }
       return DateTimeModel(
           dateTime: DateTime.parse(query[0]['date_time']),
-          className: query[0]['class_name']);
+          meta: query[0]['meta']);
     } catch (error) {
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 
@@ -56,10 +56,10 @@ class DateTimeModel {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
       int query = await db
-          .delete('datetimes', where: 'class_name = ?', whereArgs: [className]);
+          .delete('datetimes', where: 'meta = ?', whereArgs: [this.meta]);
       return query == 1;
     } catch (error) {
-      return Future.error(error, StackTrace.current);
+      throw (error);
     }
   }
 }

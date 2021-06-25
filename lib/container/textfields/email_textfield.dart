@@ -6,12 +6,16 @@ class EmailTextField extends StatelessWidget {
   final TextEditingController? emailTextFieldController;
   final ValueSetter<String?>? onSaved;
   final bool? disableTextFields;
+  final String? invalidMessage;
   EmailTextField(
-      {this.emailTextFieldController, this.onSaved, this.disableTextFields});
+      {this.emailTextFieldController,
+      this.onSaved,
+      this.disableTextFields,
+      this.invalidMessage});
 
   @override
   Widget build(BuildContext context) {
-    String validationErrorMessage = "Email not valid";
+    String validationErrorMessage = invalidMessage ?? "Email not valid";
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [

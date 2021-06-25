@@ -10,16 +10,14 @@ class ServiceCard extends StatefulWidget {
   final VoidCallback? viewService;
   final serviceCardTapped;
   final int? serviceToFocus;
-  final refresh;
-  const ServiceCard(
-      {Key? key,
-      required this.serviceModel,
-      this.numberOfSessions,
-      this.viewService,
-      this.serviceCardTapped,
-      this.serviceToFocus,
-      this.refresh})
-      : super(key: key);
+  const ServiceCard({
+    Key? key,
+    required this.serviceModel,
+    this.numberOfSessions,
+    this.viewService,
+    this.serviceCardTapped,
+    this.serviceToFocus,
+  }) : super(key: key);
   @override
   _ServiceCardState createState() => _ServiceCardState();
 }
@@ -47,11 +45,10 @@ class _ServiceCardState extends State<ServiceCard> {
         padding: EdgeInsets.all(5),
         child: GestureDetector(
           onTapUp: (tapDownDetails) {
-            // widget.serviceCardTapped(widget.serviceModel.id);
             Future.delayed(Duration(milliseconds: 200)).then((value) {
               Navigator.pushNamed(context, "/view-service", arguments: {
-                'sessionModel': widget.serviceModel,
-              }).then((value) => widget.refresh());
+                'serviceId': widget.serviceModel.id,
+              });
             });
           },
           child: Card(
@@ -161,8 +158,7 @@ class _AddNewServiceCardState extends State<AddNewServiceCard> {
                     transitionToNextPage = !transitionToNextPage;
                   });
                   Future.delayed(const Duration(milliseconds: 300), () {
-                    Navigator.pushNamed(context, "/add-service")
-                        .then((value) => widget.refresh!());
+                    Navigator.pushNamed(context, "/add-service");
                   });
                 },
                 child: Card(
@@ -217,71 +213,69 @@ class _AddNewServiceCardState extends State<AddNewServiceCard> {
             ),
           ))
         : Container(
-            height: 200,
             child: AspectRatio(
-              aspectRatio: 4 / 5,
-              child: Padding(
-                padding: EdgeInsets.all(5),
-                child: GestureDetector(
-                  onTap: () {
-                    setState(() {
-                      transitionToNextPage = !transitionToNextPage;
-                    });
-                    Future.delayed(const Duration(milliseconds: 300), () {
-                      Navigator.pushNamed(context, "/add-service")
-                          .then((value) => widget.refresh!());
-                    });
-                  },
-                  child: Card(
-                    elevation: 10,
-                    child: AnimatedContainer(
-                        duration: Duration(milliseconds: 300),
-                        decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                                begin: Alignment.topRight,
-                                end: Alignment.bottomLeft,
-                                colors: transitionToNextPage
-                                    ? [
-                                        colorStyles['light_purple']!,
-                                        colorStyles['green']!,
-                                        colorStyles['blue']!,
-                                        colorStyles['dark_purple']!,
-                                      ]
-                                    : [
-                                        colorStyles['green']!,
-                                        colorStyles['blue']!,
-                                        colorStyles['dark_purple']!,
-                                        colorStyles['light_purple']!,
-                                      ])),
-                        child: Stack(
-                          children: [
-                            Align(
-                              alignment: Alignment.center,
-                              child: Icon(
-                                Icons.add,
-                                color: Colors.white,
-                                size: 100,
-                              ),
+            aspectRatio: 4 / 5,
+            child: Padding(
+              padding: EdgeInsets.all(5),
+              child: GestureDetector(
+                onTap: () {
+                  setState(() {
+                    transitionToNextPage = !transitionToNextPage;
+                  });
+                  Future.delayed(const Duration(milliseconds: 300), () {
+                    Navigator.pushNamed(context, "/add-service");
+                  });
+                },
+                child: Card(
+                  elevation: 10,
+                  child: AnimatedContainer(
+                      duration: Duration(milliseconds: 300),
+                      decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                              begin: Alignment.topRight,
+                              end: Alignment.bottomLeft,
+                              colors: transitionToNextPage
+                                  ? [
+                                      colorStyles['light_purple']!,
+                                      colorStyles['green']!,
+                                      colorStyles['blue']!,
+                                      colorStyles['dark_purple']!,
+                                    ]
+                                  : [
+                                      colorStyles['green']!,
+                                      colorStyles['blue']!,
+                                      colorStyles['dark_purple']!,
+                                      colorStyles['light_purple']!,
+                                    ])),
+                      child: Stack(
+                        children: [
+                          Align(
+                            alignment: Alignment.center,
+                            child: Icon(
+                              Icons.add,
+                              color: Colors.white,
+                              size: 100,
                             ),
-                            Padding(
-                                padding: EdgeInsets.symmetric(vertical: 20),
-                                child: Align(
-                                  alignment: Alignment.bottomCenter,
-                                  child: Text(
-                                    "Add your next service",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontWeight: FontWeight.normal,
-                                      fontFamily: 'OpenSans',
-                                    ),
-                                    textAlign: TextAlign.center,
+                          ),
+                          Padding(
+                              padding: EdgeInsets.symmetric(vertical: 20),
+                              child: Align(
+                                alignment: Alignment.bottomCenter,
+                                child: Text(
+                                  "Add your next service",
+                                  style: TextStyle(
+                                    color: Colors.white,
+                                    fontWeight: FontWeight.normal,
+                                    fontFamily: 'OpenSans',
                                   ),
-                                ))
-                          ],
-                        )),
-                  ),
+                                  textAlign: TextAlign.center,
+                                ),
+                              ))
+                        ],
+                      )),
                 ),
               ),
-            ));
+            ),
+          ));
   }
 }

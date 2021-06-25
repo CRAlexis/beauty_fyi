@@ -9,8 +9,8 @@ final todoListProvider =
 class StateNotifierWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, ScopedReader watch) {
-    final todosController = watch(todoListProvider.notifier);
-    final todos = watch(todoListProvider);
+    // final todosController = watch(todoListProvider.notifier);
+    // final todos = watch(todoListProvider);
     return Scaffold(
       appBar: AppBar(
         title: Text("change notifier"),
@@ -21,19 +21,34 @@ class StateNotifierWidget extends ConsumerWidget {
           width: double.infinity,
           child: Column(
             children: [
-              for (final todo in todos)
-                GestureDetector(
-                    onTap: () => todosController.toggle(todo.leading),
-                    child: ListTile(
-                      leading: Text(todo.leading.toString()),
-                      title: Text(todo.title),
-                    ))
+              // for (final todo in todos)
+              // GestureDetector(
+              // onTap: () => todosController.toggle(todo.leading),
+              // child: ListTile(
+              // leading: Text(todo.leading.toString()),
+              // title: Text(todo.title),
+              // )),
+              _Testing()
             ],
           )),
       floatingActionButton: FloatingActionButton(
-        onPressed: () => todosController.add(title: "this is a new note"),
+        onPressed: () =>
+            null, //todosController.add(title: "this is a new note"),
         child: Icon(Icons.add),
       ),
+    );
+  }
+}
+
+class _Testing extends ConsumerWidget {
+  const _Testing({Key? key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context, ScopedReader watch) {
+    // final todos = watch(todoListProvider);
+
+    return Container(
+      child: Text("hey"),
     );
   }
 }

@@ -49,6 +49,7 @@ Map<String, InputDecoration> textfieldInputDecoration(
         String? suffixText}) =>
     {
       "white_text_decoration": InputDecoration(
+        counterText: '',
         errorStyle: TextStyle(),
         border: InputBorder.none,
         contentPadding: EdgeInsets.only(top: 14.0),
@@ -62,11 +63,12 @@ Map<String, InputDecoration> textfieldInputDecoration(
         suffixText: suffixText,
       ),
       "black_text_decoration": InputDecoration(
+        counterText: '',
         errorStyle: TextStyle(),
         border: InputBorder.none,
-        contentPadding: iconData == null
-            ? EdgeInsets.only(top: 0.0, left: 7)
-            : EdgeInsets.only(top: 10.0),
+        // contentPadding: iconData == null
+        // ? EdgeInsets.only(top: 0.0, left: 7)
+        // : EdgeInsets.only(top: 10.0),
         prefixIcon: iconData == null
             ? null
             : Icon(

@@ -1,7 +1,6 @@
 import 'dart:io';
 
 import 'package:beauty_fyi/container/alert_dialoges/are_you_sure_alert_dialog.dart';
-import 'package:beauty_fyi/container/alert_dialoges/message_alert_dialog.dart';
 import 'package:beauty_fyi/container/app_bar/app_bar.dart';
 import 'package:beauty_fyi/container/create_service/service_image/action_button.dart';
 import 'package:beauty_fyi/container/create_service/service_image/gallery_icon_stack.dart';
@@ -9,58 +8,62 @@ import 'package:beauty_fyi/container/full_screen_image/bottom_bar.dart';
 import 'package:beauty_fyi/container/textfields/default_textfield.dart';
 import 'package:beauty_fyi/functions/file_and_image_functions.dart';
 import 'package:beauty_fyi/models/client_model.dart';
+import 'package:beauty_fyi/providers/addClient/add_client_provider.dart';
+import 'package:beauty_fyi/providers/addClient/client_form_provider.dart';
+import 'package:beauty_fyi/providers/bottom_bar_provider.dart';
+import 'package:beauty_fyi/providers/image_file_provider.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-class AddClientScreen extends StatefulWidget {
-  @override
-  _AddClientScreenState createState() => _AddClientScreenState();
-}
+final bottomBarNotfierProvider =
+    StateNotifierProvider.autoDispose((ref) => BottomBarNotifier());
+final addClientNotifierProvider =
+    StateNotifierProvider.autoDispose((ref) => AddClientNotifier());
+final clientFormNotifierProvider =
+    StateNotifierProvider.autoDispose((ref) => ClientFormNotifier());
+final imageFileNotifierProvider = StateNotifierProvider.autoDispose((ref) {
+  ref.onDispose(() {});
+  return ImageFileNotifier();
+});
 
-class _AddClientScreenState extends State<AddClientScreen>
-    with TickerProviderStateMixin {
-  AnimationController? bottomBarAnimationController;
-  final GlobalKey<FormState> formKey = GlobalKey();
-  final firstNameController = TextEditingController();
-  final lastNameController = TextEditingController();
-  final emailAddressController = TextEditingController();
-  final phoneNumberController = TextEditingController();
-  AutovalidateMode autovalidateMode = AutovalidateMode.disabled;
-
-  List<Color?> backgroundColours = [
-    colorStyles['dark_purple'],
-    colorStyles['light_purple'],
-    colorStyles['blue'],
-    colorStyles['green']
+class AddClientScreen extends ConsumerWidget {
+  final List<Color> backgroundColours = [
+    colorStyles['dark_purple'] as Color,
+    colorStyles['light_purple'] as Color,
+    colorStyles['blue'] as Color,
+    colorStyles['green'] as Color
   ];
-  File? imageSrc;
-  String firstName = "";
-  String lastName = "";
-  String emailAddress = "";
-  String phoneNumber = "";
-  bool bottomBarVisible = false;
-  bool disableTextFields = false;
-
-  void initState() {
-    super.initState();
-    bottomBarAnimationController = AnimationController(
-      duration: Duration(milliseconds: 200),
-      vsync: this,
-    );
-  }
 
   @override
-  void dispose() {
-    bottomBarAnimationController!.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, ScopedReader watch) {
+    final bottomBarNotifierController =
+        context.read(bottomBarNotfierProvider.notifier);
+    final addClientNotifierController =
+        context.read(addClientNotifierProvider.notifier);
+    final clientFormNotifierController =
+        context.read(clientFormNotifierProvider.notifier);
+    final imageFileNotifierController =
+        context.read(imageFileNotifierProvider.notifier);
+    final state = watch(addClientNotifierProvider);
     final height = MediaQuery.of(context).size.height - 170;
     return new WillPopScope(
         onWillPop: () {
-          return Future.value(true);
+          if (bottomBarNotifierController.isVisible) {
+            bottomBarNotifierController.hideBottomBar();
+            return Future.value(false);
+          }
+          AreYouSureAlertDialog(
+              context: context,
+              message: "Are  you sure you want to exit?",
+              leftButtonText: "no",
+              rightButtonText: "yes",
+              onLeftButton: () => Navigator.of(context).pop(),
+              onRightButton: () {
+                Navigator.of(context).pop();
+                Navigator.of(context).pop();
+              }).show();
+          return Future.value(false);
         },
         child: Scaffold(
             extendBodyBehindAppBar: true,
@@ -69,48 +72,36 @@ class _AddClientScreenState extends State<AddClientScreen>
                 transparent: true,
                 titleText: "",
                 leftIcon: Icons.arrow_back,
-                rightIcon: null,
                 leftIconClicked: () {
+                  if (bottomBarNotifierController.isVisible) {
+                    bottomBarNotifierController.hideBottomBar();
+                    return;
+                  }
                   Navigator.pop(context);
                 },
-                rightIconClicked: () {},
+                showMenuIcon: false,
                 automaticallyImplyLeading: false),
             body: AnimatedContainer(
                 duration: Duration(milliseconds: 400),
                 width: double.infinity,
                 height: double.infinity,
                 decoration: BoxDecoration(
-                    gradient: true
-                        ? LinearGradient(
-                            colors: [
-                                colorStyles['dark_purple']!,
-                                colorStyles['light_purple']!,
-                                colorStyles['blue']!,
-                                colorStyles['green']!
-                              ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight)
-                        : LinearGradient(
-                            colors: [
-                                backgroundColours[2]!,
-                                backgroundColours[1]!,
-                                backgroundColours[3]!,
-                                backgroundColours[0]!
-                              ],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight)),
+                    gradient: LinearGradient(colors: [
+                  colorStyles['dark_purple']!,
+                  colorStyles['light_purple']!,
+                  colorStyles['blue']!,
+                  colorStyles['green']!
+                ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
                 child: Stack(children: [
                   GestureDetector(
                       onTap: () {
-                        if (bottomBarVisible) {
-                          setState(() {
-                            bottomBarVisible = !bottomBarVisible;
-                          });
+                        if (bottomBarNotifierController.isVisible) {
+                          bottomBarNotifierController.hideBottomBar();
                         }
                       },
                       child: AnimatedOpacity(
-                          opacity: bottomBarVisible ? 0.2 : 1,
-                          /* if something pops up on the screen */
+                          opacity:
+                              bottomBarNotifierController.isVisible ? 0.2 : 1,
                           duration: Duration(microseconds: 500),
                           child: Container(
                               height: double.infinity,
@@ -127,347 +118,260 @@ class _AddClientScreenState extends State<AddClientScreen>
                                           padding: EdgeInsets.symmetric(
                                               vertical: 10, horizontal: 20),
                                           height: height > 400 ? height : 500,
-                                          child: Form(
-                                              key: formKey,
-                                              autovalidateMode:
-                                                  autovalidateMode,
-                                              child: SingleChildScrollView(
-                                                physics:
-                                                    NeverScrollableScrollPhysics(),
-                                                child: Stack(
+                                          child: SingleChildScrollView(
+                                            physics:
+                                                AlwaysScrollableScrollPhysics(),
+                                            child: Stack(
+                                              children: [
+                                                Column(
                                                   children: [
-                                                    Column(
-                                                      children: [
-                                                        GalleryIconStack(
-                                                          size: GalleryIconSize
-                                                              .Medium,
-                                                          imageSrc: imageSrc,
-                                                          onPreviewImage: () {
-                                                            if (bottomBarVisible) {
-                                                              setState(() {
-                                                                bottomBarVisible =
-                                                                    !bottomBarVisible;
-                                                              });
-                                                              return;
-                                                            }
-                                                            Navigator.pushNamed(
-                                                                context,
-                                                                "/full-screen-image",
-                                                                arguments: {
-                                                                  'imageSrc':
-                                                                      imageSrc
-                                                                }).then(
-                                                                (value) {
-                                                              File?
-                                                                  returnedImage =
-                                                                  (value as Map<
-                                                                          String,
-                                                                          dynamic>)[
-                                                                      'imageSrc'];
-                                                              bool? override =
-                                                                  value[
-                                                                      'override'];
-                                                              setState(() {
-                                                                if (returnedImage !=
-                                                                    null) {
-                                                                  imageSrc =
-                                                                      returnedImage;
-                                                                } else {
-                                                                  if (override!) {
-                                                                    imageSrc =
-                                                                        null;
-                                                                  }
-                                                                }
-                                                              });
-                                                            });
-                                                          },
-                                                          onOpenGalleryOrCamera:
-                                                              () {
-                                                            if (bottomBarVisible) {
-                                                              setState(() {
-                                                                bottomBarVisible =
-                                                                    !bottomBarVisible;
-                                                              });
-                                                              return;
-                                                            }
-                                                            setState(() {
-                                                              bottomBarVisible =
-                                                                  !bottomBarVisible;
-                                                            });
-                                                            //open camera
-                                                          },
-                                                        ),
-                                                        DefaultTextField(
-                                                          iconData:
-                                                              Icons.person,
-                                                          hintText: "",
-                                                          invalidMessage:
-                                                              "Invalid name",
-                                                          labelText:
-                                                              "First name",
-                                                          validationStringLength:
-                                                              3,
-                                                          textInputType:
-                                                              TextInputType
-                                                                  .name,
-                                                          onSaved: (String?
-                                                              value) {},
-                                                          onChanged:
-                                                              (String value) {
-                                                            firstName = value;
-                                                          },
-                                                          stylingIndex: 1,
-                                                          regex:
-                                                              r'^[a-zA-Z ]+$',
-                                                          disableTextFields:
-                                                              disableTextFields,
-                                                          height: 40,
-                                                          defaultTextFieldController:
-                                                              firstNameController,
-                                                        ),
-                                                        SizedBox(
-                                                          height: 5,
-                                                        ),
-                                                        DefaultTextField(
-                                                          iconData:
-                                                              Icons.person,
-                                                          hintText: "",
-                                                          invalidMessage:
-                                                              "Invalid name",
-                                                          labelText:
-                                                              "Last name",
-                                                          validationStringLength:
-                                                              0,
-                                                          textInputType:
-                                                              TextInputType
-                                                                  .name,
-                                                          onSaved: (String?
-                                                              value) {},
-                                                          onChanged:
-                                                              (String value) {
-                                                            lastName = value;
-                                                          },
-                                                          stylingIndex: 1,
-                                                          regex:
-                                                              r'^[a-zA-Z ]+$',
-                                                          disableTextFields:
-                                                              disableTextFields,
-                                                          height: 40,
-                                                          defaultTextFieldController:
-                                                              lastNameController,
-                                                        ),
-                                                        SizedBox(
-                                                          height: 5,
-                                                        ),
-                                                        DefaultTextField(
-                                                          iconData: Icons
-                                                              .email_outlined,
-                                                          hintText: "",
-                                                          invalidMessage:
-                                                              "Invalid email",
-                                                          labelText: "Email",
-                                                          validationStringLength:
-                                                              0,
-                                                          textInputType:
-                                                              TextInputType
-                                                                  .emailAddress,
-                                                          onSaved: (String?
-                                                              value) {},
-                                                          onChanged:
-                                                              (String value) {
-                                                            emailAddress =
-                                                                value;
-                                                          },
-                                                          stylingIndex: 1,
-                                                          regex:
-                                                              r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
-                                                          disableTextFields:
-                                                              disableTextFields,
-                                                          height: 40,
-                                                          defaultTextFieldController:
-                                                              emailAddressController,
-                                                        ),
-                                                        SizedBox(
-                                                          height: 5,
-                                                        ),
-                                                        DefaultTextField(
-                                                          iconData: Icons.phone,
-                                                          hintText: "",
-                                                          invalidMessage:
-                                                              "Invalid phone number",
-                                                          labelText:
-                                                              "Phone number",
-                                                          validationStringLength:
-                                                              0,
-                                                          textInputType:
-                                                              TextInputType
-                                                                  .phone,
-                                                          onSaved: (String?
-                                                              value) {},
-                                                          onChanged:
-                                                              (String value) {
-                                                            phoneNumber = value;
-                                                          },
-                                                          stylingIndex: 1,
-                                                          regex: r"",
-                                                          disableTextFields:
-                                                              disableTextFields,
-                                                          height: 40,
-                                                          defaultTextFieldController:
-                                                              phoneNumberController,
-                                                        ),
-                                                        ActionButton(
-                                                            onPressed:
-                                                                () async {
-                                                              setState(() {
-                                                                autovalidateMode =
-                                                                    AutovalidateMode
-                                                                        .onUserInteraction;
-                                                                disableTextFields =
-                                                                    true;
-                                                              });
-                                                              try {
-                                                                final bool success = await addClient(
-                                                                    firstName:
-                                                                        firstName,
-                                                                    lastName:
-                                                                        lastName,
-                                                                    email:
-                                                                        emailAddress,
-                                                                    phoneNumber:
-                                                                        phoneNumber,
-                                                                    clientImage:
-                                                                        imageSrc,
-                                                                    formKey:
-                                                                        formKey);
-                                                                if (success) {
-                                                                  MessageAlertDialog(
-                                                                      message:
-                                                                          "$firstName $lastName was added as a client.",
-                                                                      context:
-                                                                          context,
-                                                                      onPressed:
-                                                                          () {
-                                                                        Navigator.pop(
-                                                                            context);
-                                                                        Navigator.pop(
-                                                                            context);
-                                                                      }).show();
-                                                                } else {
-                                                                  throw new Exception(
-                                                                      "error");
-                                                                }
-                                                              } catch (e) {
-                                                                setState(() {
-                                                                  disableTextFields =
-                                                                      false;
-                                                                });
-                                                                MessageAlertDialog(
-                                                                    message:
-                                                                        "Unable to add client, please try again.",
-                                                                    context:
-                                                                        context,
-                                                                    onPressed: () =>
-                                                                        Navigator.pop(
-                                                                            context)).show();
-                                                              }
-                                                            },
-                                                            buttonText:
-                                                                "add client",
-                                                            isLoading: false,
-                                                            backgroundColor:
-                                                                'green'),
-                                                      ],
-                                                    ),
+                                                    _ClientImage(),
+                                                    _ClientForm(state!
+                                                        is AddClientQuerying),
+                                                    ActionButton(
+                                                        onPressed: () async {
+                                                          addClientNotifierController.sendQuery(
+                                                              ClientModel(
+                                                                  clientFirstName:
+                                                                      clientFormNotifierController
+                                                                          .firstNameController
+                                                                          .text,
+                                                                  clientLastName:
+                                                                      clientFormNotifierController
+                                                                          .lastNameController
+                                                                          .text,
+                                                                  clientEmail:
+                                                                      clientFormNotifierController
+                                                                          .emailAddressController
+                                                                          .text,
+                                                                  clientPhoneNumber:
+                                                                      clientFormNotifierController
+                                                                          .phoneNumberController
+                                                                          .text,
+                                                                  clientImage:
+                                                                      imageFileNotifierController
+                                                                          .imageFile),
+                                                              context);
+                                                        },
+                                                        iconData: Icons.add,
+                                                        buttonText:
+                                                            "add client",
+                                                        isLoading: state
+                                                            is AddClientQuerying,
+                                                        backgroundColor:
+                                                            'green'),
                                                   ],
                                                 ),
-                                              )))))))),
-                  BottomBar(
-                      visble: bottomBarVisible,
-                      controller: bottomBarAnimationController,
-                      deleteImage: () {
-                        print(imageSrc!.path);
-                        if (imageSrc == null) {
-                          setState(() {
-                            bottomBarVisible = false;
-                          });
-                          return;
+                                              ],
+                                            ),
+                                          ))))))),
+                  ProviderListener(
+                      onChange: (context, state) {
+                        if (state is AddClientError) {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            SnackBar(
+                              content: Text(state.message),
+                              duration: Duration(seconds: 7),
+                            ),
+                          );
                         }
-
-                        AreYouSureAlertDialog(
-                          context: context,
-                          message:
-                              "Are you sure you want to remove this image?",
-                          leftButtonText: "no",
-                          rightButtonText: "yes",
-                          onLeftButton: () {
-                            Navigator.of(context).pop();
-                          },
-                          onRightButton: () {
-                            setState(() {
-                              imageSrc = null;
-                              bottomBarVisible = false;
-                            });
-                            Navigator.of(context).pop();
-                          },
-                        ).show();
                       },
-                      openCamera: () async {
-                        File? tempImageSrc = imageSrc;
-                        imageSrc =
-                            await FileAndImageFunctions.openNativeCamera();
-                        setState(() {
-                          if (imageSrc == null) {
-                            imageSrc = tempImageSrc;
-                          } else {
-                            bottomBarVisible = false;
-                          }
-                        });
-                      },
-                      openGallery: () async {
-                        File? tempImageSrc = imageSrc;
-                        imageSrc =
-                            await FileAndImageFunctions.openImagePicker();
-                        setState(() {
-                          if (imageSrc == null) {
-                            imageSrc = tempImageSrc;
-                          } else {
-                            bottomBarVisible = false;
-                          }
-                        });
-                      })
+                      provider: addClientNotifierProvider,
+                      child: Container()),
+                  _BottomBar(),
                 ]))));
   }
 }
 
-Future<bool> addClient({
-  String? firstName,
-  String? lastName,
-  String? email,
-  String? phoneNumber,
-  File? clientImage,
-  required GlobalKey<FormState> formKey,
-}) async {
-  try {
-    if (!formKey.currentState!.validate()) {
-      return false;
-    }
-    final ClientModel clientModel = ClientModel(
-        clientFirstName: firstName,
-        clientLastName: lastName,
-        clientEmail: email,
-        clientPhoneNumber: phoneNumber,
-        clientImage: clientImage);
-    print(clientImage);
-    // List<ClientModel> clients = await clientModel.readClients();
-    // clients.asMap().forEach((key, value) {
-    // print("$key : ${value.map}");
-    // });
-    bool query = await clientModel.insertClient(clientModel);
-    print("query $query");
-    return query;
-  } catch (e) {
-    print(e);
-    return false;
+class _ClientImage extends ConsumerWidget {
+  @override
+  Widget build(BuildContext context, ScopedReader watch) {
+    final bottomBarNotifierController =
+        context.read(bottomBarNotfierProvider.notifier);
+    final imageFileNotifierController =
+        context.read(imageFileNotifierProvider.notifier);
+    final state = watch(imageFileNotifierProvider);
+    return Column(
+        key: ValueKey<int>(0),
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          GalleryIconStack(
+            size: GalleryIconSize.Medium,
+            imageSrc: state is ImageFileLoaded ? state.file : null,
+            onPreviewImage: () async {
+              if (bottomBarNotifierController.isVisible) {
+                bottomBarNotifierController.hideBottomBar();
+                return;
+              }
+              final returnedValue = await Navigator.pushNamed(
+                  context, "/full-screen-image", arguments: {
+                'imageSrc': state is ImageFileLoaded ? state.file : null
+              });
+              File? returnedImage =
+                  (returnedValue as Map<String, dynamic>)['imageSrc'];
+              bool imageHasUpdated = returnedValue['imageHasUpdated'];
+              imageHasUpdated
+                  ? imageFileNotifierController.clearImageFile(context)
+                  : imageFileNotifierController.setImageFile(returnedImage);
+              //will need to validate slide
+            },
+            onOpenGalleryOrCamera: () {
+              if (bottomBarNotifierController.isVisible) {
+                bottomBarNotifierController.hideBottomBar();
+                return;
+              } else {
+                bottomBarNotifierController.showBottomBar();
+              }
+            },
+          ),
+        ]);
+  }
+}
+
+class _ClientForm extends ConsumerWidget {
+  final bool disableTextFields;
+  _ClientForm(this.disableTextFields);
+  @override
+  Widget build(BuildContext context, ScopedReader watch) {
+    final clientFormNotifierController =
+        context.read(clientFormNotifierProvider.notifier);
+    final state = watch(clientFormNotifierProvider);
+    return Form(
+        key: clientFormNotifierController.formKey,
+        autovalidateMode: AutovalidateMode.onUserInteraction,
+        child: Column(
+          children: [
+            DefaultTextField(
+              iconData: Icons.person,
+              hintText: "",
+              invalidMessage: clientFormNotifierController.invalidNameString,
+              labelText: "First name",
+              validationStringLength: 1,
+              textInputType: TextInputType.name,
+              stylingIndex: 1,
+              regex: r'^[a-zA-Z ]+$',
+              disableTextFields: disableTextFields,
+              height: 40,
+              defaultTextFieldController:
+                  clientFormNotifierController.firstNameController,
+              validate: clientFormNotifierController.validateFirstName,
+              focusNode: clientFormNotifierController.firstNameFocusNode,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            DefaultTextField(
+              iconData: Icons.person,
+              hintText: "",
+              invalidMessage:
+                  clientFormNotifierController.invalidLastNameString,
+              labelText: "Last name",
+              validationStringLength: 0,
+              textInputType: TextInputType.name,
+              stylingIndex: 1,
+              regex: r'^[a-zA-Z ]+$',
+              disableTextFields: disableTextFields,
+              height: 40,
+              defaultTextFieldController:
+                  clientFormNotifierController.lastNameController,
+              validate: clientFormNotifierController.validateLastName,
+              focusNode: clientFormNotifierController.lastNameFocusNode,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            DefaultTextField(
+              iconData: Icons.email_outlined,
+              hintText: "",
+              invalidMessage: clientFormNotifierController.invalidEmailString,
+              labelText: "Email",
+              validationStringLength: 0,
+              textInputType: TextInputType.emailAddress,
+              stylingIndex: 1,
+              regex:
+                  r"^[a-zA-Z0-9.a-zA-Z0-9.!#$%&'*+-/=?^_`{|}~]+@[a-zA-Z0-9]+\.[a-zA-Z]+",
+              disableTextFields: disableTextFields,
+              height: 40,
+              defaultTextFieldController:
+                  clientFormNotifierController.emailAddressController,
+              validate: clientFormNotifierController.validateEmail,
+              focusNode: clientFormNotifierController.emailAddressFocusNode,
+            ),
+            SizedBox(
+              height: 5,
+            ),
+            DefaultTextField(
+              iconData: Icons.phone,
+              hintText: "",
+              invalidMessage: "Invalid phone number",
+              labelText: "Phone number",
+              validationStringLength: 0,
+              textInputType: TextInputType.phone,
+              stylingIndex: 1,
+              regex: r"",
+              disableTextFields: disableTextFields,
+              height: 40,
+              defaultTextFieldController:
+                  clientFormNotifierController.phoneNumberController,
+              focusNode: clientFormNotifierController.phoneNumberFocusNode,
+            ),
+          ],
+        ));
+  }
+}
+
+class _BottomBar extends StatefulWidget {
+  @override
+  __BottomBarState createState() => __BottomBarState();
+}
+
+class __BottomBarState extends State<_BottomBar> with TickerProviderStateMixin {
+  late AnimationController bottomBarAnimationController;
+
+  void initState() {
+    super.initState();
+    bottomBarAnimationController = AnimationController(
+      duration: Duration(milliseconds: 200),
+      vsync: this,
+    );
+  }
+
+  @override
+  void dispose() {
+    bottomBarAnimationController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Consumer(
+      builder: (context, watch, child) {
+        final state = watch(bottomBarNotfierProvider);
+        final imageFileNotifierController =
+            context.read(imageFileNotifierProvider.notifier);
+        print(state is BottomBarVisibility ? state.isVisible : false);
+
+        return BottomBar(
+            visble: state is BottomBarVisibility ? state.isVisible : false,
+            controller: bottomBarAnimationController,
+            deleteImage: () =>
+                imageFileNotifierController.clearImageFile(context),
+            // bottomBarVisible = false;
+            // slideValidated = isSlideValid(slideIndex: 0, imageSrc: imageSrc);
+            openCamera: () async {
+              imageFileNotifierController
+                  .setImageFile(await FileAndImageFunctions.openNativeCamera());
+              // bottomBarVisible = false;
+              // slideValidated = isSlideValid(slideIndex: 0, imageSrc: imageSrc);
+            },
+            openGallery: () async {
+              imageFileNotifierController
+                  .setImageFile(await FileAndImageFunctions.openImagePicker());
+              // bottomBarVisible = false;
+              // slideValidated = isSlideValid(slideIndex: 0, imageSrc: imageSrc);
+            });
+      },
+    );
   }
 }

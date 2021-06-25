@@ -14,7 +14,7 @@ class _ProgressCirclesState extends State<ProgressCircles> {
   @override
   Widget build(BuildContext context) {
     return (Align(
-        alignment: Alignment.center,
+        alignment: Alignment.bottomCenter,
         child: SizedBox(
             height: 25,
             child: ListView.builder(

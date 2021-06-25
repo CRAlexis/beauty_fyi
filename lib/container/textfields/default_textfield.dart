@@ -20,6 +20,8 @@ class DefaultTextField extends StatelessWidget {
   final String? suffixText;
   final int validationStringLength;
   final int maxLength;
+  final bool validate;
+  final FocusNode? focusNode;
   DefaultTextField(
       {this.defaultTextFieldController,
       this.onSaved,
@@ -36,7 +38,9 @@ class DefaultTextField extends StatelessWidget {
       this.suffixText,
       this.onChanged,
       this.validationStringLength = 3,
-      this.maxLength = 255});
+      this.maxLength = 255,
+      this.validate = false,
+      this.focusNode});
 
   @override
   Widget build(BuildContext context) {
@@ -85,8 +89,9 @@ class DefaultTextField extends StatelessWidget {
           alignment: Alignment.centerLeft,
           decoration:
               textfieldStyles[textFieldStylingListHolder[stylingIndex][0]],
-          height: height,
+          // height: height,
           child: TextFormField(
+            focusNode: focusNode,
             maxLength: maxLength,
             enabled: !disableTextFields!,
             keyboardType: textInputType,
@@ -94,15 +99,16 @@ class DefaultTextField extends StatelessWidget {
             onSaved: (newValue) {
               onSaved!(newValue);
             },
-            onChanged: (value) {
-              onChanged!(value);
-            },
+            onChanged: (value) {},
             inputFormatters: textInputType == TextInputType.number
                 ? <TextInputFormatter>[
                     FilteringTextInputFormatter.allow(RegExp(r'[0-9]')),
                   ]
                 : null,
             validator: (value) {
+              if (!validate) {
+                return null;
+              }
               String textFieldValue = value.toString().trim();
               if (!RegExp(regex).hasMatch(textFieldValue) ||
                   textFieldValue.length < validationStringLength) {

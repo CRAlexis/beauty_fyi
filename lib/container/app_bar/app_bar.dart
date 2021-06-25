@@ -4,9 +4,10 @@ import 'package:flutter/material.dart';
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   final String? titleText;
   final IconData? leftIcon;
-  final IconData? rightIcon;
+  final bool showMenuIcon;
   final VoidCallback? leftIconClicked;
-  final VoidCallback? rightIconClicked;
+  final menuIconClicked;
+  final Iterable<String>? menuOptions;
   final bool automaticallyImplyLeading;
   final bool? transparent;
   final bool dark;
@@ -17,9 +18,10 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
   CustomAppBar(
       {this.titleText = "Beauty-FYI",
       this.leftIcon,
-      this.rightIcon,
+      required this.showMenuIcon,
       this.leftIconClicked,
-      this.rightIconClicked,
+      this.menuIconClicked,
+      this.menuOptions,
       this.automaticallyImplyLeading = true,
       this.transparent,
       this.dark = false,
@@ -68,16 +70,18 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               leftIcon, // add custom icons also
             ),
           ),
-          actions: [
-            GestureDetector(
-                onTap: () => rightIconClicked!(),
-                child: Container(
-                  padding: EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Icon(
-                    rightIcon,
-                    color: Colors.white,
-                  ),
-                )),
+          actions: <Widget>[
+            PopupMenuButton<String>(
+              onSelected: (String val) => menuIconClicked(val),
+              itemBuilder: (BuildContext context) {
+                return menuOptions!.map((String choice) {
+                  return PopupMenuItem<String>(
+                    value: choice,
+                    child: Text(choice),
+                  );
+                }).toList();
+              },
+            ),
           ],
         ));
   }

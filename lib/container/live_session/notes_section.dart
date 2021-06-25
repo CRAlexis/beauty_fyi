@@ -2,7 +2,12 @@ import 'dart:async';
 
 import 'package:beauty_fyi/container/textfields/default_textarea.dart';
 import 'package:beauty_fyi/models/session_model.dart';
+import 'package:beauty_fyi/providers/liveSession/live_session_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+final liveSessionNotifierProvider =
+    StateNotifierProvider((ref) => LiveSessionNotifier(null));
 
 class NotesSection extends StatefulWidget {
   final SessionModel? sessionModel;
@@ -13,18 +18,7 @@ class NotesSection extends StatefulWidget {
 
 class _NotesSectionState extends State<NotesSection> {
   final TextEditingController textAreaController = TextEditingController();
-  String sessionNotesValue = "";
-  late Timer timer;
   @override
-  void dispose() {
-    super.dispose();
-    widget.sessionModel!.setNotes = sessionNotesValue;
-    widget.sessionModel!.updateSession(widget.sessionModel!);
-    try {
-      timer.cancel();
-    } catch (e) {}
-  }
-
   Widget build(BuildContext context) {
     textAreaController.text = widget.sessionModel!.notes!;
     return Container(
@@ -41,14 +35,9 @@ class _NotesSectionState extends State<NotesSection> {
               defaultTextAreaController: textAreaController,
               onSaved: (String? value) {},
               onChanged: (String value) {
-                sessionNotesValue = value;
-                try {
-                  timer.cancel();
-                } catch (e) {}
-                timer = new Timer(Duration(seconds: 5), () {
-                  widget.sessionModel!.setNotes = sessionNotesValue;
-                  widget.sessionModel!.updateSession(widget.sessionModel!);
-                });
+                context
+                    .read(liveSessionNotifierProvider.notifier)
+                    .updateNotes(value);
               },
               disableTextFields: false,
               stylingIndex: 1,

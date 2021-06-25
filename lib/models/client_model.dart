@@ -40,7 +40,7 @@ class ClientModel {
         clientImage: File(query['client_image'] ?? ""));
   }
 
-  Future<bool> insertClient(ClientModel clientModel) async {
+  Future<void> insertClient(ClientModel clientModel) async {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
@@ -49,10 +49,9 @@ class ClientModel {
         clientModel.map,
         conflictAlgorithm: ConflictAlgorithm.replace,
       );
-      return true;
+      return;
     } catch (error) {
-      print(error);
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 

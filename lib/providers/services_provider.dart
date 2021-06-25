@@ -1,5 +1,8 @@
+import 'package:beauty_fyi/models/service_media.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:riverpod/riverpod.dart';
+
+enum ServicesProviderEnum { READALL, READONE, NULL }
 
 abstract class ServicesState {
   const ServicesState();
@@ -27,6 +30,21 @@ class ServicesLoaded extends ServicesState {
   int get hashCode => services.hashCode;
 }
 
+class ServiceLoaded extends ServicesState {
+  final List<ServiceMedia> serviceMedia;
+  final ServiceModel service;
+  const ServiceLoaded(this.service, this.serviceMedia);
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+    return o is ServiceLoaded && o.service == service;
+  }
+
+  @override
+  int get hashCode => service.hashCode;
+}
+
 class ServicesError extends ServicesState {
   final String message;
   const ServicesError(this.message);
@@ -42,8 +60,20 @@ class ServicesError extends ServicesState {
 }
 
 class ServicesNotifier extends StateNotifier<ServicesState> {
-  ServicesNotifier([ServicesNotifier? state]) : super(ServicesInitial()) {
-    getServices();
+  ServicesNotifier(ServicesProviderEnum servicesProviderEnum, int? serviceId,
+      [ServicesNotifier? state])
+      : super(ServicesInitial()) {
+    switch (servicesProviderEnum) {
+      case ServicesProviderEnum.READALL:
+        getServices();
+        break;
+      case ServicesProviderEnum.READONE:
+        getService(serviceId);
+        break;
+      default:
+        getServices();
+        break;
+    }
   }
 
   Future<void> getServices() async {
@@ -53,18 +83,24 @@ class ServicesNotifier extends StateNotifier<ServicesState> {
       state = ServicesLoaded(services);
       return;
     } catch (e) {
-      state = ServicesError("Unable to load your services");
+      state = ServicesError("Unable to load services.");
       return;
     }
   }
-}
 
-class _Extender {
-  void testing() {}
-}
+  Future<void> getService(serviceId) async {
+    try {
+      state = ServicesLoading();
+      final service = await ServiceModel(id: serviceId).readService();
+      final serviceImages = await fetchServiceImages(serviceId);
+      state = ServiceLoaded(service, serviceImages);
+    } catch (e) {
+      state = ServicesError("Unable to load service.");
+    }
+  }
 
-class _Testing extends _Extender {
-  _Testing() : super() {
-    print("hey");
+  Future<List<ServiceMedia>> fetchServiceImages(int serviceId) async {
+    return await ServiceMedia()
+        .readServiceMedia(sql: "service_id = ?", args: [serviceId]);
   }
 }

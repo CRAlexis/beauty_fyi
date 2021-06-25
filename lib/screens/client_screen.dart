@@ -47,7 +47,8 @@ class ClientScreen extends ConsumerWidget {
                 : "",
             centerTitle: true,
             leftIcon: Icons.arrow_back,
-            rightIcon: null,
+                       showMenuIcon: false,
+
             leftIconClicked: () {
               Navigator.pop(context);
             },
@@ -276,7 +277,7 @@ Widget _sessionCard(
   return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
     return GestureDetector(
         onTap: () => Navigator.pushNamed(context, "/gallery-screen",
-            arguments: {"sessionModel": sessionData[index]}),
+            arguments: {"media": serviceMediaData[index]}),
         child: Card(
           elevation: 10,
           shape: RoundedRectangleBorder(

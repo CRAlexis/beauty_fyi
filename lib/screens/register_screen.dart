@@ -1,4 +1,3 @@
-import 'package:beauty_fyi/container/alert_dialoges/message_alert_dialog.dart';
 import 'package:beauty_fyi/container/textfields/email_textfield.dart';
 import 'package:beauty_fyi/container/textfields/password_textfield.dart';
 import 'package:beauty_fyi/container/landing_page/action_button.dart';
@@ -62,6 +61,14 @@ class RegisterScreen extends ConsumerWidget {
                                 ),
                               ),
                               SizedBox(height: 30.0),
+                              ActionButton(
+                                  disableTextFields:
+                                      state is RegisterLoading ? true : false,
+                                  buttonText: "continue",
+                                  onPressed: () {
+                                    print(
+                                        registerProviderController.testString);
+                                  }),
                               EmailTextField(
                                 disableTextFields:
                                     state is RegisterLoading ? true : false,

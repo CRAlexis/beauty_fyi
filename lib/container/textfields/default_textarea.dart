@@ -15,6 +15,7 @@ class DefaultTextArea extends StatelessWidget {
   final int stylingIndex;
   final int? maxLines;
   final int maxLength;
+  final FocusNode? focusNode;
   DefaultTextArea(
       {this.defaultTextAreaController,
       this.onSaved,
@@ -27,7 +28,8 @@ class DefaultTextArea extends StatelessWidget {
       this.stylingIndex = 0,
       this.onChanged,
       this.maxLines = 6,
-      this.maxLength = 240});
+      this.maxLength = 240,
+      this.focusNode});
 
   @override
   Widget build(BuildContext context) {
@@ -55,17 +57,14 @@ class DefaultTextArea extends StatelessWidget {
           decoration:
               textfieldStyles[textFieldStylingListHolder[stylingIndex][0]],
           child: TextFormField(
+            focusNode: focusNode,
             maxLength: maxLength,
             maxLines: maxLines,
             keyboardType: TextInputType.multiline,
             enabled: !disableTextFields!,
             controller: defaultTextAreaController,
-            onSaved: (newValue) {
-              onSaved!(newValue);
-            },
-            onChanged: (value) {
-              onChanged!(value);
-            },
+            onSaved: (newValue) {},
+            onChanged: (value) {},
             validator: (value) {
               return null;
             },

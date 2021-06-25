@@ -33,9 +33,8 @@ class _DashboardScreenState extends State<DashboardScreen>
           transparent: false,
           titleText: "Beauty-FYI",
           leftIcon: null,
-          rightIcon: null,
+          showMenuIcon: false,
           leftIconClicked: () {},
-          rightIconClicked: () {},
           automaticallyImplyLeading: false),
       body: TabBarView(
           controller: tabController, children: [ServicesTab(), ClientsTab()]),

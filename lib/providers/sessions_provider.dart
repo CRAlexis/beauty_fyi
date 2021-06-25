@@ -1,8 +1,12 @@
+import 'package:beauty_fyi/container/alert_dialoges/are_you_sure_alert_dialog.dart';
+import 'package:beauty_fyi/container/alert_dialoges/client_list_alert_dialog.dart';
+import 'package:beauty_fyi/models/datetime_model.dart';
 import 'package:beauty_fyi/models/session_bundle_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
+import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
 
-enum SessionProviderEnums { READBUNDLE }
+enum SessionProviderEnums { READBUNDLE, NULL }
 
 abstract class SessionsState {
   const SessionsState();
@@ -40,7 +44,7 @@ class SessionsError extends SessionsState {
 }
 
 class SessionsNotifier extends StateNotifier<SessionsState> {
-  SessionsNotifier(SessionProviderEnums providerEnums, int clientId,
+  SessionsNotifier(SessionProviderEnums providerEnums, int? clientId,
       [SessionsState? state])
       : super(SessionsInitial()) {
     switch (providerEnums) {
@@ -60,6 +64,61 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
       state = SessionBundleLoaded(sessionBundle);
     } catch (e) {
       state = SessionsError("Unable to load session");
+    }
+  }
+
+  Future<void> _initSession(SessionModel sessionModel, context) async {
+    final result =
+        await ClientListAlertDialog(context: context, onConfirm: () {}).show();
+    if (result != 0) {
+      //0 is means null
+      await DateTimeModel(meta: 'paused_time').removeDateTime();
+      await DateTimeModel(meta: 'current_process_start_Time')
+          .removeDateTime(); // this is just incase the date time was not remoed from before;
+      sessionModel.setClientId = result;
+      SessionModel newSession = await sessionModel.startSession();
+      Navigator.pushNamed(context, "/live-session", arguments: {
+        'sessionModel': newSession,
+      });
+    }
+  }
+
+  Future<void> newSession(int serviceId, context) async {
+    try {
+      final sessionModel = SessionModel(
+          clientId: null,
+          serviceId: serviceId,
+          dateTime: DateTime.now(),
+          notes: "",
+          active: true,
+          currentProcess: 0);
+      Map<String, dynamic> sessionAlreadyActive =
+          await sessionModel.sessionInit();
+
+      if (sessionAlreadyActive['activeSession']) {
+        AreYouSureAlertDialog(
+          dismissible: true,
+          context: context,
+          message:
+              "You already have a session active with ${sessionAlreadyActive['clientName']}.",
+          leftButtonText: "New session",
+          rightButtonText: "Resume",
+          onLeftButton: () async {
+            Navigator.of(context).pop();
+            _initSession(sessionModel, context);
+          },
+          onRightButton: () async {
+            Navigator.of(context).pop();
+            Navigator.pushNamed(context, "/live-session", arguments: {
+              'sessionModel': sessionAlreadyActive['previousSession']
+            });
+          },
+        ).show();
+      } else {
+        _initSession(sessionModel, context);
+      }
+    } catch (e) {
+      print(e);
     }
   }
 }

@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:beauty_fyi/models/service_media.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -20,9 +19,9 @@ class ServiceModel {
 
   Map<String, dynamic> toMap() {
     return {
-      "service_name": serviceName!.isNotEmpty ? serviceName : "Unnamed",
+      "service_name": serviceName!.isNotEmpty ? serviceName?.trim() : "Unnamed",
       "service_description":
-          serviceDescription!.isNotEmpty ? serviceDescription : "",
+          serviceDescription!.isNotEmpty ? serviceDescription?.trim() : "",
       "service_image": imageSrc!.path,
       "service_processes": serviceProcesses,
     };
@@ -82,18 +81,18 @@ class ServiceModel {
           serviceProcesses: map.first['service_processes'],
           imageSrc: File(map.first['service_image']));
     } catch (e) {
-      return Future.error(e, StackTrace.fromString(""));
+      throw (e);
     }
   }
 
-  Future<bool> updateService(ServiceModel serviceModel) async {
+  Future<bool> updateService() async {
     print("updating service");
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      final int query = await db.update('services', serviceModel.toMap(),
+      final int query = await db.update('services', this.toMap(),
           where: "id = ?",
-          whereArgs: [id],
+          whereArgs: [this.id],
           conflictAlgorithm: ConflictAlgorithm.rollback);
       return query == 1;
     } catch (e) {

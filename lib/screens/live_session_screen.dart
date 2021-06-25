@@ -3,16 +3,22 @@ import 'dart:async';
 import 'package:beauty_fyi/bloc/gallery_bloc.dart';
 import 'package:beauty_fyi/container/app_bar/app_bar.dart';
 import 'package:beauty_fyi/container/live_session/bottom_bar.dart';
-import 'package:beauty_fyi/container/live_session/camera_preview.dart';
 import 'package:beauty_fyi/container/live_session/countdown.dart';
 import 'package:beauty_fyi/container/live_session/notes_section.dart';
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/container/pageViewWrapper/page_view_wrapper.dart';
 import 'package:beauty_fyi/models/session_model.dart';
-import 'package:beauty_fyi/styles/colors.dart';
+import 'package:beauty_fyi/providers/camera_provider.dart';
+import 'package:beauty_fyi/providers/liveSession/live_session_provider.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:riverpod/riverpod.dart';
 
-import 'package:path_provider/path_provider.dart';
+final liveSessionNotifierProvider = StateNotifierProvider.family(
+    (ref, SessionModel? params) => LiveSessionNotifier(params));
+final cameraNotifierProvider = StateNotifierProvider.autoDispose.family((ref,
+        GalleryBloc params) =>
+    CameraNotifier(params)); //need to pass session ID to here -> not sure how
 
 class LiveSessionScreen extends StatefulWidget {
   final args;
@@ -23,42 +29,30 @@ class LiveSessionScreen extends StatefulWidget {
 
 class _LiveSessionScreenState extends State<LiveSessionScreen>
     with SingleTickerProviderStateMixin, WidgetsBindingObserver {
-  TabController? tabController;
-  late CameraDescription camera;
-  CameraController? cameraController;
-  Future<void>? initialiseCameraControllerFuture;
-  late Timer processFinishedTimer;
-  late Timer sessionFinishedTimer;
-  bool displayCamera = true;
-  int? cameraIndex = 0;
-  String? videoFileName;
-  final GalleryBloc _galleryBloc = GalleryBloc();
-  List<Color> backgroundColors = [
-    colorStyles['dark_purple'] as Color,
-    colorStyles['light_purple'] as Color,
-    colorStyles['blue'] as Color,
-    colorStyles['green'] as Color
-  ];
+  late TabController tabController;
+  int processIndex = 0; // Will need to fetch this from database
+  late GalleryBloc galleryBloc;
 
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance!.addObserver(this);
     tabController = TabController(length: 3, vsync: this);
-    tabController!.index = 1;
-    initCameras(index: cameraIndex);
+    tabController.index = 1;
+    galleryBloc = GalleryBloc(widget.args['sessionModel']);
   }
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     switch (state.toString()) {
       case 'AppLifecycleState.paused':
+        //need to check if countdown provider runs when paused, if not will need to work out diffe
         break;
       case 'AppLifecylcleState.inactive':
         break;
       case 'AppLifecycleState.resumed':
-        initCameras(index: cameraIndex);
-        if (tabController!.index == 0) tabController!.index = 1;
+        context.read(liveSessionNotifierProvider(null).notifier).appResumed();
+        if (tabController.index == 0) tabController.index = 1;
         break;
       default:
     }
@@ -66,48 +60,13 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
 
   @override
   void dispose() {
-    tabController!.dispose();
-
+    tabController.dispose();
     WidgetsBinding.instance!.removeObserver(this);
-    _galleryBloc.dipose();
-    try {
-      processFinishedTimer.cancel();
-      sessionFinishedTimer.cancel();
-    } catch (e) {}
+    galleryBloc.dipose();
     super.dispose();
   }
 
-  Future<void> disposeCameras() async {
-    try {
-      cameraIndex = null;
-      await cameraController!.dispose();
-      return;
-    } catch (e) {
-      print(e);
-    }
-  }
-
-  Future<void> initCameras({index = 0}) async {
-    cameraIndex = index;
-    // Obtain a list of the available cameras on the device.
-    final cameras = await availableCameras();
-    // Get a specific camera from the list of available cameras.
-    camera = cameras[index];
-    cameraController = CameraController(camera, ResolutionPreset.max);
-    initialiseCameraControllerFuture = cameraController!.initialize();
-    return;
-  }
-
-  void sessionFinished() {
-    backgroundColors = [
-      colorStyles['darker_green'] as Color,
-      colorStyles['green'] as Color,
-      colorStyles['blue'] as Color,
-      colorStyles['green'] as Color
-    ];
-  }
-
-  Widget build(BuildContext context) {
+  /*
     tabController!.addListener(() {
       setState(() {
         if (tabController!.index == 0) {
@@ -116,200 +75,221 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
           displayCamera = false;
         }
       });
+  */
+
+  Widget build(BuildContext context) {
+    return Consumer(builder: (context, watch, child) {
+      final state =
+          watch(liveSessionNotifierProvider(widget.args['sessionModel']));
+      final liveSessionNotifierController = context.read(
+          liveSessionNotifierProvider(widget.args['sessionModel']).notifier);
+      // final cameraController = context.read(cameraNotifierProvider.notifier);
+      print("#live session screen initialised");
+      print("live session screen state: $state");
+
+      return new WillPopScope(
+          onWillPop: () async {
+            if (tabController.index == 0) {
+              tabController.animateTo(1,
+                  duration: Duration(milliseconds: 400),
+                  curve: Curves.easeOutCirc);
+              return Future.value(false);
+            } else {
+              // await disposeCameras();
+              return Future.value(true);
+            }
+          },
+          child: Scaffold(
+              extendBodyBehindAppBar: true,
+              appBar: CustomAppBar(
+                  focused: true,
+                  transparent: true,
+                  titleText: "",
+                  leftIcon: Icons.arrow_back,
+                  showMenuIcon: false,
+                  leftIconClicked: () async {
+                    if (tabController.index == 0) {
+                      tabController.animateTo(1,
+                          duration: Duration(milliseconds: 400),
+                          curve: Curves.easeOutCirc);
+                    } else {
+                      // await disposeCameras();
+                      Navigator.pop(context);
+                    }
+                  },
+                  automaticallyImplyLeading: false),
+              body: AnimatedContainer(
+                  duration: Duration(milliseconds: 1000),
+                  width: double.infinity,
+                  height: double.infinity,
+                  decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                          colors:
+                              liveSessionNotifierController.backgroundColors,
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight)),
+                  child: state is LiveSessionLoading
+                      ? Center(child: CircularProgressIndicator())
+                      : state is LiveSessionActive
+                          ? Stack(alignment: Alignment.topCenter, children: <
+                              Widget>[
+                              Container(
+                                child: TabBarView(
+                                    controller: tabController,
+                                    children: [
+                                      CameraPreviewScreen(
+                                          liveSessionNotifierController
+                                              .sessionModel as SessionModel,
+                                          galleryBloc),
+                                      // /need to check if slide is 1 to display?
+                                      Column(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          PageViewWrapper(
+                                              child: CountDown(
+                                                  state
+                                                      .processDurationInSeconds,
+                                                  state.serviceProcess,
+                                                  state.sessionFinished,
+                                                  onPaused: () =>
+                                                      liveSessionNotifierController
+                                                          .countdownPaused(),
+                                                  onResumed: () =>
+                                                      liveSessionNotifierController
+                                                          .countdownResumed(),
+                                                  onStartNextProcess: () =>
+                                                      liveSessionNotifierController
+                                                          .startNextProcess()),
+                                              keepAlive: true)
+                                        ],
+                                      ),
+                                      NotesSection(
+                                          sessionModel:
+                                              widget.args['sessionModel']),
+                                    ]),
+                              ),
+                              LiveSessionBottomBar(
+                                galleryBloc,
+                                liveSessionNotifierController.sessionModel
+                                    as SessionModel,
+                                tabController,
+                                takePhoto: () => context
+                                    .read(cameraNotifierProvider(galleryBloc)
+                                        .notifier)
+                                    .takePhoto(widget.args['sessionModel']),
+                                startRecording: () => context
+                                    .read(cameraNotifierProvider(galleryBloc)
+                                        .notifier)
+                                    .startRecording(),
+                                stopRecording: () => context
+                                    .read(cameraNotifierProvider(galleryBloc)
+                                        .notifier)
+                                    .stopRecording(widget.args['sessionModel']),
+                                switchCamera: () => context
+                                    .read(cameraNotifierProvider(galleryBloc)
+                                        .notifier)
+                                    .initCamera(
+                                        index: context
+                                                    .read(
+                                                        cameraNotifierProvider(
+                                                                galleryBloc)
+                                                            .notifier)
+                                                    .cameraIndex ==
+                                                0
+                                            ? 1
+                                            : 0),
+                              )
+                            ])
+                          : state is LiveSessionError
+                              ? Center(
+                                  child: Text(
+                                  state.message,
+                                  textAlign: TextAlign.center,
+                                  softWrap: true,
+                                  style: TextStyle(
+                                      fontSize: 40,
+                                      color: Colors.white,
+                                      fontFamily: 'OpenSans'),
+                                ))
+                              : Center(child: CircularProgressIndicator()))));
     });
-    return new WillPopScope(
-        onWillPop: () async {
-          if (tabController!.index == 0) {
-            tabController!.animateTo(1,
-                duration: Duration(milliseconds: 400),
-                curve: Curves.easeOutCirc);
-            return Future.value(false);
-          } else {
-            await disposeCameras();
-            return Future.value(true);
+  }
+}
+
+class CameraPreviewScreen extends ConsumerWidget {
+  final SessionModel _sessionModel;
+  final GalleryBloc galleryBloc;
+  CameraPreviewScreen(this._sessionModel, this.galleryBloc);
+
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // this will work with consumer widget
+    switch (state.toString()) {
+      case 'AppLifecycleState.paused':
+        break;
+      case 'AppLifecylcleState.inactive':
+        break;
+      case 'AppLifecycleState.resumed':
+        //init camera
+        break;
+      default:
+    }
+  }
+
+  Widget build(BuildContext context, ScopedReader watch) {
+    final state = watch(cameraNotifierProvider(galleryBloc));
+    final mediaSize = MediaQuery.of(context).size;
+    final scale = print("# $state");
+    return ProviderListener(
+        onChange: (BuildContext context, state) {
+          if (state is CameraCaptureError) {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+              content: Text(state.message),
+              duration: Duration(seconds: 6),
+            ));
           }
         },
-        child: Scaffold(
-            extendBodyBehindAppBar: true,
-            appBar: CustomAppBar(
-                focused: true,
-                transparent: true,
-                titleText: "",
-                leftIcon: Icons.arrow_back,
-                rightIcon: null,
-                leftIconClicked: () async {
-                  if (tabController!.index == 0) {
-                    tabController!.animateTo(1,
-                        duration: Duration(milliseconds: 400),
-                        curve: Curves.easeOutCirc);
-                  } else {
-                    await disposeCameras();
-                    print("this should be second");
-                    Navigator.pop(context);
-                  }
-                },
-                rightIconClicked: () {},
-                automaticallyImplyLeading: false),
-            body: AnimatedContainer(
-                duration: Duration(milliseconds: 1000),
-                width: double.infinity,
-                height: double.infinity,
-                decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                        colors: backgroundColors as List<Color>,
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight)),
-                child: Stack(alignment: Alignment.topCenter, children: <Widget>[
-                  Container(
-                    child: TabBarView(controller: tabController, children: [
-                      displayCamera
-                          ? CameraPreviewScreen(
-                              cameraController: cameraController,
-                              initialiseCameraControllerFuture:
-                                  initialiseCameraControllerFuture,
-                            )
-                          : SizedBox(),
-                      Column(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          CountDown(
-                            secondCallBack: (timeInSeconds) {},
-                            sessionFinished: () {
-                              sessionFinishedTimer =
-                                  Timer(Duration(milliseconds: 1250), () {
-                                setState(() {
-                                  sessionFinished();
-                                });
-                              });
-                            },
-                            startingNextProcess: () {
-                              setState(() {
-                                backgroundColors = [
-                                  colorStyles['blue'] as Color,
-                                  colorStyles['cream'] as Color,
-                                  colorStyles['green'] as Color,
-                                  colorStyles['cream'] as Color
-                                ];
-                              });
-                              processFinishedTimer =
-                                  Timer(Duration(milliseconds: 1000), () {
-                                setState(() {
-                                  backgroundColors = [
-                                    colorStyles['dark_purple'] as Color,
-                                    colorStyles['light_purple'] as Color,
-                                    colorStyles['blue'] as Color,
-                                    colorStyles['green'] as Color
-                                  ];
-                                });
-                              });
-                            },
-                            sessionModel: widget.args['sessionModel'],
+        provider: cameraNotifierProvider(galleryBloc),
+        child: Stack(
+          children: [
+            state is CameraLoading
+                ? Center(
+                    child: CircularProgressIndicator(),
+                  )
+                : state is CameraLoaded
+                    ? ClipRect(
+                        clipper: _MediaSizeClipper(mediaSize),
+                        child: Transform.scale(
+                          scale: 1 /
+                              (state.cameraController.value.aspectRatio *
+                                  mediaSize.aspectRatio),
+                          alignment: Alignment.topCenter,
+                          child: CameraPreview(state.cameraController),
+                        ),
+                      )
+                    // ? Container(
+                    // child: Text("camrea laoded"),
+                    // )
+                    : state is CameraLoadingError
+                        ? Center(
+                            child: Text(state.message),
                           )
-                        ],
-                      ),
-                      NotesSection(sessionModel: widget.args['sessionModel']),
-                    ]),
-                  ),
-                  LiveSessionBottomBar(
-                      sessionModel: widget.args['sessionModel'],
-                      tabController: tabController,
-                      galleryBloc: _galleryBloc,
-                      switchCamera: () async {
-                        cameraIndex == 0
-                            ? await initCameras(index: 1)
-                            : await initCameras(index: 0);
-                        setState(() {});
-                      },
-                      onTakePhoto: () async {
-                        try {
-                          print("take Photo");
-                          takePhoto(
-                              cameraController:
-                                  cameraController as CameraController,
-                              galleryBloc: _galleryBloc,
-                              sessionModel: widget.args['sessionModel']);
-                        } catch (e) {
-                          print(e);
-                          //unable to take photo -> might have to do alert dialoug
-                        }
-                      },
-                      onStartRecording: () {
-                        videoFileName =
-                            DateTime.now().toString().replaceAll(" ", "");
-                        startRecording(
-                            cameraController: cameraController,
-                            sessionModel: widget.args['sessionModel'],
-                            galleryBloc: _galleryBloc,
-                            videoFileName: videoFileName);
-                      },
-                      onStopRecording: () {
-                        stopRecording(
-                            cameraController: cameraController,
-                            sessionModel: widget.args['sessionModel'],
-                            galleryBloc: _galleryBloc,
-                            videoFileName: videoFileName);
-                        videoFileName = null;
-                      })
-                ]))));
+                        : Container(),
+          ],
+        ));
   }
 }
 
-void takePhoto(
-    {required CameraController cameraController,
-    required SessionModel sessionModel,
-    required GalleryBloc galleryBloc,
-    clientId}) async {
-  try {
-    print("saving photo...");
-    final p = await getTemporaryDirectory();
-    final String name = DateTime.now().toString().replaceAll(" ", "");
-    final path = "${p.path}/$name.png";
-    XFile file = await cameraController.takePicture();
-    file.saveTo(path);
-    final serviceMedia = ServiceMedia(
-        sessionId: sessionModel.id,
-        serviceId: sessionModel.serviceId,
-        fileType: "image",
-        filePath: path,
-        userId: sessionModel.clientId);
-    await serviceMedia.insertServiceMedia(serviceMedia);
-    galleryBloc.eventSink
-        .add({GalleryEvent.PhotoCaptured: sessionModel.id as int});
-  } catch (error) {
-    print(error);
-    return Future.error(error, StackTrace.fromString(""));
+class _MediaSizeClipper extends CustomClipper<Rect> {
+  final Size mediaSize;
+  const _MediaSizeClipper(this.mediaSize);
+  @override
+  Rect getClip(Size size) {
+    return Rect.fromLTWH(0, 0, mediaSize.width, mediaSize.height);
   }
-}
 
-void startRecording(
-    {required cameraController,
-    SessionModel? sessionModel,
-    galleryBloc,
-    videoFileName}) async {
-  final p = await getTemporaryDirectory();
-  final path = "${p.path}/$videoFileName.mp4";
-  print("#tag Started reocording");
-  await cameraController.startVideoRecording(path);
-}
-
-void stopRecording(
-    {required cameraController,
-    required SessionModel sessionModel,
-    galleryBloc,
-    videoFileName}) async {
-  try {
-    print("#tag Finished reocording");
-    final p = await getTemporaryDirectory();
-    final path = "${p.path}/$videoFileName.mp4";
-    await cameraController.stopVideoRecording();
-    final serviceMedia = ServiceMedia(
-        sessionId: sessionModel.id,
-        serviceId: sessionModel.serviceId,
-        fileType: "video",
-        filePath: path);
-    await serviceMedia.insertServiceMedia(serviceMedia);
-    // galleryBloc.eventSink.add({GalleryEvent.VideoCaptured: 1});
-  } catch (error) {
-    return Future.error(error, StackTrace.fromString(""));
+  @override
+  bool shouldReclip(CustomClipper<Rect> oldClipper) {
+    return true;
   }
 }

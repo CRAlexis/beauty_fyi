@@ -16,6 +16,15 @@ class ClientsTab extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
+        decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+              // colorStyles['blue'],
+              colorStyles['cream']!,
+              colorStyles['cream']!,
+            ])),
         height: double.infinity,
         child: Stack(children: [
           ProviderListener(

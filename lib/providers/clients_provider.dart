@@ -56,8 +56,8 @@ class ClientsError extends ClientsState {
 }
 
 class ClientsNotifier extends StateNotifier<ClientsState> {
-  final ClientProviderEnums providerEnum;
-  ClientsNotifier(this.providerEnum, int? clientId, [ClientsState? state])
+  ClientsNotifier(ClientProviderEnums providerEnum, int? clientId,
+      [ClientsState? state])
       : super(ClientsInitial()) {
     switch (providerEnum) {
       case ClientProviderEnums.READALL:
@@ -78,7 +78,9 @@ class ClientsNotifier extends StateNotifier<ClientsState> {
       final clients = await ClientModel().readClients();
       state = ClientsLoaded(clients);
     } catch (e) {
-      state = ClientsError("Unable to load clients");
+      try {
+        state = ClientsError("Unable to load clients");
+      } catch (e) {}
     }
     return;
   }

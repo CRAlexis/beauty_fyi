@@ -2,45 +2,44 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:beauty_fyi/bloc/gallery_bloc.dart';
+import 'package:beauty_fyi/models/service_media.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:simple_animations/simple_animations.dart';
 
 class LiveSessionBottomBar extends StatefulWidget {
-  final TabController? tabController;
-  final onTakePhoto;
-  final onStartRecording;
-  final onStopRecording;
+  final takePhoto;
+  final startRecording;
+  final stopRecording;
   final switchCamera;
-  final GalleryBloc? galleryBloc;
-  final SessionModel? sessionModel;
-  LiveSessionBottomBar(
-      {this.tabController,
-      this.onTakePhoto,
-      this.onStartRecording,
-      this.onStopRecording,
-      this.switchCamera,
-      this.galleryBloc,
-      this.sessionModel});
+  final GalleryBloc galleryBloc;
+  final SessionModel sessionModel;
+  final TabController tabController;
+  LiveSessionBottomBar(this.galleryBloc, this.sessionModel, this.tabController,
+      {required this.takePhoto,
+      required this.startRecording,
+      required this.stopRecording,
+      required this.switchCamera});
   @override
   _LiveSessionBottomBarState createState() => _LiveSessionBottomBarState();
 }
 
 class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
   CustomAnimationControl customAnimationControlTabBar =
-      CustomAnimationControl.PLAY;
+      CustomAnimationControl.play;
   CustomAnimationControl customAnimationControlCamera =
-      CustomAnimationControl.STOP;
+      CustomAnimationControl.stop;
   @override
   Widget build(BuildContext context) {
-    widget.tabController!.addListener(() {
+    widget.tabController.addListener(() {
       setState(() {
-        if (widget.tabController!.index == 0) {
-          customAnimationControlTabBar = CustomAnimationControl.PLAY_REVERSE;
-          customAnimationControlCamera = CustomAnimationControl.STOP;
+        if (widget.tabController.index == 0) {
+          customAnimationControlTabBar = CustomAnimationControl.playReverse;
+          customAnimationControlCamera = CustomAnimationControl.stop;
         } else {
-          customAnimationControlCamera = CustomAnimationControl.PLAY_REVERSE;
-          customAnimationControlTabBar = CustomAnimationControl.STOP;
+          customAnimationControlCamera = CustomAnimationControl.playReverse;
+          customAnimationControlTabBar = CustomAnimationControl.stop;
         }
       });
     });
@@ -52,7 +51,7 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
                 if (status == AnimationStatus.completed) {}
                 if (status == AnimationStatus.dismissed) {
                   setState(() {
-                    customAnimationControlCamera = CustomAnimationControl.PLAY;
+                    customAnimationControlCamera = CustomAnimationControl.play;
                   });
                 }
               },
@@ -109,7 +108,7 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
               animationStatusListener: (AnimationStatus status) {
                 if (status == AnimationStatus.dismissed) {
                   setState(() {
-                    customAnimationControlTabBar = CustomAnimationControl.PLAY;
+                    customAnimationControlTabBar = CustomAnimationControl.play;
                   });
                 }
               },
@@ -132,24 +131,20 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
                                   padding: EdgeInsets.only(left: 15, top: 38),
                                   child: Align(
                                     alignment: Alignment.centerLeft,
-                                    child: GalleryIcon(
-                                        galleryBloc:
-                                            widget.galleryBloc as GalleryBloc,
-                                        sessionModel: widget.sessionModel
-                                            as SessionModel),
+                                    child: GalleryIcon(widget.galleryBloc),
                                   ),
                                 ),
-                                Align(
-                                  alignment: Alignment.center,
-                                  child: CircleButton(onTakePhoto: () {
-                                    print("widget.onTakePhoto() 2");
-                                    widget.onTakePhoto();
-                                  }, onStartRecording: () {
-                                    widget.onStartRecording();
-                                  }, onStopRecording: () {
-                                    widget.onStopRecording();
-                                  }),
-                                ),
+                                Consumer(builder: (context, watch, child) {
+                                  return Align(
+                                      alignment: Alignment.center,
+                                      child: CircleButton(
+                                        onTakePhoto: () => widget.takePhoto(),
+                                        onStartRecording: () =>
+                                            widget.startRecording(),
+                                        onStopRecording: () =>
+                                            widget.stopRecording(),
+                                      ));
+                                }),
                                 GestureDetector(
                                   onTap: () => widget.switchCamera(),
                                   child: Padding(
@@ -204,7 +199,6 @@ class _CircleButtonState extends State<CircleButton> {
           if (tapDownActive) {
             widget.onStartRecording();
             recording = true;
-            print("Start recording");
             setState(() {
               animate = true;
               buffer = true;
@@ -228,7 +222,6 @@ class _CircleButtonState extends State<CircleButton> {
             animate = true;
             buffer = true;
             widget.onTakePhoto();
-            print("widget.onTakePhoto() 1");
           });
           Timer(Duration(milliseconds: 100), () {
             setState(() {
@@ -254,7 +247,6 @@ class _CircleButtonState extends State<CircleButton> {
             animate = true;
             buffer = true;
             widget.onTakePhoto();
-            print("widget.onTakePhoto() 1 (2)");
           });
           Timer(Duration(milliseconds: 100), () {
             setState(() {
@@ -284,45 +276,32 @@ class _CircleButtonState extends State<CircleButton> {
   }
 }
 
-class GalleryIcon extends StatefulWidget {
+class GalleryIcon extends StatelessWidget {
   final GalleryBloc galleryBloc;
-  final SessionModel sessionModel;
-
-  const GalleryIcon(
-      {Key? key, required this.galleryBloc, required this.sessionModel})
-      : super(key: key);
-  @override
-  _GalleryIconState createState() => _GalleryIconState();
-}
-
-class _GalleryIconState extends State<GalleryIcon> {
-  @override
-  void initState() {
-    super.initState();
-    refresh();
-  }
-
-  void refresh() {
-    print("id: ${widget.sessionModel.id}");
-    Timer(Duration(seconds: 1), () {
-      widget.galleryBloc.eventSink.add({
-        GalleryEvent.PhotoCaptured: widget.sessionModel.id as int
-      }); // This does not run on very first instance
-    });
-  }
-
-  @override
+  GalleryIcon(this.galleryBloc);
   Widget build(BuildContext context) {
-    return StreamBuilder<File>(
-        stream: widget.galleryBloc.galleryStream,
+    return StreamBuilder<ServiceMedia>(
+        stream: galleryBloc.serviceMediaStream,
         initialData: null,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             return GestureDetector(
-                onTap: () => {
-                      Navigator.pushNamed(context, "/gallery-screen",
-                          arguments: {"sessionModel": widget.sessionModel})
-                    },
+                onTap: () async {
+                  try {
+                    print("# Tapped");
+                    // final images = await ServiceMedia().readServiceMedia(
+                    // sql: "session_id = ?", args: []);
+                    final List<ServiceMedia> images = await ServiceMedia()
+                        .readServiceMedia(
+                            sql: "session_id = ?",
+                            args: [snapshot.data!.sessionId as int]);
+                    print("# media: $images");
+                    Navigator.pushNamed(context, "/gallery-screen",
+                        arguments: {'media': images});
+                  } catch (e) {
+                    print(e);
+                  }
+                },
                 child: Container(
                     height: 50,
                     width: 50,
@@ -332,15 +311,17 @@ class _GalleryIconState extends State<GalleryIcon> {
                       color: Color.fromRGBO(255, 255, 255, 0.2),
                       image: DecorationImage(
                         fit: BoxFit.cover,
-                        image: FileImage(snapshot.data as File),
+                        image:
+                            FileImage(File(snapshot.data!.filePath as String)),
                       ),
                     )));
           } else {
+            try {
+            galleryBloc.eventSink.add(galleryBloc.sessionModel!.id as int);
+            } catch (e) {
+            }
             return GestureDetector(
-                onTap: () => {
-                      Navigator.pushNamed(context, "/gallery-screen",
-                          arguments: {"sessionModel": widget.sessionModel})
-                    },
+                onTap: () async {},
                 child: Container(
                     height: 50,
                     width: 50,

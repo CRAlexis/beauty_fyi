@@ -5,11 +5,10 @@ import 'package:beauty_fyi/container/tabs/service_tab/service_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final servicesNotifierProvider =
-    StateNotifierProvider.autoDispose<ServicesNotifier, ServicesState>(
-        (ref) => ServicesNotifier());
-
 class ServicesTab extends ConsumerWidget {
+  final servicesNotifierProvider =
+      StateNotifierProvider.autoDispose<ServicesNotifier, ServicesState>(
+          (ref) => ServicesNotifier(ServicesProviderEnum.READALL, null));
   final int serviceToFocus = -1;
   @override
   Widget build(BuildContext context, ScopedReader watch) {
@@ -50,7 +49,9 @@ class ServicesTab extends ConsumerWidget {
                                         width:
                                             MediaQuery.of(context).size.width /
                                                 2,
-                                        child: AddNewServiceCard()),
+                                        child: AddNewServiceCard(
+                                          constrained: true,
+                                        )),
                                   ])
                                 : ListView.builder(
                                     physics: NeverScrollableScrollPhysics(),
@@ -65,7 +66,7 @@ class ServicesTab extends ConsumerWidget {
                                                 ServiceCard(
                                                   serviceModel:
                                                       state.services[index],
-                                                  numberOfSessions: 18,
+                                                  numberOfSessions: 0,
                                                   serviceToFocus:
                                                       serviceToFocus,
                                                   serviceCardTapped:
@@ -78,6 +79,7 @@ class ServicesTab extends ConsumerWidget {
                                                 ServiceCard(
                                                   serviceModel:
                                                       state.services[index],
+                                                  numberOfSessions: 0,
                                                   serviceToFocus:
                                                       serviceToFocus,
                                                   serviceCardTapped:
@@ -88,7 +90,7 @@ class ServicesTab extends ConsumerWidget {
                                                     ? ServiceCard(
                                                         serviceModel: state
                                                             .services[index],
-                                                        numberOfSessions: 18,
+                                                        numberOfSessions: 0,
                                                         serviceToFocus:
                                                             serviceToFocus,
                                                         serviceCardTapped:

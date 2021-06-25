@@ -10,7 +10,7 @@ class BottomBar extends StatefulWidget {
   final openGallery;
   const BottomBar(
       {Key? key,
-      this.visble,
+      this.visble = false,
       this.controller,
       this.deleteImage,
       this.openCamera,

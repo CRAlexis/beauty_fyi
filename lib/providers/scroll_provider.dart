@@ -13,13 +13,12 @@ class ScrollInit extends ScrollState {
 class ScrollNotifier extends StateNotifier<ScrollState> {
   final ScrollController _pageScrollController = ScrollController();
   ScrollNotifier([ScrollState? state]) : super(ScrollInit(0)) {
-    print("here");
     _pageScrollController.addListener(_scrollListener);
   }
 
   bool _scrollIsActive = false;
+
   _scrollListener() {
-    print(_pageScrollController.offset);
     if (_pageScrollController.offset > 50 && !_scrollIsActive) {
       state = ScrollInit(20);
       _scrollIsActive = true;

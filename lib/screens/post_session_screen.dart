@@ -52,7 +52,7 @@ class _PostSessionScreenState extends State<PostSessionScreen> {
           titleText: "",
           centerTitle: true,
           leftIcon: Icons.arrow_back,
-          rightIcon: null,
+          showMenuIcon: false,
           leftIconClicked: () {
             Navigator.pop(context);
           },

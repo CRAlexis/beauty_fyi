@@ -1,9 +1,10 @@
-import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/test/misc/todos_data.dart';
 import 'package:riverpod/riverpod.dart';
 
 class ToDoList extends StateNotifier<List<ToDoItem>> {
-  ToDoList([List<ToDoItem>? state]) : super([]);
+  ToDoList([List<ToDoItem>? state]) : super([]){
+    print("it has been inited");
+  }
 
   void add({required String title}) {
     state = [...state, new ToDoItem(leading: state.length + 1, title: title)];
