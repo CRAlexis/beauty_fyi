@@ -71,17 +71,19 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
             ),
           ),
           actions: <Widget>[
-            PopupMenuButton<String>(
-              onSelected: (String val) => menuIconClicked(val),
-              itemBuilder: (BuildContext context) {
-                return menuOptions!.map((String choice) {
-                  return PopupMenuItem<String>(
-                    value: choice,
-                    child: Text(choice),
-                  );
-                }).toList();
-              },
-            ),
+            this.showMenuIcon
+                ? PopupMenuButton<String>(
+                    onSelected: (String val) => menuIconClicked(val),
+                    itemBuilder: (BuildContext context) {
+                      return menuOptions!.map((String choice) {
+                        return PopupMenuItem<String>(
+                          value: choice,
+                          child: Text(choice),
+                        );
+                      }).toList();
+                    },
+                  )
+                : Container(),
           ],
         ));
   }

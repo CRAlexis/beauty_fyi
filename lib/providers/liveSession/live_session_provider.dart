@@ -1,12 +1,14 @@
 import 'dart:async';
 import 'dart:convert';
 
+import 'package:beauty_fyi/container/alert_dialoges/message_alert_dialog.dart';
 import 'package:beauty_fyi/models/datetime_model.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/service_process_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:vibration/vibration.dart';
 
@@ -29,9 +31,17 @@ class LiveSessionActive extends LiveSessionState {
   final int processDurationInSeconds;
   final bool sessionFinished;
   final ServiceProcess serviceProcess;
+  final bool lastProcess;
+  final bool vibrationSetting;
 
-  const LiveSessionActive(this.serviceModel, this.sessionModel,
-      this.processDurationInSeconds, this.sessionFinished, this.serviceProcess);
+  const LiveSessionActive(
+      this.serviceModel,
+      this.sessionModel,
+      this.processDurationInSeconds,
+      this.sessionFinished,
+      this.serviceProcess,
+      this.lastProcess,
+      this.vibrationSetting);
 }
 
 class LiveSessionError extends LiveSessionState {
@@ -54,6 +64,7 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
       : super(LiveSessionLoading()) {
     countdownResumed();
   }
+  final storage = new FlutterSecureStorage();
   List<Color> backgroundColors = [
     colorStyles['dark_purple'] as Color,
     colorStyles['light_purple'] as Color,
@@ -69,18 +80,11 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
       final serviceModel =
           await ServiceModel(id: sessionModel?.serviceId).readService();
       // print("#2");
-
       final allProcesses =
           jsonDecode(serviceModel.serviceProcesses as String) as List;
       final currentProcess = ServiceProcess()
           .toModel(allProcesses[sessionModel!.currentProcess as int]);
-      // print("#3");
-      // print("process length: ${allProcesses.length}");
-      // print("current process: ${sessionModel!.currentProcess}");
-      if (allProcesses.length == sessionModel!.currentProcess) {
-        print("end the session");
-        return endSession();
-      }
+
       // print("#4");
 
       int processDurationInSeconds =
@@ -95,14 +99,21 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
               as DateTime) // first date time is created here
           .inSeconds;
 
+      print("time elapsed: $timeElapsed");
+
       // print("#6");
 
       processDurationInSeconds -= timeElapsed;
       sessionModel!.updateSession();
       // print("#7");
-
-      state = LiveSessionActive(serviceModel, sessionModel as SessionModel,
-          processDurationInSeconds, false, currentProcess);
+      state = LiveSessionActive(
+          serviceModel,
+          sessionModel as SessionModel,
+          processDurationInSeconds,
+          false,
+          currentProcess,
+          allProcesses.length - 1 == (sessionModel!.currentProcess as int),
+          await storage.read(key: 'vibration_setting') == 'true');
       // print("#8");
 
       return;
@@ -128,6 +139,9 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
         .difference((await DateTimeModel(meta: 'paused_time').readDateTime())
             .dateTime as DateTime)
         .inSeconds;
+
+    print("current process: ${dateTimeModel.dateTime}");
+    print("idle time: $idleTime");
     dateTimeModel.setDateTime =
         dateTimeModel.dateTime!.add(Duration(seconds: idleTime));
     await dateTimeModel.insertDateTime(true);
@@ -151,6 +165,14 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
     if (!startNextProcessLock) {
       startNextProcessLock = true;
       sessionModel!.setCurrentProcess = sessionModel!.currentProcess! + 1;
+      final serviceModel =
+          await ServiceModel(id: sessionModel?.serviceId).readService();
+      final allProcesses =
+          jsonDecode(serviceModel.serviceProcesses as String) as List;
+      // print("#3");
+      if (allProcesses.length == sessionModel!.currentProcess) {
+        return endSession();
+      }
       await _fetchCurrentProcess(true);
       startNextProcessLock = false;
     }
@@ -159,17 +181,17 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
 
   Future<void> endCurrentProcess() async {
     try {
-      backgroundColors = [
-        colorStyles['darker_green'] as Color,
-        colorStyles['green'] as Color,
-        colorStyles['blue'] as Color,
-        colorStyles['green'] as Color
-      ];
+      // backgroundColors = [
+      //   colorStyles['darker_green'] as Color,
+      //   colorStyles['green'] as Color,
+      //   colorStyles['blue'] as Color,
+      //   colorStyles['green'] as Color
+      // ];
       _vibration();
-      await DateTimeModel(
-        dateTime: DateTime.now(),
-        meta: 'current_process_start_Time',
-      ).insertDateTime(true);
+      // await DateTimeModel(
+      // dateTime: DateTime.now(),
+      // meta: 'current_process_start_Time',
+      // ).insertDateTime(true);
       return;
     } catch (e) {
       print(e);
@@ -177,32 +199,57 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
   }
 
   Future<void> endSession() async {
-    final serviceModel =
-        await ServiceModel(id: sessionModel?.serviceId).readService();
-    await sessionModel!.endSession();
-    state = LiveSessionActive(
-        serviceModel,
-        sessionModel as SessionModel,
-        0,
-        true,
-        ServiceProcess(processName: "session finished", processDuration: 0));
-    await DateTimeModel(meta: 'paused_time').removeDateTime();
+    try {
+      backgroundColors = [
+        colorStyles['dark_purple'] as Color,
+        colorStyles['light_purple'] as Color,
+        colorStyles['blue'] as Color,
+        colorStyles['green'] as Color
+      ];
+      final serviceModel =
+          await ServiceModel(id: sessionModel?.serviceId).readService();
+      await sessionModel!.endSession();
+      state = LiveSessionActive(
+          serviceModel,
+          sessionModel as SessionModel,
+          0,
+          true,
+          ServiceProcess(processName: "session finished", processDuration: 0),
+          false,
+          await storage.read(key: 'vibration_setting') == 'true');
+      await DateTimeModel(meta: 'paused_time').removeDateTime();
+      return;
+    } catch (e) {
+      MessageAlertDialog(message: "Error: Unable to end session.");
+    }
+  }
+
+  void _vibration() async {
+    if (await storage.read(key: 'vibration_setting') == 'true') {
+      late Timer vibrationTimer;
+      Vibration.cancel();
+      int i = 0;
+      vibrationTimer = new Timer.periodic(Duration(seconds: 1), (callback) {
+        Vibration.vibrate(duration: 500);
+        i++;
+        i > 1 ? vibrationTimer.cancel() : false;
+      });
+    }
+  }
+
+  Future<void> updateNotes(String notes, SessionModel sessionModel) async {
+    try {
+      print(sessionModel);
+      sessionModel.setNotes = notes;
+      await sessionModel.updateSessionNotes();
+    } catch (e) {
+      print(e);
+    }
+  }
+
+  Future<void> toggleVibration(value) async {
+    await storage.write(
+        key: 'vibration_setting', value: value ? 'true' : 'false');
     return;
-  }
-
-  void _vibration() {
-    late Timer vibrationTimer;
-    Vibration.cancel();
-    int i = 0;
-    vibrationTimer = new Timer.periodic(Duration(seconds: 1), (callback) {
-      Vibration.vibrate(duration: 500);
-      i++;
-      i > 1 ? vibrationTimer.cancel() : false;
-    });
-  }
-
-  void updateNotes(String notes) {
-    sessionModel!.setNotes = notes;
-    sessionModel!.updateSession();
   }
 }

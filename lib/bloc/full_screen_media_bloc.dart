@@ -1,12 +1,13 @@
 import 'dart:async';
 
 enum FullScreenMediaEvent {
-  VideoPlayPauseState,
+  VideoPlayState,
+  VideoPauseState,
   OverlayState,
 }
 
 class FullScreenMediaBloc {
-  final _eventController = StreamController<FullScreenMediaEvent>();
+  final _eventController = StreamController<FullScreenMediaEvent>.broadcast();
   Stream<FullScreenMediaEvent> get eventStream => _eventController.stream;
   Sink<FullScreenMediaEvent> get eventSink => _eventController.sink;
 
@@ -25,8 +26,12 @@ class FullScreenMediaBloc {
   FullScreenMediaBloc() {
     eventStream.listen((event) {
       switch (event) {
-        case FullScreenMediaEvent.VideoPlayPauseState:
-          videoPlayState = !videoPlayState;
+        case FullScreenMediaEvent.VideoPlayState:
+          videoPlayState = true;
+          videoPlayPauseStateSink.add(videoPlayState);
+          break;
+        case FullScreenMediaEvent.VideoPauseState:
+          videoPlayState = false;
           videoPlayPauseStateSink.add(videoPlayState);
           break;
         case FullScreenMediaEvent.OverlayState:

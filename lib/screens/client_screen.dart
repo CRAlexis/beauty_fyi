@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:ui';
 
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/providers/clients_provider.dart';
@@ -22,10 +23,9 @@ final scrollNotifierProvider =
 final clientNotifierProvider =
     StateNotifierProvider.family<ClientsNotifier, ClientsState, int>(
         (ref, params) => ClientsNotifier(ClientProviderEnums.READONE, params));
-final sessionNotifierProvider =
-    StateNotifierProvider.family<SessionsNotifier, SessionsState, int>(
-        (ref, params) =>
-            SessionsNotifier(SessionProviderEnums.READBUNDLE, params));
+final sessionNotifierProvider = StateNotifierProvider.family
+    .autoDispose<SessionsNotifier, SessionsState, int>((ref, params) =>
+        SessionsNotifier(SessionProviderEnums.READBUNDLE, params));
 
 class ClientScreen extends ConsumerWidget {
   final args;
@@ -47,8 +47,7 @@ class ClientScreen extends ConsumerWidget {
                 : "",
             centerTitle: true,
             leftIcon: Icons.arrow_back,
-                       showMenuIcon: false,
-
+            showMenuIcon: false,
             leftIconClicked: () {
               Navigator.pop(context);
             },
@@ -81,11 +80,11 @@ class ClientScreen extends ConsumerWidget {
                           EdgeInsets.symmetric(vertical: 20, horizontal: 20),
                       child: Column(
                         children: [
-                          _clientScreenAnalytics(
-                              context: context, state: state),
-                          SizedBox(
-                            height: MediaQuery.of(context).size.height / 15,
-                          ),
+                          // _clientScreenAnalytics(
+                          // context: context, state: state),
+                          // SizedBox(
+                          // height: MediaQuery.of(context).size.height / 15,
+                          // ),
                           Text(
                             "Previous sessions",
                             style: TextStyle(fontSize: 16, color: Colors.grey),
@@ -94,9 +93,6 @@ class ClientScreen extends ConsumerWidget {
                             height: MediaQuery.of(context).size.height / 60,
                           ),
                           _ClientSessions(args['id']),
-                          SizedBox(
-                            height: 500,
-                          )
                         ],
                       )),
                 ],
@@ -276,64 +272,60 @@ Widget _sessionCard(
   final String serviceName = serviceModelData[index].serviceName ?? "";
   return StatefulBuilder(builder: (BuildContext context, StateSetter setState) {
     return GestureDetector(
-        onTap: () => Navigator.pushNamed(context, "/gallery-screen",
-            arguments: {"media": serviceMediaData[index]}),
+        onTap: () =>
+            Navigator.pushNamed(context, "/post-session-screen", arguments: {
+              "service_media": serviceMediaData[index],
+              "session_data": sessionData[index],
+              "service_data": sessionData[index]
+            }),
         child: Card(
-          elevation: 10,
+          elevation: 1,
           shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.all(Radius.circular(10))),
+              borderRadius: BorderRadius.all(Radius.circular(3))),
           child: Container(
-            height: MediaQuery.of(context).size.height / 7,
-            width: MediaQuery.of(context).size.height / 7,
-            decoration: BoxDecoration(
-                image: DecorationImage(
-                  fit: BoxFit.cover,
-                  image: FileImage(File(image)),
-                  colorFilter: ColorFilter.mode(
-                      Colors.black.withOpacity(.9), BlendMode.dstATop),
-                ),
-                color: image != "" ? Colors.black : colorStyles['green'],
-                borderRadius: BorderRadius.all(Radius.circular(10))),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  dateFormat.format(sessionData[index].dateTime as DateTime),
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-                Text(
-                  serviceName,
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                      color: Colors.white, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
+              height: MediaQuery.of(context).size.height / 7,
+              width: MediaQuery.of(context).size.height / 7,
+              decoration: BoxDecoration(
+                  image: DecorationImage(
+                    fit: BoxFit.cover,
+                    image: FileImage(File(image)),
+                    colorFilter: ColorFilter.mode(
+                        Colors.black.withOpacity(.8), BlendMode.dstATop),
+                  ),
+                  color: image != ""
+                      ? Colors.black
+                      : colorStyles['dark_blue_grey'],
+                  borderRadius: BorderRadius.all(Radius.circular(3))),
+              child: ClipRRect(
+                  borderRadius: BorderRadius.all(Radius.circular(3)),
+                  // make sure we apply clip it properly
+                  child: BackdropFilter(
+                      filter: ImageFilter.blur(sigmaX: 1, sigmaY: 1),
+                      child: Container(
+                        alignment: Alignment.center,
+                        color: Colors.grey.withOpacity(0.1),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text(
+                              dateFormat.format(
+                                  sessionData[index].dateTime as DateTime),
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                            Text(
+                              serviceName,
+                              textAlign: TextAlign.center,
+                              style: TextStyle(
+                                  color: Colors.white,
+                                  fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                      )))),
         ));
   });
-}
-
-class _ImageSqaure extends StatelessWidget {
-  final File? imageFile;
-  _ImageSqaure({this.imageFile});
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        width: 82,
-        padding: EdgeInsets.only(right: 5),
-        child: GestureDetector(
-          onTap: () => Navigator.pushNamed(context, "/full-screen-media",
-              arguments: {'file_type': 'image', 'file_path': imageFile}),
-          child: Container(
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                  fit: BoxFit.cover, image: FileImage(imageFile!)),
-            ),
-          ),
-        ));
-  }
 }
 
 class _VideoSqaure extends StatefulWidget {
@@ -372,11 +364,7 @@ class __VideoSqaureState extends State<_VideoSqaure> {
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.done) {
             return GestureDetector(
-                onTap: () => Navigator.pushNamed(context, "/full-screen-media",
-                        arguments: {
-                          'file_type': 'video',
-                          'file_path': widget.videoFile
-                        }),
+                onTap: () => null,
                 child: Stack(
                   children: [
                     Container(

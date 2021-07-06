@@ -22,12 +22,14 @@ class GalleryBloc {
   //https://pub.dev/packages/video_thumbnail
 
   Future<void> init(int sessionId) async {
-    await serviceMediaStream.drain();
-    final List<ServiceMedia> images = await ServiceMedia().readServiceMedia(
-        sql: "session_id = ? AND file_type = ?", args: [sessionId, 'image']);
-    for (final image in images) {
-      serviceMediaSink.add(image);
-    }
+    try {
+      await serviceMediaStream.drain();
+      final List<ServiceMedia> images = await ServiceMedia().readServiceMedia(
+          sql: "session_id = ? AND file_type = ?", args: [sessionId, 'image']);
+      for (final image in images) {
+        serviceMediaSink.add(image);
+      }
+    } catch (e) {}
   }
 
   final SessionModel? sessionModel;
@@ -37,10 +39,8 @@ class GalleryBloc {
             init(sessionModel!.id as int);
             eventStream.listen((int sessionId) async {
               final List<ServiceMedia> images = await ServiceMedia()
-                  .readServiceMedia(
-                      sql: "session_id = ? AND file_type = ?",
-                      args: [sessionId, 'image']);
-              serviceMediaSink.add(images.last);
+                  .readServiceMedia(sql: "session_id = ?", args: [sessionId]);
+              images.isNotEmpty ? serviceMediaSink.add(images.last) : false;
             });
           }()
         : null;

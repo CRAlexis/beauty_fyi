@@ -8,7 +8,7 @@ class DefaultTextArea extends StatelessWidget {
   final String? hintText;
   final String? labelText;
   final ValueSetter<String?>? onSaved;
-  final ValueSetter<String>? onChanged;
+  final onChanged;
   final TextInputType? textInputType;
   final IconData? iconData;
   final bool? disableTextFields;
@@ -40,6 +40,12 @@ class DefaultTextArea extends StatelessWidget {
         'tf_label_black',
         'tf_hint_black',
         'black_text_decoration'
+      ],
+      [
+        'white_textfield_sqaured',
+        'tf_label_black',
+        'tf_hint_black',
+        'black_text_decoration_with_padding'
       ]
     ];
     return Column(
@@ -64,7 +70,7 @@ class DefaultTextArea extends StatelessWidget {
             enabled: !disableTextFields!,
             controller: defaultTextAreaController,
             onSaved: (newValue) {},
-            onChanged: (value) {},
+            onChanged: (value) => onChanged(value),
             validator: (value) {
               return null;
             },

@@ -93,78 +93,6 @@ class AddClientScreen extends ConsumerWidget {
                   colorStyles['green']!
                 ], begin: Alignment.topLeft, end: Alignment.bottomRight)),
                 child: Stack(children: [
-                  GestureDetector(
-                      onTap: () {
-                        if (bottomBarNotifierController.isVisible) {
-                          bottomBarNotifierController.hideBottomBar();
-                        }
-                      },
-                      child: AnimatedOpacity(
-                          opacity:
-                              bottomBarNotifierController.isVisible ? 0.2 : 1,
-                          duration: Duration(microseconds: 500),
-                          child: Container(
-                              height: double.infinity,
-                              width: double.infinity,
-                              child: SingleChildScrollView(
-                                  physics: AlwaysScrollableScrollPhysics(),
-                                  padding: EdgeInsets.symmetric(
-                                    horizontal: 20.0,
-                                    vertical: 80.0,
-                                  ),
-                                  child: Card(
-                                      elevation: 20,
-                                      child: Container(
-                                          padding: EdgeInsets.symmetric(
-                                              vertical: 10, horizontal: 20),
-                                          height: height > 400 ? height : 500,
-                                          child: SingleChildScrollView(
-                                            physics:
-                                                AlwaysScrollableScrollPhysics(),
-                                            child: Stack(
-                                              children: [
-                                                Column(
-                                                  children: [
-                                                    _ClientImage(),
-                                                    _ClientForm(state!
-                                                        is AddClientQuerying),
-                                                    ActionButton(
-                                                        onPressed: () async {
-                                                          addClientNotifierController.sendQuery(
-                                                              ClientModel(
-                                                                  clientFirstName:
-                                                                      clientFormNotifierController
-                                                                          .firstNameController
-                                                                          .text,
-                                                                  clientLastName:
-                                                                      clientFormNotifierController
-                                                                          .lastNameController
-                                                                          .text,
-                                                                  clientEmail:
-                                                                      clientFormNotifierController
-                                                                          .emailAddressController
-                                                                          .text,
-                                                                  clientPhoneNumber:
-                                                                      clientFormNotifierController
-                                                                          .phoneNumberController
-                                                                          .text,
-                                                                  clientImage:
-                                                                      imageFileNotifierController
-                                                                          .imageFile),
-                                                              context);
-                                                        },
-                                                        iconData: Icons.add,
-                                                        buttonText:
-                                                            "add client",
-                                                        isLoading: state
-                                                            is AddClientQuerying,
-                                                        backgroundColor:
-                                                            'green'),
-                                                  ],
-                                                ),
-                                              ],
-                                            ),
-                                          ))))))),
                   ProviderListener(
                       onChange: (context, state) {
                         if (state is AddClientError) {
@@ -177,7 +105,96 @@ class AddClientScreen extends ConsumerWidget {
                         }
                       },
                       provider: addClientNotifierProvider,
-                      child: Container()),
+                      child: GestureDetector(
+                          onTap: () {
+                            if (bottomBarNotifierController.isVisible) {
+                              bottomBarNotifierController.hideBottomBar();
+                            }
+                          },
+                          child: AnimatedOpacity(
+                              opacity: bottomBarNotifierController.isVisible
+                                  ? 0.2
+                                  : 1,
+                              duration: Duration(microseconds: 500),
+                              child: Container(
+                                  height: double.infinity,
+                                  width: double.infinity,
+                                  child: SingleChildScrollView(
+                                      physics: AlwaysScrollableScrollPhysics(),
+                                      padding: EdgeInsets.symmetric(
+                                        horizontal: 20.0,
+                                        vertical: 80.0,
+                                      ),
+                                      child: Card(
+                                          elevation: 20,
+                                          child: Container(
+                                              padding: EdgeInsets.symmetric(
+                                                  vertical: 10, horizontal: 20),
+                                              height:
+                                                  height > 400 ? height : 500,
+                                              child: SingleChildScrollView(
+                                                physics:
+                                                    AlwaysScrollableScrollPhysics(),
+                                                child: Stack(
+                                                  children: [
+                                                    Column(
+                                                      children: [
+                                                        _ClientImage(),
+                                                        _ClientForm(state!
+                                                            is AddClientQuerying),
+                                                        Consumer(builder:
+                                                            (BuildContext
+                                                                    context,
+                                                                ScopedReader
+                                                                    watch,
+                                                                child) {
+                                                          final state = watch(
+                                                              clientFormNotifierProvider);
+                                                          return ActionButton(
+                                                              onPressed:
+                                                                  () async {
+                                                                addClientNotifierController.sendQuery(
+                                                                    ClientModel(
+                                                                        clientFirstName: clientFormNotifierController
+                                                                            .firstNameController
+                                                                            .text
+                                                                            .trim(),
+                                                                        clientLastName: clientFormNotifierController.lastNameController.text.trim().length != 0
+                                                                            ? clientFormNotifierController.lastNameController.text
+                                                                                .trim()
+                                                                            : "",
+                                                                        clientEmail: clientFormNotifierController.emailAddressController.text.trim().length !=
+                                                                                0
+                                                                            ? clientFormNotifierController.emailAddressController.text
+                                                                                .trim()
+                                                                            : "",
+                                                                        clientPhoneNumber: clientFormNotifierController.phoneNumberController.text.trim().length !=
+                                                                                0
+                                                                            ? clientFormNotifierController.phoneNumberController.text
+                                                                                .trim()
+                                                                            : "",
+                                                                        clientImage:
+                                                                            imageFileNotifierController.imageFile),
+                                                                    context);
+                                                              },
+                                                              iconData:
+                                                                  Icons.add,
+                                                              buttonText:
+                                                                  "add client",
+                                                              isLoading: state
+                                                                  is AddClientQuerying,
+                                                              backgroundColor: state
+                                                                      is ClientFormValidation
+                                                                  ? state.isValidated
+                                                                      ? 'darker_green'
+                                                                      : 'green'
+                                                                  : 'green');
+                                                        })
+                                                      ],
+                                                    ),
+                                                  ],
+                                                ),
+                                              )))))))),
                   _BottomBar(),
                 ]))));
   }

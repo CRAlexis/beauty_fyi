@@ -83,10 +83,6 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
           watch(liveSessionNotifierProvider(widget.args['sessionModel']));
       final liveSessionNotifierController = context.read(
           liveSessionNotifierProvider(widget.args['sessionModel']).notifier);
-      // final cameraController = context.read(cameraNotifierProvider.notifier);
-      print("#live session screen initialised");
-      print("live session screen state: $state");
-
       return new WillPopScope(
           onWillPop: () async {
             if (tabController.index == 0) {
@@ -107,6 +103,30 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                   titleText: "",
                   leftIcon: Icons.arrow_back,
                   showMenuIcon: false,
+                  menuIconClicked: (value) async {
+                    switch (value) {
+                      case 'End session':
+                        await liveSessionNotifierController.endSession();
+                        break;
+                      case 'Turn off vibration':
+                        await liveSessionNotifierController
+                            .toggleVibration(false);
+                        break;
+                      case 'Turn on vibration':
+                        await liveSessionNotifierController
+                            .toggleVibration(true);
+                        break;
+                      default:
+                    }
+                  },
+                  menuOptions: [
+                    'End session',
+                    state is LiveSessionActive
+                        ? state.vibrationSetting
+                            ? 'Turn off vibration'
+                            : 'Turn on vibration'
+                        : ''
+                  ],
                   leftIconClicked: () async {
                     if (tabController.index == 0) {
                       tabController.animateTo(1,
@@ -148,19 +168,23 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
                                         children: [
                                           PageViewWrapper(
                                               child: CountDown(
-                                                  state
-                                                      .processDurationInSeconds,
-                                                  state.serviceProcess,
-                                                  state.sessionFinished,
-                                                  onPaused: () =>
-                                                      liveSessionNotifierController
-                                                          .countdownPaused(),
-                                                  onResumed: () =>
-                                                      liveSessionNotifierController
-                                                          .countdownResumed(),
-                                                  onStartNextProcess: () =>
-                                                      liveSessionNotifierController
-                                                          .startNextProcess()),
+                                                state.processDurationInSeconds,
+                                                state.serviceProcess,
+                                                state.sessionFinished,
+                                                state.lastProcess,
+                                                onPaused: () =>
+                                                    liveSessionNotifierController
+                                                        .countdownPaused(),
+                                                onResumed: () =>
+                                                    liveSessionNotifierController
+                                                        .countdownResumed(),
+                                                onStartNextProcess: () =>
+                                                    liveSessionNotifierController
+                                                        .startNextProcess(),
+                                                onProcessFinished: () =>
+                                                    liveSessionNotifierController
+                                                        .endCurrentProcess(),
+                                              ),
                                               keepAlive: true)
                                         ],
                                       ),
@@ -239,7 +263,6 @@ class CameraPreviewScreen extends ConsumerWidget {
   Widget build(BuildContext context, ScopedReader watch) {
     final state = watch(cameraNotifierProvider(galleryBloc));
     final mediaSize = MediaQuery.of(context).size;
-    final scale = print("# $state");
     return ProviderListener(
         onChange: (BuildContext context, state) {
           if (state is CameraCaptureError) {
@@ -260,16 +283,12 @@ class CameraPreviewScreen extends ConsumerWidget {
                     ? ClipRect(
                         clipper: _MediaSizeClipper(mediaSize),
                         child: Transform.scale(
-                          scale: 1 /
-                              (state.cameraController.value.aspectRatio *
-                                  mediaSize.aspectRatio),
-                          alignment: Alignment.topCenter,
-                          child: CameraPreview(state.cameraController),
-                        ),
+                            scale: 1 /
+                                (state.cameraController.value.aspectRatio *
+                                    mediaSize.aspectRatio),
+                            alignment: Alignment.topCenter,
+                            child: CameraPreview(state.cameraController)),
                       )
-                    // ? Container(
-                    // child: Text("camrea laoded"),
-                    // )
                     : state is CameraLoadingError
                         ? Center(
                             child: Text(state.message),

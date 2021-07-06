@@ -43,7 +43,6 @@ class ServiceMedia {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      print(args);
       List<Map<String, dynamic>> query =
           await db.query('service_media', where: sql, whereArgs: args);
       return List.generate(query.length, (index) {

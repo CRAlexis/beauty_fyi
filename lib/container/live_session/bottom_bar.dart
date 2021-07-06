@@ -7,6 +7,7 @@ import 'package:beauty_fyi/models/session_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:simple_animations/simple_animations.dart';
+import 'package:video_player/video_player.dart';
 
 class LiveSessionBottomBar extends StatefulWidget {
   final takePhoto;
@@ -260,9 +261,9 @@ class _CircleButtonState extends State<CircleButton> {
           duration: Duration(milliseconds: 100),
           width: animate
               ? takePhoto
-                  ? MediaQuery.of(context).size.width / 5
-                  : MediaQuery.of(context).size.width / 5 + 4
-              : MediaQuery.of(context).size.width / 5,
+                  ? MediaQuery.of(context).size.width / 4
+                  : MediaQuery.of(context).size.width / 4 + 4
+              : MediaQuery.of(context).size.width / 4,
           decoration: BoxDecoration(
             color: animate
                 ? takePhoto
@@ -279,7 +280,11 @@ class _CircleButtonState extends State<CircleButton> {
 class GalleryIcon extends StatelessWidget {
   final GalleryBloc galleryBloc;
   GalleryIcon(this.galleryBloc);
+
   Widget build(BuildContext context) {
+    try {
+      galleryBloc.eventSink.add(galleryBloc.sessionModel!.id as int);
+    } catch (e) {}
     return StreamBuilder<ServiceMedia>(
         stream: galleryBloc.serviceMediaStream,
         initialData: null,
@@ -289,8 +294,6 @@ class GalleryIcon extends StatelessWidget {
                 onTap: () async {
                   try {
                     print("# Tapped");
-                    // final images = await ServiceMedia().readServiceMedia(
-                    // sql: "session_id = ?", args: []);
                     final List<ServiceMedia> images = await ServiceMedia()
                         .readServiceMedia(
                             sql: "session_id = ?",
@@ -302,34 +305,86 @@ class GalleryIcon extends StatelessWidget {
                     print(e);
                   }
                 },
-                child: Container(
-                    height: 50,
-                    width: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(5)),
-                      border: Border.all(color: Colors.white, width: 2),
-                      color: Color.fromRGBO(255, 255, 255, 0.2),
-                      image: DecorationImage(
-                        fit: BoxFit.cover,
-                        image:
-                            FileImage(File(snapshot.data!.filePath as String)),
-                      ),
-                    )));
+                child: snapshot.data!.fileType == "image"
+                    ? Container(
+                        height: MediaQuery.of(context).size.width / 6.5,
+                        width: MediaQuery.of(context).size.width / 6.5,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(5)),
+                          border: Border.all(color: Colors.white, width: 2),
+                          color: Color.fromRGBO(255, 255, 255, 0.2),
+                          image: DecorationImage(
+                            fit: BoxFit.cover,
+                            image: FileImage(
+                                File(snapshot.data!.filePath as String)),
+                          ),
+                        ))
+                    : Container(
+                        height: MediaQuery.of(context).size.width / 6.5,
+                        width: MediaQuery.of(context).size.width / 6.5,
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.all(Radius.circular(5)),
+                          border: Border.all(color: Colors.white, width: 2),
+                          color: Color.fromRGBO(255, 255, 255, 0.2),
+                        ),
+                        child: _VideoSqaure(
+                          File(snapshot.data!.filePath as String),
+                        )));
           } else {
-            try {
-            galleryBloc.eventSink.add(galleryBloc.sessionModel!.id as int);
-            } catch (e) {
-            }
-            return GestureDetector(
-                onTap: () async {},
+            return Container(
+                padding: EdgeInsets.only(bottom: 20),
+                height: MediaQuery.of(context).size.width / 6.5,
+                width: MediaQuery.of(context).size.width / 6.5,
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.all(Radius.circular(5)),
+                  border: Border.all(color: Colors.white, width: 2),
+                  color: Color.fromRGBO(255, 255, 255, 0.2),
+                ));
+          }
+        });
+  }
+}
+
+class _VideoSqaure extends StatefulWidget {
+  final File? videoFile;
+
+  _VideoSqaure(this.videoFile);
+
+  @override
+  __VideoSqaureState createState() => __VideoSqaureState();
+}
+
+class __VideoSqaureState extends State<_VideoSqaure> {
+  late VideoPlayerController _controller;
+  Future<void>? _initialiseVideoPlayerFuture;
+
+  @override
+  void initState() {
+    _controller = VideoPlayerController.file(widget.videoFile!);
+    _initialiseVideoPlayerFuture = _controller.initialize();
+    _controller.setLooping(false);
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder(
+        future: _initialiseVideoPlayerFuture,
+        builder: (context, snapshot) {
+          if (snapshot.connectionState == ConnectionState.done) {
+            return AspectRatio(
+                aspectRatio: 1 / 1,
                 child: Container(
-                    height: 50,
-                    width: 50,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(Radius.circular(5)),
-                      border: Border.all(color: Colors.white, width: 2),
-                      color: Color.fromRGBO(255, 255, 255, 0.2),
-                    )));
+                  child: VideoPlayer(_controller),
+                ));
+          } else {
+            return Container();
           }
         });
   }

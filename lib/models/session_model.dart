@@ -1,6 +1,9 @@
+import 'dart:collection';
+
 import 'package:beauty_fyi/models/service_media.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/session_bundle_model.dart';
+import 'package:beauty_fyi/providers/services_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -36,6 +39,17 @@ class SessionModel {
     };
   }
 
+  SessionModel _toModel(Map<String, dynamic> query) {
+    return SessionModel(
+        id: query['id'],
+        clientId: int.parse(query['client_id']),
+        dateTime: DateTime.parse(query['date_time']),
+        notes: query['notes'],
+        active: query['active'] == 1,
+        currentProcess: query['current_process'],
+        serviceId: query['service_id']);
+  }
+
   set setSessionId(int sessionId) {
     this.id = sessionId;
   }
@@ -54,6 +68,25 @@ class SessionModel {
 
   set setActive(bool active) {
     this.active = active;
+  }
+
+  Future<int> checkSessionActivity() async {
+    try {
+      final Database db = await openDatabase(
+          join(await getDatabasesPath(), "beautyfyi_database.db"));
+      final List<Map<String, dynamic>> query = await db.query("sessions");
+      int sessionIsActive = 0;
+      query.every((element) {
+        if (element['active'] == 1) {
+          sessionIsActive = element['service_id'];
+          return false;
+        }
+        return true;
+      });
+      return sessionIsActive;
+    } catch (e) {
+      return 0;
+    }
   }
 
   Future<Map<String, dynamic>> sessionInit() async {
@@ -120,7 +153,6 @@ class SessionModel {
       if (sessions.isNotEmpty) {
         sessions.every((element) {
           if (element['active'] == 1) {
-            print(element);
             try {
               db.update(
                   'sessions',
@@ -175,6 +207,18 @@ class SessionModel {
     }
   }
 
+  Future<void> updateSessionNotes() async {
+    try {
+      final Database db = await openDatabase(
+          join(await getDatabasesPath(), "beautyfyi_database.db"));
+      await db.rawUpdate('UPDATE sessions SET notes = ? WHERE id = ${this.id}',
+          ["${this.notes}"]);
+      return;
+    } catch (e) {
+      throw (e);
+    }
+  }
+
   Future<void> endSession() async {
     try {
       this.active = false;
@@ -220,6 +264,55 @@ class SessionModel {
     } catch (e) {
       print(e);
       return Future.error(e, StackTrace.current);
+    }
+  }
+
+  Future<ServiceMetaData> fetchServiceMetaData() async {
+    try {
+      final Database db = await openDatabase(
+          join(await getDatabasesPath(), 'beautyfyi_database.db'));
+      final List<Map<String, dynamic>> query =
+          await db.query('sessions', where: 'active = ?', whereArgs: [0]);
+      final Map<int, List<SessionModel>> sessionsSortedById = {};
+      final Map<int, int> sessionPopularity = {};
+
+      await Future.forEach(query, (Map<String, dynamic> session) async {
+        try {
+          final s = _toModel(session);
+          sessionsSortedById[s.serviceId] == null
+              ? () {
+                  sessionsSortedById[s.serviceId as int] = [];
+                  sessionPopularity[s.serviceId as int] = 0;
+                }()
+              : null;
+          sessionPopularity[s.serviceId as int] =
+              sessionPopularity[s.serviceId as int]! + 1;
+          sessionsSortedById[s.serviceId]?.add(s);
+        } catch (e) {
+          print("top catch: $e");
+        }
+      });
+
+      final sortedByPopularity = new SplayTreeMap<int, int>.from(
+          sessionPopularity,
+          (a, b) => sessionPopularity[a]! < sessionPopularity[b]! ? 1 : -1);
+      int i = 1;
+      int? popIndex;
+      sortedByPopularity.forEach((key, value) {
+        if (key == this.serviceId) {
+          popIndex = i;
+        }
+        i++;
+      });
+      return ServiceMetaData(
+          sessionsSortedById[this.serviceId] != null
+              ? sessionsSortedById[this.serviceId]!.length
+              : 0,
+          87,
+          popIndex ?? 0);
+    } catch (e) {
+      print("bottom catch: $e");
+      return ServiceMetaData(null, null, null);
     }
   }
 }

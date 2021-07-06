@@ -100,9 +100,9 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
           dismissible: true,
           context: context,
           message:
-              "You already have a session active with ${sessionAlreadyActive['clientName']}.",
-          leftButtonText: "New session",
-          rightButtonText: "Resume",
+              "${sessionAlreadyActive['serviceName']} with ${sessionAlreadyActive['clientName']} is currently in progress.",
+          leftButtonText: "Start new session",
+          rightButtonText: "Resume session",
           onLeftButton: () async {
             Navigator.of(context).pop();
             _initSession(sessionModel, context);

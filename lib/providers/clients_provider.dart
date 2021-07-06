@@ -76,6 +76,10 @@ class ClientsNotifier extends StateNotifier<ClientsState> {
     try {
       state = ClientsLoading();
       final clients = await ClientModel().readClients();
+      clients.sort((a, b) => ("${a.clientFirstName!} ${a.clientLastName!}")
+          .toLowerCase()
+          .compareTo(
+              ("${b.clientFirstName!} ${b.clientLastName!}").toLowerCase()));
       state = ClientsLoaded(clients);
     } catch (e) {
       try {

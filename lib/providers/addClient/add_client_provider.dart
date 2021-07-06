@@ -1,4 +1,3 @@
-
 import 'package:beauty_fyi/container/alert_dialoges/loading_alert_dialog.dart';
 import 'package:beauty_fyi/container/alert_dialoges/message_alert_dialog.dart';
 import 'package:beauty_fyi/models/client_model.dart';
@@ -44,12 +43,18 @@ class AddClientNotifier<AddClientState> extends StateNotifier {
     try {
       loadingAlertDialog.show();
       state = AddClientQuerying;
+      print("last: ${clientModel.clientLastName}");
+      print("email: ${clientModel.clientEmail}");
+      print("number: ${clientModel.clientPhoneNumber}");
+      print("here 1");
       await clientModel.insertClient(clientModel);
+      print("here 2");
+
       state = AddClientSuccess;
       loadingAlertDialog.pop();
       MessageAlertDialog(
           message:
-              "${clientModel.clientFirstName} ${clientModel.clientLastName ?? ""} was added as a client.",
+              "${clientModel.clientFirstName} ${clientModel.clientLastName} was added as a client.",
           context: context,
           onPressed: () {
             Navigator.pop(context);
@@ -57,9 +62,9 @@ class AddClientNotifier<AddClientState> extends StateNotifier {
           }).show();
       return;
     } catch (e) {
+      print(e);
       state = AddClientError("Unable to add client. Please try again");
       loadingAlertDialog.pop();
-
       throw (e);
     }
   }

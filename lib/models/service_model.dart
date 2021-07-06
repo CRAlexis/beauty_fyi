@@ -1,5 +1,7 @@
 import 'dart:io';
 
+import 'package:beauty_fyi/models/session_model.dart';
+import 'package:beauty_fyi/providers/services_provider.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 
@@ -85,29 +87,28 @@ class ServiceModel {
     }
   }
 
-  Future<bool> updateService() async {
+  Future<void> updateService() async {
     print("updating service");
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      final int query = await db.update('services', this.toMap(),
+      await db.update('services', this.toMap(),
           where: "id = ?",
           whereArgs: [this.id],
           conflictAlgorithm: ConflictAlgorithm.rollback);
-      return query == 1;
+      return;
     } catch (e) {
       print(e);
       return Future.error(e, StackTrace.fromString(""));
     }
   }
 
-  Future<bool> deleteService() async {
+  Future<void> deleteService() async {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      final int query =
-          await db.delete('services', where: "id = ?", whereArgs: [id]);
-      return query == 1;
+      await db.delete('services', where: "id = ?", whereArgs: [id]);
+      return;
     } catch (e) {
       return Future.error(e, StackTrace.fromString(""));
     }

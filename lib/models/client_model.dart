@@ -23,7 +23,9 @@ class ClientModel {
   Map<String, dynamic> get map {
     return {
       'client_first_name': clientFirstName!.trim().capitalize(),
-      'client_last_name': clientLastName!.trim().capitalize(),
+      'client_last_name': clientLastName!.length != 0
+          ? clientLastName!.trim().capitalize()
+          : clientLastName,
       'client_email': clientEmail!.trim(),
       'client_phone_number': clientPhoneNumber!.trim(),
       'client_image': clientImage != null ? clientImage!.path : null

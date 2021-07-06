@@ -40,6 +40,10 @@ Map<String, BoxDecoration> textfieldStyles = {
     color: Colors.white,
     border: Border(bottom: BorderSide(color: Colors.grey.shade400, width: 1)),
   ),
+  "white_textfield_sqaured": BoxDecoration(
+    color: Colors.white.withOpacity(0.4),
+    borderRadius: BorderRadius.circular(0.0),
+  ),
 };
 
 Map<String, InputDecoration> textfieldInputDecoration(
@@ -69,6 +73,24 @@ Map<String, InputDecoration> textfieldInputDecoration(
         // contentPadding: iconData == null
         // ? EdgeInsets.only(top: 0.0, left: 7)
         // : EdgeInsets.only(top: 10.0),
+        prefixIcon: iconData == null
+            ? null
+            : Icon(
+                iconData,
+                color: Colors.grey.shade700,
+                size: double.parse('25'),
+              ),
+        hintText: hintText,
+        hintStyle: textStyles[hintTextStyle],
+        suffixText: suffixText,
+      ),
+      "black_text_decoration_with_padding": InputDecoration(
+        counterText: '',
+        errorStyle: TextStyle(),
+        border: InputBorder.none,
+        contentPadding: iconData == null
+            ? EdgeInsets.only(top: 0.0, left: 7)
+            : EdgeInsets.only(top: 10.0),
         prefixIcon: iconData == null
             ? null
             : Icon(

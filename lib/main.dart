@@ -12,9 +12,10 @@ import 'package:beauty_fyi/screens/forgot_password_screen.dart';
 
 import 'package:beauty_fyi/screens/dashboard_screen.dart';
 import 'package:beauty_fyi/screens/add_service_screen.dart';
+import 'package:beauty_fyi/screens/settings_screen.dart';
 import 'package:beauty_fyi/screens/test2.dart';
 
-import 'package:beauty_fyi/screens/view_service_screen.dart';
+import 'package:beauty_fyi/screens/service_screen.dart';
 import 'package:beauty_fyi/test/change_notifier_widget.dart';
 import 'package:beauty_fyi/test/future_provider_widget.dart';
 import 'package:beauty_fyi/test/provider_widget.dart';
@@ -23,6 +24,7 @@ import 'package:beauty_fyi/test/state_provider_widget.dart';
 import 'package:beauty_fyi/test/stream_provider_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
 import 'package:path/path.dart';
 import 'package:sqflite/sqflite.dart';
@@ -34,8 +36,18 @@ void main() async {
     statusBarColor: Colors.transparent, // transparent status bar
   ));
   initDatabases();
+  systemSettings();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(ProviderScope(child: MyApp()));
+}
+
+void systemSettings() async {
+  final storage = new FlutterSecureStorage();
+  await storage.write(key: 'vibration_setting', value: 'true');
+
+  if (!await storage.containsKey(key: 'vibration_setting')) {
+    await storage.write(key: 'vibration_setting', value: 'true');
+  }
 }
 
 Future<void> initDatabases() async {
@@ -43,7 +55,6 @@ Future<void> initDatabases() async {
     join(await getDatabasesPath(), 'beautyfyi_database.db'),
     onOpen: (db) async {
       print(db);
-
       // await deleteAllTables(db);
       await db.execute(
         "CREATE TABLE IF NOT EXISTS clients(id INTEGER PRIMARY KEY, client_first_name VARCHAR, client_last_name VARCHAR, client_image TEXT, client_email VARCHAR, client_phone_number VARCHAR )",
@@ -84,9 +95,6 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       title: 'Beauty-fyi',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
       initialRoute: '/dashboard',
       onGenerateRoute: (RouteSettings settings) {
         final routes = <String, WidgetBuilder>{
@@ -95,7 +103,7 @@ class MyApp extends StatelessWidget {
           '/onboarding-screen': (BuildContext context) => OnboardingScreen(),
           '/forgot-password': (BuildContext context) => ForgotPasswordScreen(),
           '/dashboard': (BuildContext context) => DashboardScreen(),
-          '/view-service': (BuildContext context) => ViewServiceScreen(
+          '/view-service': (BuildContext context) => ServiceScreen(
                 args: settings.arguments,
               ),
           '/add-service': (BuildContext context) =>
@@ -112,6 +120,7 @@ class MyApp extends StatelessWidget {
               ClientScreen(args: settings.arguments),
           '/post-session-screen': (BuildContext context) =>
               PostSessionScreen(args: settings.arguments),
+          '/settings-screen': (BuildContext context) => SettingsScreen(),
           '/test': (BuildContext context) => Test(),
           '/provider': (BuildContext context) => ProviderWidget(),
           '/state_provider': (BuildContext context) => StateProviderWidget(),

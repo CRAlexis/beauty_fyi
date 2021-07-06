@@ -28,19 +28,22 @@ class _NotesSectionState extends State<NotesSection> {
           child: Container(
             child: DefaultTextArea(
               iconData: null,
-              hintText: "Session notes",
-              invalidMessage: "Invalid name",
+              hintText: "notes",
               labelText: "",
-              textInputType: TextInputType.name,
+              textInputType: TextInputType.multiline,
               defaultTextAreaController: textAreaController,
               onSaved: (String? value) {},
               onChanged: (String value) {
-                context
-                    .read(liveSessionNotifierProvider.notifier)
-                    .updateNotes(value);
+                try {
+                   context.read(liveSessionNotifierProvider.notifier).updateNotes(
+                    value.isNotEmpty ? value : "",
+                    widget.sessionModel as SessionModel);
+                } catch (e) {
+                  print(e);
+                }
               },
               disableTextFields: false,
-              stylingIndex: 1,
+              stylingIndex: 2,
               maxLength: 2500,
               maxLines: null,
             ),

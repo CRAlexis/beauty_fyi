@@ -4,6 +4,7 @@ import 'package:beauty_fyi/models/session_model.dart';
 import 'package:camera/camera.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:vibration/vibration.dart';
 
 abstract class CameraState {
   const CameraState();
@@ -60,7 +61,7 @@ class CameraNotifier<CameraState> extends StateNotifier {
       state = CameraLoading();
       final cameras = await availableCameras();
       camera = cameras[index];
-      cameraController = CameraController(camera, ResolutionPreset.max);
+      cameraController = CameraController(camera, ResolutionPreset.high);
       await cameraController.initialize();
       // try {
       // await cameraController.setFlashMode(FlashMode.torch);
@@ -103,8 +104,9 @@ class CameraNotifier<CameraState> extends StateNotifier {
   void startRecording() async {
     print("# start recording");
     try {
-      state = CameraLoaded(cameraController);
       // state = CameraLoaded(cameraController);
+      // state = CameraLoaded(cameraController);
+      Vibration.vibrate(duration: 100);
       await cameraController.startVideoRecording();
     } catch (e) {
       state = CameraCaptureError(cameraController, "Unable to save video.");
@@ -116,17 +118,27 @@ class CameraNotifier<CameraState> extends StateNotifier {
   ) async {
     print("# end recording");
     try {
-      final directory = await getApplicationDocumentsDirectory();
+      print("# 1");
+      final d = await getExternalStorageDirectory();
       final String name = DateTime.now().toString().replaceAll(" ", "");
+      final directory =
+          d != null ? d : await getApplicationDocumentsDirectory();
       final path = "${directory.path}/$name.mp4";
+      print("# 2");
+
       XFile file = await cameraController.stopVideoRecording();
+      print("# 3");
+
       file.saveTo(path);
       await ServiceMedia().insertServiceMedia(ServiceMedia(
           sessionId: sessionModel.id,
           serviceId: sessionModel.serviceId,
           fileType: "video",
           filePath: path));
-      // galleryBloc.eventSink.add({GalleryEvent.VideoCaptured: 1});
+      print("# 4");
+
+      galleryBloc.eventSink.add(sessionModel.id as int);
+      print("# 5");
     } catch (error) {
       state = CameraCaptureError(cameraController, "Unable to save video.");
       print(error);

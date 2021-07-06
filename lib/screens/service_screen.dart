@@ -3,13 +3,13 @@ import 'dart:io';
 
 import 'package:beauty_fyi/container/app_bar/app_bar.dart';
 import 'package:beauty_fyi/container/media/grid_media.dart';
-import 'package:beauty_fyi/container/view_service/start_session_button.dart';
 import 'package:beauty_fyi/models/service_media.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/service_process_model.dart';
 import 'package:beauty_fyi/providers/services_provider.dart';
 import 'package:beauty_fyi/providers/sessions_provider.dart';
 import 'package:beauty_fyi/styles/colors.dart';
+import 'package:beauty_fyi/styles/text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
@@ -21,9 +21,9 @@ final serviceNotifierProvider = StateNotifierProvider.autoDispose
 final sessionNotifierProvider = StateNotifierProvider(
     (ref) => SessionsNotifier(SessionProviderEnums.NULL, null));
 
-class ViewServiceScreen extends ConsumerWidget {
+class ServiceScreen extends ConsumerWidget {
   final args;
-  ViewServiceScreen({Key? key, this.args}) : super(key: key);
+  ServiceScreen({Key? key, this.args}) : super(key: key);
 
   Widget build(BuildContext context, ScopedReader watch) {
     final state = watch(serviceNotifierProvider(args['serviceId']));
@@ -39,7 +39,11 @@ class ViewServiceScreen extends ConsumerWidget {
           automaticallyImplyLeading: false,
           centerTitle: true,
           elevation: 0,
-          showMenuIcon: true,
+          showMenuIcon: state is ServiceLoaded
+              ? state.serviceIsActive
+                  ? false
+                  : true
+              : false,
           menuOptions: ['edit', 'delete'],
           menuIconClicked: (String val) {
             switch (val) {
@@ -65,9 +69,19 @@ class ViewServiceScreen extends ConsumerWidget {
               _TabBody(
                 serviceModel: state is ServiceLoaded ? state.service : null,
                 serviceMedia: state is ServiceLoaded ? state.serviceMedia : [],
+                serviceMetaData:
+                    state is ServiceLoaded ? state.serviceMetaData : null,
+              ),
+              SizedBox(
+                height: MediaQuery.of(context).size.height / 14,
               )
             ])),
-            StartSessionButton(
+            _StartSessionButton(
+              state is ServiceLoaded
+                  ? state.serviceIsActive
+                      ? "Start or resume session"
+                      : "Start session"
+                  : "",
               onPressed: () {
                 state is ServiceLoaded
                     ? context
@@ -122,7 +136,12 @@ Widget _serviceScreenHeader(
 class _TabBody extends StatefulWidget {
   final ServiceModel? serviceModel;
   final List<ServiceMedia> serviceMedia;
-  const _TabBody({Key? key, this.serviceModel, required this.serviceMedia})
+  final ServiceMetaData? serviceMetaData;
+  const _TabBody(
+      {Key? key,
+      this.serviceModel,
+      required this.serviceMedia,
+      this.serviceMetaData})
       : super(key: key);
 
   @override
@@ -217,8 +236,27 @@ class __TabBodyState extends State<_TabBody>
                                   return Container(
                                       padding:
                                           EdgeInsets.symmetric(vertical: 2.5),
-                                      child: Text(
-                                          "${index + 1}) ${processes.processName?.capitalize()} for ${processes.processDuration} minutes"));
+                                      child: RichText(
+                                          text: TextSpan(children: [
+                                        TextSpan(
+                                            text:
+                                                "${index + 1}) ${processes.processName?.capitalize()}",
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black)),
+                                        TextSpan(
+                                            text: " for ",
+                                            style: TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                fontSize: 14,
+                                                color: Colors.black)),
+                                        TextSpan(
+                                            text:
+                                                "${processes.processDuration} minute(s)",
+                                            style: TextStyle(
+                                                fontSize: 14,
+                                                color: Colors.black))
+                                      ])));
                                 })
                           ],
                         ),
@@ -236,32 +274,29 @@ class __TabBodyState extends State<_TabBody>
                                       context,
                                       Icons.group,
                                       colorStyles['darker_purple'],
-                                      "32",
-                                      "sessions booked"),
-                                  _analyticCard(
-                                      context,
-                                      Icons.sentiment_satisfied,
-                                      colorStyles['darker_green'],
-                                      "87%",
-                                      "customer satisfaction"),
-                                ],
-                              ),
-                              Row(
-                                children: [
-                                  _analyticCard(
-                                      context,
-                                      Icons.group,
-                                      colorStyles['darker_blue'],
-                                      "405 mins",
-                                      "average length"),
+                                      widget.serviceMetaData?.sessionsBooked
+                                          .toString(),
+                                      "session(s) booked"),
                                   _analyticCard(
                                       context,
                                       Icons.trending_up,
-                                      colorStyles['dark_purple'],
-                                      "#3",
-                                      "popularity")
+                                      colorStyles['darker_blue'],
+                                      "#${widget.serviceMetaData?.servicePopularity}",
+                                      "popularity"),
                                 ],
                               ),
+                              // Row(
+                              // children: [
+                              // _analyticCard(
+                              // context,
+                              // Icons.sentiment_satisfied,
+                              // Colors.white,
+                              // "",
+                              // ""),
+                              // _analyticCard(context, Icons.trending_up,
+                              // Colors.white, "", "")
+                              // ],
+                              // ),
                             ],
                           ))),
                   GridMedia(images: widget.serviceMedia)
@@ -291,27 +326,74 @@ Widget _analyticCard(context, icon, color, value, description) {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(5)),
         child: Container(
             height: MediaQuery.of(context).size.height / 6,
-            child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  SizedBox(
-                    height: 10,
+            child: Stack(
+              children: [
+                Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      SizedBox(
+                        height: 10,
+                      ),
+                    ]),
+                Padding(
+                    padding: EdgeInsets.only(top: 10),
+                    child: Align(
+                      alignment: Alignment.topCenter,
+                      child: Icon(
+                        icon,
+                        size: 25,
+                        color: color,
+                      ),
+                    )),
+                Padding(
+                  padding: EdgeInsets.only(top: 10),
+                  child: Align(
+                    alignment: Alignment.center,
+                    child: Text(
+                      value,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: MediaQuery.of(context).size.height / 20),
+                    ),
                   ),
-                  Icon(
-                    icon,
-                    size: 25,
-                    color: color,
-                  ),
-                  Text(
-                    value,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontWeight: FontWeight.bold, fontSize: 30),
-                  ),
-                  Text(
-                    description,
-                    textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.grey, fontSize: 12),
-                  )
-                ])),
+                ),
+                Padding(
+                    padding: EdgeInsets.only(bottom: 10),
+                    child: Align(
+                      alignment: Alignment.bottomCenter,
+                      child: Text(description,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: Colors.grey, fontSize: 12)),
+                    ))
+              ],
+            )),
       ));
+}
+
+class _StartSessionButton extends StatelessWidget {
+  final buttonText;
+  final onPressed;
+  _StartSessionButton(this.buttonText, {this.onPressed});
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+        alignment: Alignment.bottomCenter,
+        child: Container(
+          height: MediaQuery.of(context).size.height / 14,
+          width: double.infinity,
+          child: ElevatedButton(
+            style: ButtonStyle(
+                elevation: MaterialStateProperty.all(10),
+                padding: MaterialStateProperty.all(EdgeInsets.all(15.0)),
+                backgroundColor:
+                    MaterialStateProperty.all(colorStyles['green'])),
+            onPressed: () => onPressed(),
+            child: Text(
+              buttonText,
+              style: textStyles['button_label_white'],
+            ),
+          ),
+        ));
+  }
 }

@@ -14,11 +14,11 @@ class ClientFormNotifier<ClientFormState> extends StateNotifier {
   ClientFormNotifier([ClientFormState? state])
       : super(ClientFormValidation(false)) {
     firstNameController.addListener(_validateClientForm);
-    lastNameController.addListener(_validateClientForm);
-    emailAddressController.addListener(_validateClientForm);
+    // lastNameController.addListener(_validateClientForm);
+    // emailAddressController.addListener(_validateClientForm);
     // firstNameFocusNode.addListener(_firstNameFocusChange);
-    lastNameFocusNode.addListener(_lastNameFocusChange);
-    emailAddressFocusNode.addListener(_emailAddressFocusChange);
+    // lastNameFocusNode.addListener(_lastNameFocusChange);
+    // emailAddressFocusNode.addListener(_emailAddressFocusChange);
     // phoneNumberFocusNode.addListener(_phoneNumberFocusChange);
   }
   final GlobalKey<FormState> formKey = GlobalKey();
@@ -40,33 +40,41 @@ class ClientFormNotifier<ClientFormState> extends StateNotifier {
   bool validateEmail = false;
   void _validateClientForm() {
     if (firstNameController.text.trim().length > 1) {
-      validateFirstName = true;
-    }
-
-    state = ClientFormValidation(false);
-  }
-
-  // void _firstNameFocusChange() {}
-
-  void _lastNameFocusChange() {
-    if (!lastNameFocusNode.hasFocus) {
-      if (lastNameController.text.trim().length > 0) {
-        validateLastName = true;
-      } else {
-        validateLastName = false;
-      }
+      state = ClientFormValidation(true);
+    } else {
+      state = ClientFormValidation(false);
     }
   }
 
-  void _emailAddressFocusChange() {
-    if (!emailAddressFocusNode.hasFocus) {
-      if (emailAddressController.text.length > 1) {
-        validateEmail = true;
-      } else {
-        validateEmail = false;
-      }
-    }
-  }
+  // void _firstNameFocusChange() {
+  // if (!firstNameFocusNode.hasFocus) {
+  // if (firstNameController.text.trim().length > 0) {
+  // validateFirstName = true;
+  // } else {
+  // validateFirstName = false;
+  // }
+  // }
+  // }
+
+  // void _lastNameFocusChange() {
+  // if (!lastNameFocusNode.hasFocus) {
+  // if (lastNameController.text.trim().length > 0) {
+  // validateLastName = true;
+  // } else {
+  // validateLastName = false;
+  // }
+  // }
+  // }
+//
+  // void _emailAddressFocusChange() {
+  // if (!emailAddressFocusNode.hasFocus) {
+  // if (emailAddressController.text.length > 1) {
+  // validateEmail = true;
+  // } else {
+  // validateEmail = false;
+  // }
+  // }
+  // }
 
   // void _phoneNumberFocusChange() {}
 }

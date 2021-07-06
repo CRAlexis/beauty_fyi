@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';
 
@@ -17,6 +18,7 @@ class _GridMediaState extends State<GridMedia> {
     return Container(
         height: double.infinity,
         width: double.infinity,
+        color: colorStyles['cream'],
         child: ListView.builder(
             physics: BouncingScrollPhysics(),
             shrinkWrap: true,
@@ -26,50 +28,62 @@ class _GridMediaState extends State<GridMedia> {
                 children: [
                   widget.images[index * 4].fileType == "image"
                       ? _ImageSqaure(
+                          allMedia: widget.images,
                           imageFile: File(widget.images[index * 4].filePath!),
                           isEnd: false,
+                          index: index * 4,
                         )
                       : _VideoSqaure(
+                          allMedia: widget.images,
                           videoFile: File(widget.images[index * 4].filePath!),
                           isEnd: false,
+                          index: index * 4,
                         ),
                   widget.images.length > (index * 4) + 1
                       ? widget.images[(index * 4) + 1].fileType == "image"
                           ? _ImageSqaure(
+                              allMedia: widget.images,
                               imageFile: File(
                                   widget.images[(index * 4) + 1].filePath!),
                               isEnd: false,
-                            )
+                              index: (index * 4) + 1)
                           : _VideoSqaure(
+                              allMedia: widget.images,
                               videoFile: File(
                                   widget.images[(index * 4) + 1].filePath!),
                               isEnd: false,
-                            )
+                              index: (index * 4) + 1)
                       : _PlaceholderSqaure(isEnd: false),
                   widget.images.length > (index * 4) + 2
-                      ? widget.images[index].fileType == "image"
+                      ? widget.images[(index * 4) + 2].fileType == "image"
                           ? _ImageSqaure(
+                              allMedia: widget.images,
                               imageFile: File(
                                   widget.images[(index * 4) + 2].filePath!),
                               isEnd: false,
-                            )
+                              index: (index * 4) + 2)
                           : _VideoSqaure(
+                              allMedia: widget.images,
                               videoFile: File(
                                   widget.images[(index * 4) + 2].filePath!),
                               isEnd: false,
-                            )
+                              index: (index * 4) + 2)
                       : _PlaceholderSqaure(isEnd: false),
                   widget.images.length > (index * 4) + 3
-                      ? widget.images[index].fileType == "image"
+                      ? widget.images[(index * 4) + 3].fileType == "image"
                           ? _ImageSqaure(
+                              allMedia: widget.images,
                               imageFile: File(
                                   widget.images[(index * 4) + 3].filePath!),
                               isEnd: true,
+                              index: (index * 4) + 3,
                             )
                           : _VideoSqaure(
+                              allMedia: widget.images,
                               videoFile: File(
                                   widget.images[(index * 4) + 3].filePath!),
                               isEnd: true,
+                              index: (index * 4) + 3,
                             )
                       : _PlaceholderSqaure(isEnd: true)
                 ],
@@ -79,9 +93,13 @@ class _GridMediaState extends State<GridMedia> {
 }
 
 class _ImageSqaure extends StatelessWidget {
+  final List<ServiceMedia> allMedia;
   final File? imageFile;
   final bool? isEnd;
-  _ImageSqaure({this.imageFile, this.isEnd});
+  final int? index;
+
+  _ImageSqaure(
+      {required this.allMedia, this.imageFile, this.isEnd, this.index});
   @override
   Widget build(BuildContext context) {
     return Flexible(
@@ -90,7 +108,10 @@ class _ImageSqaure extends StatelessWidget {
             aspectRatio: 1 / 1,
             child: GestureDetector(
                 onTap: () => Navigator.pushNamed(context, "/full-screen-media",
-                    arguments: {'file_type': 'image', 'file_path': imageFile}),
+                        arguments: {
+                          'media': allMedia,
+                          'initialIndex': index,
+                        }),
                 child: Container(
                   padding: isEnd!
                       ? EdgeInsets.only(bottom: 2)
@@ -106,10 +127,12 @@ class _ImageSqaure extends StatelessWidget {
 }
 
 class _VideoSqaure extends StatefulWidget {
+  final List<ServiceMedia>? allMedia;
   final File? videoFile;
   final bool? isEnd;
+  final int? index;
 
-  _VideoSqaure({this.videoFile, this.isEnd});
+  _VideoSqaure({this.allMedia, this.videoFile, this.isEnd, this.index});
 
   @override
   __VideoSqaureState createState() => __VideoSqaureState();
@@ -124,6 +147,7 @@ class __VideoSqaureState extends State<_VideoSqaure> {
     _controller = VideoPlayerController.file(widget.videoFile!);
     _initialiseVideoPlayerFuture = _controller.initialize();
     _controller.setLooping(false);
+    _controller.pause();
     super.initState();
   }
 
@@ -136,6 +160,7 @@ class __VideoSqaureState extends State<_VideoSqaure> {
 
   @override
   Widget build(BuildContext context) {
+    print("should be here once");
     return FutureBuilder(
         future: _initialiseVideoPlayerFuture,
         builder: (context, snapshot) {
@@ -146,10 +171,13 @@ class __VideoSqaureState extends State<_VideoSqaure> {
                     aspectRatio: 1 / 1,
                     child: GestureDetector(
                         onTap: () => Navigator.pushNamed(
-                                context, "/full-screen-media", arguments: {
-                              'file_type': 'video',
-                              'file_path': widget.videoFile
-                            }),
+                                context, "/full-screen-media",
+                                arguments: {
+                                  // 'file_type': 'video',
+                                  // 'file_path': widget.videoFile
+                                  'media': widget.allMedia,
+                                  'initialIndex': widget.index,
+                                }),
                         child: Stack(
                           children: [
                             Container(
@@ -196,7 +224,7 @@ class _PlaceholderSqaure extends StatelessWidget {
                   ? EdgeInsets.only(bottom: 2)
                   : EdgeInsets.only(right: 2, bottom: 2),
               child: Container(
-                color: Colors.grey.shade100,
+                color: colorStyles['cream'],
               ),
             )));
   }

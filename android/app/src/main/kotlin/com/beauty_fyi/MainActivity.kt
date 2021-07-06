@@ -1,4 +1,4 @@
-package com.example.beauty_fyi
+package com.beauty_fyi
 
 import io.flutter.embedding.android.FlutterActivity
 

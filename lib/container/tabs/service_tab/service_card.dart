@@ -6,14 +6,12 @@ import 'package:flutter/material.dart';
 
 class ServiceCard extends StatefulWidget {
   final ServiceModel serviceModel;
-  final int? numberOfSessions;
   final VoidCallback? viewService;
   final serviceCardTapped;
   final int? serviceToFocus;
   const ServiceCard({
     Key? key,
     required this.serviceModel,
-    this.numberOfSessions,
     this.viewService,
     this.serviceCardTapped,
     this.serviceToFocus,
@@ -32,7 +30,7 @@ class _ServiceCardState extends State<ServiceCard> {
 
   final List<Color?> defaultColourList = [Colors.white, colorStyles['cream']];
   final List<Color?> activeColorList = [
-    colorStyles['green'],
+    colorStyles['blue'],
     colorStyles['blue']
   ];
   bool cardIsFocused = false;
@@ -52,8 +50,7 @@ class _ServiceCardState extends State<ServiceCard> {
             });
           },
           child: Card(
-            elevation:
-                widget.serviceToFocus == widget.serviceModel.id ? 15 : 10,
+            elevation: widget.serviceToFocus == widget.serviceModel.id ? 15 : 5,
             child: AnimatedContainer(
               duration: Duration(milliseconds: 300),
               decoration: BoxDecoration(
@@ -69,14 +66,14 @@ class _ServiceCardState extends State<ServiceCard> {
                 children: [
                   Container(
                     child: CircleAvatar(
-                        radius: 45,
+                        radius: MediaQuery.of(context).size.height / 13,
                         backgroundImage: serviceImage.existsSync()
                             ? FileImage(serviceImage)
                             : null),
                     decoration: BoxDecoration(
                         shape: BoxShape.circle,
                         border:
-                            new Border.all(color: Colors.white, width: 2.0)),
+                            new Border.all(color: Colors.white, width: 3.0)),
                   ),
                   SizedBox(
                     height: 5,
@@ -95,29 +92,14 @@ class _ServiceCardState extends State<ServiceCard> {
                   SizedBox(
                     height: 5,
                   ),
-                  widget.numberOfSessions == 1
-                      ? Text(
-                          "${widget.numberOfSessions.toString()} session",
-                          style: TextStyle(
-                            color:
-                                widget.serviceToFocus == widget.serviceModel.id
-                                    ? Colors.white
-                                    : Colors.grey.shade300,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'OpenSans',
-                          ),
-                        )
-                      : Text(
-                          "${widget.numberOfSessions.toString()} sessions",
-                          style: TextStyle(
-                            color:
-                                widget.serviceToFocus == widget.serviceModel.id
-                                    ? Colors.white
-                                    : Colors.grey.shade300,
-                            fontWeight: FontWeight.bold,
-                            fontFamily: 'OpenSans',
-                          ),
-                        ),
+                  Text(
+                    "",
+                    style: TextStyle(
+                      color: Colors.grey.shade300,
+                      fontWeight: FontWeight.bold,
+                      fontFamily: 'OpenSans',
+                    ),
+                  ),
                   SizedBox(
                     height: 5,
                   ),
@@ -162,7 +144,7 @@ class _AddNewServiceCardState extends State<AddNewServiceCard> {
                   });
                 },
                 child: Card(
-                  elevation: 10,
+                  elevation: 5,
                   child: AnimatedContainer(
                       duration: Duration(milliseconds: 300),
                       decoration: BoxDecoration(

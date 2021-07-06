@@ -66,9 +66,8 @@ class ServicesTab extends ConsumerWidget {
                                                 ServiceCard(
                                                   serviceModel:
                                                       state.services[index],
-                                                  numberOfSessions: 0,
                                                   serviceToFocus:
-                                                      serviceToFocus,
+                                                      state.activeServiceId,
                                                   serviceCardTapped:
                                                       (serviceId) {},
                                                 ),
@@ -79,9 +78,8 @@ class ServicesTab extends ConsumerWidget {
                                                 ServiceCard(
                                                   serviceModel:
                                                       state.services[index],
-                                                  numberOfSessions: 0,
                                                   serviceToFocus:
-                                                      serviceToFocus,
+                                                      state.activeServiceId,
                                                   serviceCardTapped:
                                                       (serviceId) {},
                                                 ),
@@ -90,9 +88,8 @@ class ServicesTab extends ConsumerWidget {
                                                     ? ServiceCard(
                                                         serviceModel: state
                                                             .services[index],
-                                                        numberOfSessions: 0,
-                                                        serviceToFocus:
-                                                            serviceToFocus,
+                                                        serviceToFocus: state
+                                                            .activeServiceId,
                                                         serviceCardTapped:
                                                             (serviceId) {},
                                                       )

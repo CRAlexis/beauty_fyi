@@ -14,7 +14,7 @@ import 'package:beauty_fyi/screens/dashboard_screen.dart';
 import 'package:beauty_fyi/screens/add_service_screen.dart';
 import 'package:beauty_fyi/screens/test2.dart';
 
-import 'package:beauty_fyi/screens/view_service_screen.dart';
+import 'package:beauty_fyi/screens/service_screen.dart';
 import 'package:beauty_fyi/test/change_notifier_widget.dart';
 import 'package:beauty_fyi/test/future_provider_widget.dart';
 import 'package:beauty_fyi/test/provider_widget.dart';
@@ -94,7 +94,7 @@ class MyApp extends StatelessWidget {
           '/onboarding-screen': (BuildContext context) => OnboardingScreen(),
           '/forgot-password': (BuildContext context) => ForgotPasswordScreen(),
           '/dashboard': (BuildContext context) => DashboardScreen(),
-          '/view-service': (BuildContext context) => ViewServiceScreen(
+          '/view-service': (BuildContext context) => ServiceScreen(
                 args: settings.arguments,
               ),
           '/add-service': (BuildContext context) =>

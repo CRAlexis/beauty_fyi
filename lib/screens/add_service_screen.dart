@@ -323,18 +323,18 @@ class _ChooseImageSlide extends ConsumerWidget {
         context.read(imageFileNotifierProvider.notifier);
     final slideValidationNotifierController =
         context.read(slideValidationNotifierProvider.notifier);
-    // final state = watch(imageFileNotifierProvider);
-    // WidgetsBinding.instance!.addPostFrameCallback((_) {
-    // try {
-    // state is ImageFileLoaded
-    // ? slideValidationNotifierController.validateSlide(true)
-    // : slideValidationNotifierController.validateSlide(false);
-    // } catch (e) {
-    // print(e);
-    // }
-    // });
+    final state = watch(imageFileNotifierProvider);
+    WidgetsBinding.instance!.addPostFrameCallback((_) {
+      try {
+        state is ImageFileLoaded
+            ? slideValidationNotifierController.validateSlide(true)
+            : slideValidationNotifierController.validateSlide(false);
+      } catch (e) {
+        print(e);
+      }
+    });
 
-    /*return Column(
+    return Column(
         key: ValueKey<int>(0),
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -368,7 +368,7 @@ class _ChooseImageSlide extends ConsumerWidget {
               }
             },
           ),
-        ]);*/
+        ]);
     return Container(
       child: Text("hey"),
     );
@@ -415,6 +415,7 @@ class _ServiceNameSlide extends ConsumerWidget {
               regex: serviceNameNotifierController.serviceNameRegexString,
               validationStringLength: 4,
               validate: true,
+              maxLength: 36,
             ),
             SizedBox(
               height: 10,
@@ -667,6 +668,5 @@ void _recallServiceData(AddServiceNotifier addServiceNotifierController,
         value['serviceDescription'];
     serviceProcessNotifierController.addServiceProcesses =
         value['serviceProcesses'];
-    print("is data being recalled?");
   }).onError((error, stackTrace) => null);
 }

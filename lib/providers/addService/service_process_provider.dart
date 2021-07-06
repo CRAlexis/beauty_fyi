@@ -86,7 +86,7 @@ class ServiceProcessNotifier<ServiceProcessState> extends StateNotifier {
                         disableTextFields: false,
                         stylingIndex: 2,
                         regex: r'^[a-zA-Z0-9 +&]+$',
-                        maxLength: 25,
+                        maxLength: 35,
                         height: 40,
                         labelPadding: 0,
                       ),

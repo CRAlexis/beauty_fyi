@@ -48,11 +48,12 @@ class CountdownNotifier<CountdownState> extends StateNotifier {
   int _count;
   CountdownNotifier(this._count, [CountdownState? state])
       : super(CountdownInitial()) {
-    print("countdown provider initialised**");
+    sessionFinishedController.add(false);
     initStream();
   }
 
   final controller = StreamController<int>.broadcast();
+  final sessionFinishedController = StreamController<bool>.broadcast();
   void initStream() {
     state = CountdownActive(controller);
     Timer.periodic(Duration(seconds: 1), (timer) {
@@ -60,6 +61,12 @@ class CountdownNotifier<CountdownState> extends StateNotifier {
         if (!controller.isClosed && state is CountdownActive) {
           controller.sink.add(_count);
           _count--;
+          if (_count == 0) {
+            sessionFinishedController.add(true);
+          }
+        } else if (_count < 1) {
+          controller.sink.add(0);
+          controller.close();
         }
       } catch (e) {
         timer.cancel();
@@ -69,20 +76,28 @@ class CountdownNotifier<CountdownState> extends StateNotifier {
   }
 
   Stream<int> get stream => controller.stream;
+  Stream<bool> get sessionFinishedStream => sessionFinishedController.stream;
   void closeStream() {
     controller.close();
+    sessionFinishedController.close();
   }
 
   void pauseCountdown() => state = CountdownPaused(controller);
   void resumeCountdown() => state = CountdownActive(controller);
   void endCountdown() {
     state = CountDownEnded();
-    _count = 0;
+    _count = -1;
   }
 
   void refreshCountdown(int count) async {
     // await Future.delayed(Duration(seconds: 3));
     this._count = count;
     state = CountdownActive(controller);
+  }
+
+  void dispose() {
+    controller.close();
+    sessionFinishedController.close();
+    super.dispose();
   }
 }
