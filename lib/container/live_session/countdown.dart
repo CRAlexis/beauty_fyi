@@ -2,7 +2,6 @@ import 'dart:async';
 
 import 'package:beauty_fyi/models/service_process_model.dart';
 import 'package:beauty_fyi/providers/liveSession/countdown_provider.dart';
-import 'package:beauty_fyi/providers/liveSession/live_session_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -20,19 +19,21 @@ class CountDown extends ConsumerWidget {
   final onResumed;
   final onStartNextProcess;
   final onProcessFinished;
-  //onpaused
+  final VoidCallback? onShareMedia;
   CountDown(this._processDuration, this._serviceProcess, this._sessionCompleted,
       this._lastProcess,
       {this.onPaused,
       this.onResumed,
       this.onStartNextProcess,
-      this.onProcessFinished});
+      this.onProcessFinished,
+      this.onShareMedia});
   Widget build(BuildContext context, ScopedReader watch) {
     //on state pause -> send to database -> or even callback to live session screen
     final state = watch(countdownNotifierProvider(_processDuration));
+    print("## state: $state");
     final countdownNotifierController =
         context.read(countdownNotifierProvider(_processDuration).notifier);
-    countdownNotifierController.sessionFinishedStream.listen((event) {
+    countdownNotifierController.processFinishedStream.listen((event) {
       if (event) {
         onProcessFinished();
       }
@@ -47,7 +48,7 @@ class CountDown extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.max,
                 children: [
                   SizedBox(
-                    height: MediaQuery.of(context).size.height / 5 + 0,
+                    height: MediaQuery.of(context).size.height / 6 + 0,
                   ),
                   Text(
                     _serviceProcess.processName as String,
@@ -69,11 +70,6 @@ class CountDown extends ConsumerWidget {
                           stream: state.stream,
                           initialData: null,
                           builder: (context, snapshot) {
-                            if (snapshot.hasData) {
-                              if (snapshot.data as int == 0) {
-                                // onProcessFinished();
-                              }
-                            }
                             return snapshot.hasData
                                 ? Text(
                                     formatTime(snapshot.data as int),
@@ -91,44 +87,42 @@ class CountDown extends ConsumerWidget {
                   ),
                   Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          MaterialButton(
-                            onPressed: () {
-                              state is CountdownActive //TODO:: put delay on how quickly they can switch
-                                  ? () {
-                                      countdownNotifierController
-                                          .pauseCountdown();
-                                      onPaused();
-                                    }()
-                                  : () {
-                                      countdownNotifierController
-                                          .resumeCountdown();
-                                      onResumed();
-                                    }();
-                            },
-                            child: state is CountdownPaused
-                                ? !state.controller.isClosed
-                                    ? Icon(
-                                        Icons.play_arrow,
-                                        color: Colors.white,
-                                        size: 40,
-                                      )
-                                    : Container()
-                                : state is CountdownActive
-                                    ? !state.controller.isClosed
-                                        ? Icon(
-                                            Icons.pause,
-                                            color: Colors.white,
-                                            size: 40,
-                                          )
-                                        : Container()
-                                    : CircularProgressIndicator(),
-                          ),
-                        ],
-                      ),
-                      !state.controller.isClosed
+                      state is! CountDownEnded
+                          ? Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                MaterialButton(
+                                  onPressed: () {
+                                    state is CountdownActive //TODO:: put delay on how quickly they can switch
+                                        ? () {
+                                            countdownNotifierController
+                                                .pauseCountdown();
+                                            onPaused();
+                                          }()
+                                        : () {
+                                            countdownNotifierController
+                                                .resumeCountdown();
+                                            onResumed();
+                                          }();
+                                  },
+                                  child: state is CountdownPaused
+                                      ? Icon(
+                                          Icons.play_arrow,
+                                          color: Colors.white,
+                                          size: 40,
+                                        )
+                                      : state is CountdownActive
+                                          ? Icon(
+                                              Icons.pause,
+                                              color: Colors.white,
+                                              size: 40,
+                                            )
+                                          : CircularProgressIndicator(),
+                                ),
+                              ],
+                            )
+                          : Container(),
+                      state is! CountDownEnded
                           ? Text(
                               'or',
                               textAlign: TextAlign.center,
@@ -140,26 +134,25 @@ class CountDown extends ConsumerWidget {
                           : Container(),
                       TextButton(
                         onPressed: () async {
-                          countdownNotifierController.endCountdown();
+                          countdownNotifierController.endCountdown(false);
                           onStartNextProcess();
                           try {
+                            print("process duration: $_processDuration");
                             countdownNotifierController
                                 .refreshCountdown(_processDuration);
                           } catch (e) {
                             print(e);
                           }
-                          //}
                         },
                         child: AnimatedContainer(
                             duration: Duration(milliseconds: 300),
                             child: Text(
                               _lastProcess
-                                  ? 'complete this session'
-                                  : 'start the next process',
+                                  ? 'complete session'
+                                  : 'start next process',
                               textAlign: TextAlign.center,
                               style: TextStyle(
-                                  fontSize:
-                                      !state.controller.isClosed ? 17 : 24,
+                                  fontSize: state is CountDownEnded ? 24 : 17,
                                   color: Colors.white,
                                   fontFamily: 'OpenSans'),
                             )),
@@ -175,6 +168,19 @@ class CountDown extends ConsumerWidget {
                             color: Colors.white70,
                             fontFamily: 'OpenSans'),
                       ),
+                      SizedBox(
+                        height: 25,
+                      ),
+                      OutlinedButton(
+                          style: ButtonStyle(
+                              side: MaterialStateProperty.all(
+                                  BorderSide(color: Colors.white))),
+                          onPressed: () => onShareMedia!(),
+                          child: Text('Share media with client',
+                              style: TextStyle(
+                                  fontSize: 18,
+                                  color: Colors.white70,
+                                  fontFamily: 'OpenSans'))),
                     ],
                   )
                 ],

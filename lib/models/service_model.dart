@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:beauty_fyi/functions/file_and_image_functions.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/providers/services_provider.dart';
 import 'package:sqflite/sqflite.dart';
@@ -9,7 +10,7 @@ class ServiceModel {
   final int? id;
   final String? serviceName;
   final String? serviceDescription;
-  final File? imageSrc;
+  File? imageSrc;
   final String? serviceProcesses;
 
   ServiceModel(
@@ -19,13 +20,18 @@ class ServiceModel {
       this.imageSrc,
       this.serviceProcesses});
 
-  Map<String, dynamic> toMap() {
+  set imageSet(File? src) {
+    this.imageSrc = src;
+  }
+
+  Map<String, dynamic> toMap({bool delete = false}) {
     return {
       "service_name": serviceName!.isNotEmpty ? serviceName?.trim() : "Unnamed",
       "service_description":
           serviceDescription!.isNotEmpty ? serviceDescription?.trim() : "",
       "service_image": imageSrc!.path,
       "service_processes": serviceProcesses,
+      "deleted": delete ? 1 : 0
     };
   }
 
@@ -35,6 +41,12 @@ class ServiceModel {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
+
+      // final _ = await FileAndImageFunctions().getDirectory();
+      // serviceModal.imageSrc = await FileAndImageFunctions().moveFile(
+      // serviceModal.imageSrc!,
+      // "${_.path}/SMPictures/${basename(serviceModal.imageSrc!.path)}");
+
       await db.insert(
         'services',
         serviceModal.toMap(),
@@ -44,7 +56,7 @@ class ServiceModel {
       return true;
     } catch (e) {
       print("failed creating service");
-      return Future.error(e, StackTrace.fromString(""));
+      throw e;
     }
   }
 
@@ -52,7 +64,8 @@ class ServiceModel {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      final List<Map<String, dynamic>> maps = await db.query('services');
+      final List<Map<String, dynamic>> maps =
+          await db.query('services', where: "deleted = ?", whereArgs: [0]);
       await db.close();
 
       // print(maps[i]);
@@ -92,6 +105,9 @@ class ServiceModel {
     try {
       Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
+      final _ = await FileAndImageFunctions().getDirectory();
+      this.imageSet = await FileAndImageFunctions().moveFile(this.imageSrc!,
+          "${_.path}/SMPictures/${basename(this.imageSrc!.path)}");
       await db.update('services', this.toMap(),
           where: "id = ?",
           whereArgs: [this.id],
@@ -99,7 +115,7 @@ class ServiceModel {
       return;
     } catch (e) {
       print(e);
-      return Future.error(e, StackTrace.fromString(""));
+      throw e;
     }
   }
 
@@ -107,10 +123,11 @@ class ServiceModel {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      await db.delete('services', where: "id = ?", whereArgs: [id]);
+      await db.update('services', this.toMap(delete: true),
+          where: "id = ?", whereArgs: [id]);
       return;
     } catch (e) {
-      return Future.error(e, StackTrace.fromString(""));
+      throw e;
     }
   }
 }

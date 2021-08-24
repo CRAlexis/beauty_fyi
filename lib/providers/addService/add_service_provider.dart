@@ -3,11 +3,14 @@ import 'dart:io';
 
 import 'package:beauty_fyi/container/alert_dialoges/loading_alert_dialog.dart';
 import 'package:beauty_fyi/container/alert_dialoges/message_alert_dialog.dart';
+import 'package:beauty_fyi/functions/file_and_image_functions.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/service_process_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 abstract class AddServiceState {
   const AddServiceState();
@@ -82,7 +85,7 @@ class AddServiceNotifier<AddServiceState> extends StateNotifier {
   }
 
   Future<void> sendQuery(
-      {required ServiceModel servicemodel,
+      {required ServiceModel serviceModel,
       required bool updating,
       required BuildContext context}) async {
     final loadingAlertDialog =
@@ -90,42 +93,42 @@ class AddServiceNotifier<AddServiceState> extends StateNotifier {
     try {
       String sucessString = "";
       loadingAlertDialog.show();
-      updating
-          ? () async {
-              sucessString = "Updated service successfully";
-              await servicemodel.updateService();
-            }()
-          : () async {
-              sucessString = "Created service successfully";
-              await servicemodel.insertService(servicemodel);
-            }();
+
+      switch (updating) {
+        case true:
+          sucessString = "Updated service successfully";
+          await serviceModel.updateService();
+          break;
+        default:
+          sucessString = "Created service successfully";
+          await serviceModel.insertService(serviceModel);
+          break;
+      }
 
       loadingAlertDialog.pop();
 
       MessageAlertDialog(
-        context: context,
-        message: sucessString,
-        onPressed: () {
-          Navigator.pop(context);
-          Navigator.pushNamedAndRemoveUntil(
-              context, "/dashboard", (r) => false);
-        },
-      ).show();
+          context: context,
+          message: sucessString,
+          onPressed: () {
+            Navigator.pop(context);
+            Navigator.pop(context);
+          }).show();
     } catch (e) {
       loadingAlertDialog.pop();
       MessageAlertDialog(
           context: context,
-          message: "Failed to create service",
+          message: "Error creating service",
           onPressed: () {
             Navigator.of(context).pop();
           }).show();
       print("error: $e");
+      throw e;
     }
   }
 }
 
 Future<ServiceModel> _fetchService({id}) async {
   final serviceModel = new ServiceModel(id: id);
-  print("refreshing future");
   return await serviceModel.readService();
 }

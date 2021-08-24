@@ -14,7 +14,6 @@ class API {
         ToDoItem(leading: 2, title: "my next title")
       ];
     } on DioError catch (e) {
-      print(e.error);
       return Future.error(e, StackTrace.current);
     }
   }

@@ -5,6 +5,7 @@ import 'package:beauty_fyi/models/session_bundle_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:dio/dio.dart';
 
 enum SessionProviderEnums { READBUNDLE, NULL }
 
@@ -44,7 +45,7 @@ class SessionsError extends SessionsState {
 }
 
 class SessionsNotifier extends StateNotifier<SessionsState> {
-  SessionsNotifier(SessionProviderEnums providerEnums, int? clientId,
+  SessionsNotifier(SessionProviderEnums providerEnums, String? clientId,
       [SessionsState? state])
       : super(SessionsInitial()) {
     switch (providerEnums) {
@@ -67,58 +68,58 @@ class SessionsNotifier extends StateNotifier<SessionsState> {
     }
   }
 
-  Future<void> _initSession(SessionModel sessionModel, context) async {
-    final result =
-        await ClientListAlertDialog(context: context, onConfirm: () {}).show();
-    if (result != 0) {
-      //0 is means null
-      await DateTimeModel(meta: 'paused_time').removeDateTime();
-      await DateTimeModel(meta: 'current_process_start_Time')
-          .removeDateTime(); // this is just incase the date time was not remoed from before;
-      sessionModel.setClientId = result;
-      SessionModel newSession = await sessionModel.startSession();
-      Navigator.pushNamed(context, "/live-session", arguments: {
-        'sessionModel': newSession,
-      });
+  Future<void> _initSession(context, int serviceId) async {
+    try {
+      final result =
+          await ClientListAlertDialog(context: context, onConfirm: () {})
+              .show();
+      if (result != null) {
+        await DateTimeModel(meta: 'paused_time').removeDateTime();
+        await DateTimeModel(meta: 'current_process_start_Time')
+            .removeDateTime(); // this is just incase the date time was not remoed from before;
+        final session = await SessionModel().initSession(result, serviceId);
+        Navigator.pushNamed(context, "/live-session", arguments: {
+          'sessionModel': session,
+        });
+      }
+    } catch (e) {
+      print(e);
+      if (e is DioError) {
+        state = SessionsError(
+            "Unable to start session. Please check you are connected to the internet.");
+        return;
+      }
+      state = SessionsError("Unable to start session.");
+      return;
     }
   }
 
-  Future<void> newSession(int serviceId, context) async {
+  Future<void> checkSessionActivity(context, int serviceId) async {
     try {
-      final sessionModel = SessionModel(
-          clientId: null,
-          serviceId: serviceId,
-          dateTime: DateTime.now(),
-          notes: "",
-          active: true,
-          currentProcess: 0);
-      Map<String, dynamic> sessionAlreadyActive =
-          await sessionModel.sessionInit();
-
-      if (sessionAlreadyActive['activeSession']) {
+      final response = await SessionModel().checkSessionActivity();
+      if (response.sessionIsActive) {
         AreYouSureAlertDialog(
           dismissible: true,
           context: context,
           message:
-              "${sessionAlreadyActive['serviceName']} with ${sessionAlreadyActive['clientName']} is currently in progress.",
+              "${response.service?.serviceName} with ${response.client?.clientFirstName} ${response.client?.clientLastName} is currently in progress.",
           leftButtonText: "Start new session",
           rightButtonText: "Resume session",
           onLeftButton: () async {
             Navigator.of(context).pop();
-            _initSession(sessionModel, context);
+            _initSession(context, serviceId);
           },
           onRightButton: () async {
             Navigator.of(context).pop();
-            Navigator.pushNamed(context, "/live-session", arguments: {
-              'sessionModel': sessionAlreadyActive['previousSession']
-            });
+            Navigator.pushNamed(context, "/live-session",
+                arguments: {'sessionModel': response.session});
           },
         ).show();
       } else {
-        _initSession(sessionModel, context);
+        _initSession(context, serviceId);
       }
     } catch (e) {
-      print(e);
+      _initSession(context, serviceId);
     }
   }
 }

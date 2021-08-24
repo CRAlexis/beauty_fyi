@@ -13,12 +13,15 @@ import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:riverpod/riverpod.dart';
+import 'package:flutter/services.dart';
 
 final liveSessionNotifierProvider = StateNotifierProvider.family(
     (ref, SessionModel? params) => LiveSessionNotifier(params));
-final cameraNotifierProvider = StateNotifierProvider.autoDispose.family((ref,
-        GalleryBloc params) =>
-    CameraNotifier(params)); //need to pass session ID to here -> not sure how
+final cameraNotifierProvider = StateNotifierProvider.autoDispose.family(
+    (ref, GalleryBloc params) => CameraNotifier(
+        params,
+        CameraEnum
+            .LIVESESSION)); //need to pass session ID to here -> not sure how
 
 class LiveSessionScreen extends StatefulWidget {
   final args;
@@ -83,160 +86,197 @@ class _LiveSessionScreenState extends State<LiveSessionScreen>
           watch(liveSessionNotifierProvider(widget.args['sessionModel']));
       final liveSessionNotifierController = context.read(
           liveSessionNotifierProvider(widget.args['sessionModel']).notifier);
-      return new WillPopScope(
-          onWillPop: () async {
-            if (tabController.index == 0) {
-              tabController.animateTo(1,
-                  duration: Duration(milliseconds: 400),
-                  curve: Curves.easeOutCirc);
-              return Future.value(false);
-            } else {
-              // await disposeCameras();
-              return Future.value(true);
+      return ProviderListener(
+          onChange: (BuildContext context, state) {
+            if (state is LiveSessionError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(state.message),
+                  duration: Duration(seconds: 8),
+                ),
+              );
             }
           },
-          child: Scaffold(
-              extendBodyBehindAppBar: true,
-              appBar: CustomAppBar(
-                  focused: true,
-                  transparent: true,
-                  titleText: "",
-                  leftIcon: Icons.arrow_back,
-                  showMenuIcon: false,
-                  menuIconClicked: (value) async {
-                    switch (value) {
-                      case 'End session':
-                        await liveSessionNotifierController.endSession();
-                        break;
-                      case 'Turn off vibration':
-                        await liveSessionNotifierController
-                            .toggleVibration(false);
-                        break;
-                      case 'Turn on vibration':
-                        await liveSessionNotifierController
-                            .toggleVibration(true);
-                        break;
-                      default:
-                    }
-                  },
-                  menuOptions: [
-                    'End session',
-                    state is LiveSessionActive
-                        ? state.vibrationSetting
-                            ? 'Turn off vibration'
-                            : 'Turn on vibration'
-                        : ''
-                  ],
-                  leftIconClicked: () async {
-                    if (tabController.index == 0) {
-                      tabController.animateTo(1,
-                          duration: Duration(milliseconds: 400),
-                          curve: Curves.easeOutCirc);
-                    } else {
-                      // await disposeCameras();
-                      Navigator.pop(context);
-                    }
-                  },
-                  automaticallyImplyLeading: false),
-              body: AnimatedContainer(
-                  duration: Duration(milliseconds: 1000),
-                  width: double.infinity,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                          colors:
-                              liveSessionNotifierController.backgroundColors,
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight)),
-                  child: state is LiveSessionLoading
-                      ? Center(child: CircularProgressIndicator())
-                      : state is LiveSessionActive
-                          ? Stack(alignment: Alignment.topCenter, children: <
-                              Widget>[
-                              Container(
-                                child: TabBarView(
-                                    controller: tabController,
-                                    children: [
-                                      CameraPreviewScreen(
-                                          liveSessionNotifierController
-                                              .sessionModel as SessionModel,
-                                          galleryBloc),
-                                      // /need to check if slide is 1 to display?
-                                      Column(
-                                        mainAxisAlignment:
-                                            MainAxisAlignment.start,
-                                        children: [
-                                          PageViewWrapper(
-                                              child: CountDown(
-                                                state.processDurationInSeconds,
-                                                state.serviceProcess,
-                                                state.sessionFinished,
-                                                state.lastProcess,
-                                                onPaused: () =>
-                                                    liveSessionNotifierController
-                                                        .countdownPaused(),
-                                                onResumed: () =>
-                                                    liveSessionNotifierController
-                                                        .countdownResumed(),
-                                                onStartNextProcess: () =>
-                                                    liveSessionNotifierController
-                                                        .startNextProcess(),
-                                                onProcessFinished: () =>
-                                                    liveSessionNotifierController
-                                                        .endCurrentProcess(),
+          provider: liveSessionNotifierProvider(widget.args['sessionModel']),
+          child: new WillPopScope(
+              onWillPop: () async {
+                if (tabController.index == 0) {
+                  tabController.animateTo(1,
+                      duration: Duration(milliseconds: 400),
+                      curve: Curves.easeOutCirc);
+                  return Future.value(false);
+                } else {
+                  // await disposeCameras();
+                  return Future.value(true);
+                }
+              },
+              child: Scaffold(
+                  extendBodyBehindAppBar: true,
+                  appBar: CustomAppBar(
+                      focused: true,
+                      transparent: true,
+                      titleText: "",
+                      leftIcon: Icons.arrow_back,
+                      showMenuIcon: false,
+                      menuIconClicked: (value) async {
+                        switch (value) {
+                          case 'End session':
+                            await liveSessionNotifierController.endSession();
+                            break;
+                          case 'Turn off vibration':
+                            await liveSessionNotifierController
+                                .toggleVibration(false);
+                            break;
+                          case 'Turn on vibration':
+                            await liveSessionNotifierController
+                                .toggleVibration(true);
+                            break;
+                          default:
+                        }
+                      },
+                      menuOptions: [
+                        'End session',
+                        state is LiveSessionActive
+                            ? state.vibrationSetting
+                                ? 'Turn off vibration'
+                                : 'Turn on vibration'
+                            : ''
+                      ],
+                      leftIconClicked: () async {
+                        if (tabController.index == 0) {
+                          tabController.animateTo(1,
+                              duration: Duration(milliseconds: 400),
+                              curve: Curves.easeOutCirc);
+                        } else {
+                          // await disposeCameras();
+                          Navigator.pop(context);
+                        }
+                      },
+                      automaticallyImplyLeading: false),
+                  body: AnimatedContainer(
+                      duration: Duration(milliseconds: 1000),
+                      width: double.infinity,
+                      height: double.infinity,
+                      decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                              colors: liveSessionNotifierController
+                                  .backgroundColors,
+                              begin: Alignment.topLeft,
+                              end: Alignment.bottomRight)),
+                      child: state is LiveSessionLoading
+                          ? Center(child: CircularProgressIndicator())
+                          : state is LiveSessionActive
+                              ? Stack(
+                                  alignment: Alignment.topCenter,
+                                  children: <Widget>[
+                                      Container(
+                                        child: TabBarView(
+                                            controller: tabController,
+                                            children: [
+                                              CameraPreviewScreen(
+                                                  liveSessionNotifierController
+                                                          .sessionModel
+                                                      as SessionModel,
+                                                  galleryBloc),
+                                              // /need to check if slide is 1 to display?
+                                              Column(
+                                                mainAxisAlignment:
+                                                    MainAxisAlignment.start,
+                                                children: [
+                                                  PageViewWrapper(
+                                                      child: CountDown(
+                                                        state
+                                                            .processDurationInSeconds,
+                                                        state.serviceProcess,
+                                                        state.sessionFinished,
+                                                        state.lastProcess,
+                                                        onPaused: () =>
+                                                            liveSessionNotifierController
+                                                                .countdownPaused(),
+                                                        onResumed: () =>
+                                                            liveSessionNotifierController
+                                                                .countdownResumed(),
+                                                        onStartNextProcess: () =>
+                                                            liveSessionNotifierController
+                                                                .startNextProcess(),
+                                                        onProcessFinished: () =>
+                                                            liveSessionNotifierController
+                                                                .onProcessFinished(),
+                                                        onShareMedia: () =>
+                                                            Clipboard.setData(
+                                                                    ClipboardData(
+                                                                        text: state
+                                                                            .sessionModel
+                                                                            .url))
+                                                                .then((result) {
+                                                          ScaffoldMessenger.of(
+                                                                  context)
+                                                              .showSnackBar(
+                                                            SnackBar(
+                                                              content: Text(
+                                                                  'Copied link to clipboard'),
+                                                            ),
+                                                          );
+                                                        }),
+                                                      ),
+                                                      keepAlive: true)
+                                                ],
                                               ),
-                                              keepAlive: true)
-                                        ],
+                                              NotesSection(
+                                                  sessionModel: widget
+                                                      .args['sessionModel']),
+                                            ]),
                                       ),
-                                      NotesSection(
-                                          sessionModel:
-                                              widget.args['sessionModel']),
-                                    ]),
-                              ),
-                              LiveSessionBottomBar(
-                                galleryBloc,
-                                liveSessionNotifierController.sessionModel
-                                    as SessionModel,
-                                tabController,
-                                takePhoto: () => context
-                                    .read(cameraNotifierProvider(galleryBloc)
-                                        .notifier)
-                                    .takePhoto(widget.args['sessionModel']),
-                                startRecording: () => context
-                                    .read(cameraNotifierProvider(galleryBloc)
-                                        .notifier)
-                                    .startRecording(),
-                                stopRecording: () => context
-                                    .read(cameraNotifierProvider(galleryBloc)
-                                        .notifier)
-                                    .stopRecording(widget.args['sessionModel']),
-                                switchCamera: () => context
-                                    .read(cameraNotifierProvider(galleryBloc)
-                                        .notifier)
-                                    .initCamera(
-                                        index: context
-                                                    .read(
-                                                        cameraNotifierProvider(
-                                                                galleryBloc)
-                                                            .notifier)
-                                                    .cameraIndex ==
-                                                0
-                                            ? 1
-                                            : 0),
-                              )
-                            ])
-                          : state is LiveSessionError
-                              ? Center(
-                                  child: Text(
-                                  state.message,
-                                  textAlign: TextAlign.center,
-                                  softWrap: true,
-                                  style: TextStyle(
-                                      fontSize: 40,
-                                      color: Colors.white,
-                                      fontFamily: 'OpenSans'),
-                                ))
-                              : Center(child: CircularProgressIndicator()))));
+                                      LiveSessionBottomBar(
+                                        galleryBloc,
+                                        liveSessionNotifierController
+                                            .sessionModel as SessionModel,
+                                        tabController,
+                                        takePhoto: () => context
+                                            .read(cameraNotifierProvider(
+                                                    galleryBloc)
+                                                .notifier)
+                                            .takePhoto(
+                                                widget.args['sessionModel']),
+                                        startRecording: () => context
+                                            .read(cameraNotifierProvider(
+                                                    galleryBloc)
+                                                .notifier)
+                                            .startRecording(),
+                                        stopRecording: () => context
+                                            .read(cameraNotifierProvider(
+                                                    galleryBloc)
+                                                .notifier)
+                                            .stopRecording(
+                                                widget.args['sessionModel']),
+                                        switchCamera: () => context
+                                            .read(cameraNotifierProvider(
+                                                    galleryBloc)
+                                                .notifier)
+                                            .initCamera(
+                                                index: context
+                                                            .read(cameraNotifierProvider(
+                                                                    galleryBloc)
+                                                                .notifier)
+                                                            .cameraIndex ==
+                                                        0
+                                                    ? 1
+                                                    : 0),
+                                      )
+                                    ])
+                              : state is LiveSessionErrorFatal
+                                  ? Center(
+                                      child: Text(
+                                      state.message,
+                                      textAlign: TextAlign.center,
+                                      softWrap: true,
+                                      style: TextStyle(
+                                          fontSize: 25,
+                                          color: Colors.white,
+                                          fontFamily: 'OpenSans'),
+                                    ))
+                                  : Center(
+                                      child: CircularProgressIndicator())))));
     });
   }
 }
@@ -265,37 +305,55 @@ class CameraPreviewScreen extends ConsumerWidget {
     final mediaSize = MediaQuery.of(context).size;
     return ProviderListener(
         onChange: (BuildContext context, state) {
-          if (state is CameraCaptureError) {
-            ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-              content: Text(state.message),
-              duration: Duration(seconds: 6),
-            ));
+          if (state is CameraLoaded) {
+            if (state.cameraCaptureError) {
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                content: Text(state.message),
+                duration: Duration(seconds: 4),
+              ));
+            }
           }
         },
         provider: cameraNotifierProvider(galleryBloc),
-        child: Stack(
-          children: [
-            state is CameraLoading
-                ? Center(
-                    child: CircularProgressIndicator(),
-                  )
-                : state is CameraLoaded
-                    ? ClipRect(
-                        clipper: _MediaSizeClipper(mediaSize),
-                        child: Transform.scale(
-                            scale: 1 /
-                                (state.cameraController.value.aspectRatio *
-                                    mediaSize.aspectRatio),
-                            alignment: Alignment.topCenter,
-                            child: CameraPreview(state.cameraController)),
+        child: GestureDetector(
+            onScaleUpdate: (one) {
+              context
+                  .read(cameraNotifierProvider(galleryBloc).notifier)
+                  .setZoom(one.scale);
+            },
+            onDoubleTap: () => context
+                .read(cameraNotifierProvider(galleryBloc).notifier)
+                .initCamera(
+                    index: context
+                                .read(cameraNotifierProvider(galleryBloc)
+                                    .notifier)
+                                .cameraIndex ==
+                            0
+                        ? 1
+                        : 0),
+            child: Stack(
+              children: [
+                state is CameraLoading
+                    ? Center(
+                        child: CircularProgressIndicator(),
                       )
-                    : state is CameraLoadingError
-                        ? Center(
-                            child: Text(state.message),
+                    : state is CameraLoaded
+                        ? ClipRect(
+                            clipper: _MediaSizeClipper(mediaSize),
+                            child: Transform.scale(
+                                scale: 1 /
+                                    (state.cameraController.value.aspectRatio *
+                                        mediaSize.aspectRatio),
+                                alignment: Alignment.topCenter,
+                                child: CameraPreview(state.cameraController)),
                           )
-                        : Container(),
-          ],
-        ));
+                        : state is CameraLoadingError
+                            ? Center(
+                                child: Text(state.message),
+                              )
+                            : Container(),
+              ],
+            )));
   }
 }
 

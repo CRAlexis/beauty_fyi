@@ -12,8 +12,8 @@ class ClientListAlertDialog {
   }
   Future<List<ClientModel>>? clients;
 
-  Future<int> show() async {
-    int clientId = 0;
+  Future<String?> show() async {
+    String? clientId;
     return await showDialog(
         barrierDismissible: true,
         context: context!,
@@ -53,9 +53,9 @@ class ClientListAlertDialog {
                                         onTap: () {
                                           setState(() => clientId !=
                                                   snapshot.data![index].id
-                                              ? clientId =
-                                                  snapshot.data![index].id ?? 0
-                                              : clientId = 0);
+                                              ? clientId = snapshot
+                                                  .data![index].id as String
+                                              : clientId = null);
                                         },
                                         child: Container(
                                             decoration: BoxDecoration(

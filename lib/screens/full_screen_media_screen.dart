@@ -1,8 +1,9 @@
 import 'dart:io';
 
 import 'package:beauty_fyi/bloc/full_screen_media_bloc.dart';
+import 'package:beauty_fyi/container/alert_dialoges/are_you_sure_alert_dialog.dart';
 import 'package:beauty_fyi/container/app_bar/app_bar.dart';
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/models/service_media_model.dart';
 import 'package:flutter/material.dart';
 import 'package:simple_animations/simple_animations.dart';
 import 'package:social_share/social_share.dart';
@@ -150,15 +151,47 @@ class _OverlayState extends State<_Overlay> {
                                                   .filePath);
                                         }
                                       }),
-                                  // IconButton(
-                                      // icon: Icon(
-                                        // Icons.delete_outline,
-                                        // color: Colors.white,
-                                        // size:
-                                            // MediaQuery.of(context).size.width /
-                                                // 14,
-                                      // ),
-                                      // onPressed: null)
+                                  IconButton(
+                                      icon: Icon(
+                                        Icons.delete_outline,
+                                        color: Colors.white,
+                                        size:
+                                            MediaQuery.of(context).size.width /
+                                                14,
+                                      ),
+                                      onPressed: () {
+                                        AreYouSureAlertDialog(
+                                            context: context,
+                                            message:
+                                                "Are you sure you want to delete this?",
+                                            leftButtonText: 'no',
+                                            rightButtonText: 'yes',
+                                            dismissible: true,
+                                            onLeftButton: () {
+                                              Navigator.of(context).pop();
+                                            },
+                                            onRightButton: () async {
+                                              await widget.serviceMedia[widget
+                                                      .pageController.page!
+                                                      .toInt()]
+                                                  .deleteServiceMedia();
+                                              List<ServiceMedia> media =
+                                                  widget.serviceMedia;
+                                              media.removeAt(widget
+                                                  .pageController.page!
+                                                  .toInt());
+                                              Navigator.pop(context);
+                                              Navigator.pop(context);
+                                              Navigator.pushReplacementNamed(
+                                                  context, '/gallery-screen',
+                                                  arguments: {'media': media});
+                                            }).show();
+                                        //are you sure
+                                        //delete image
+                                        //send http request with id
+                                        //if image still exsists on server -> remove it
+                                        //pop()
+                                      })
                                 ],
                               ))
                         ],

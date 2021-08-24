@@ -1,4 +1,4 @@
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/models/service_media_model.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 

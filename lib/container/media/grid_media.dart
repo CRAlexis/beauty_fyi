@@ -1,6 +1,6 @@
 import 'dart:io';
 
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/models/service_media_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 import 'package:video_player/video_player.dart';

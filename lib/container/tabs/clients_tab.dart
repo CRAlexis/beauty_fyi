@@ -1,16 +1,13 @@
 import 'dart:async';
 
-import 'package:beauty_fyi/models/client_model.dart';
 import 'package:beauty_fyi/providers/clients_provider.dart';
-import 'package:beauty_fyi/screens/client_screen.dart';
 import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
-import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final clientNotifierProvider = StateNotifierProvider(
-    (ref) => ClientsNotifier(ClientProviderEnums.READALL, 0));
+    (ref) => ClientsNotifier(ClientProviderEnums.READALL, '0'));
 
 class ClientsTab extends StatelessWidget {
   @override
@@ -24,9 +21,13 @@ class ClientsTab extends StatelessWidget {
                   duration: Duration(minutes: 2),
                   action: SnackBarAction(
                       label: "refresh",
-                      onPressed: () => context
-                          .read(clientNotifierProvider.notifier)
-                          .getClients())),
+                      onPressed: () {
+                        try {
+                          context
+                              .read(clientNotifierProvider.notifier)
+                              .getClients();
+                        } catch (e) {}
+                      })),
             );
           }
         },
@@ -71,8 +72,14 @@ class ClientsTab extends StatelessWidget {
                         itemBuilder: (context, index) {
                           return GestureDetector(
                               onTap: () => Navigator.pushNamed(
-                                  context, '/client-screen',
-                                  arguments: {'id': state.clients[index].id}),
+                                      context, '/client-screen', arguments: {
+                                    'id': state.clients[index].id
+                                  }).then((res) => {
+                                        context
+                                            .read(
+                                                clientNotifierProvider.notifier)
+                                            .getClients()
+                                      }),
                               child: Container(
                                   color: Colors.transparent,
                                   padding: EdgeInsets.symmetric(
@@ -91,15 +98,18 @@ class ClientsTab extends StatelessWidget {
                                                     .width /
                                                 15,
                                             backgroundColor:
-                                                Colors.grey.shade100,
-                                            backgroundImage: File(state
+                                                colorStyles['light_purple'],
+                                            backgroundImage: state
                                                         .clients[index]
-                                                        .clientImage!
-                                                        .path)
-                                                    .existsSync()
-                                                ? FileImage(state.clients[index]
-                                                    .clientImage!)
+                                                        .clientImage !=
+                                                    null
+                                                ? NetworkImage(
+                                                    state.clients[index]
+                                                        .clientImage!,
+                                                  )
                                                 : null,
+                                            onBackgroundImageError:
+                                                (error, stacktrace) {},
                                           ),
                                           SizedBox(
                                             width: 15,
@@ -109,7 +119,7 @@ class ClientsTab extends StatelessWidget {
                                                 top: MediaQuery.of(context)
                                                         .size
                                                         .width /
-                                                    20),
+                                                    40),
                                             child: Text(
                                               "${state.clients[index].clientFirstName} ${state.clients[index].clientLastName}",
                                               style: TextStyle(
@@ -142,7 +152,7 @@ class ClientsTab extends StatelessWidget {
                 child: Container(
                     padding: EdgeInsets.all(10),
                     child: FloatingActionButton(
-                        onPressed: () {
+                        onPressed: () async {
                           Navigator.pushNamed(context, '/add-client-screen')
                               .then((value) {
                             context

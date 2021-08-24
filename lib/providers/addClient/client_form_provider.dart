@@ -1,3 +1,4 @@
+import 'package:beauty_fyi/models/client_model.dart';
 import 'package:flutter/material.dart';
 import 'package:riverpod/riverpod.dart';
 
@@ -11,8 +12,9 @@ class ClientFormValidation extends ClientFormState {
 }
 
 class ClientFormNotifier<ClientFormState> extends StateNotifier {
-  ClientFormNotifier([ClientFormState? state])
+  ClientFormNotifier(ClientModel? clientModel, [ClientFormState? state])
       : super(ClientFormValidation(false)) {
+    recallData(clientModel);
     firstNameController.addListener(_validateClientForm);
     // lastNameController.addListener(_validateClientForm);
     // emailAddressController.addListener(_validateClientForm);
@@ -44,6 +46,15 @@ class ClientFormNotifier<ClientFormState> extends StateNotifier {
     } else {
       state = ClientFormValidation(false);
     }
+  }
+
+  void recallData(ClientModel? clientModel) {
+    if (clientModel == null) return;
+    firstNameController.text = clientModel.clientFirstName ?? "";
+    lastNameController.text = clientModel.clientLastName ?? "";
+    emailAddressController.text = clientModel.clientEmail ?? "";
+    phoneNumberController.text = clientModel.clientPhoneNumber ?? "";
+    state = ClientFormValidation(true);
   }
 
   // void _firstNameFocusChange() {

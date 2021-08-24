@@ -28,4 +28,8 @@ class MessageAlertDialog {
           );
         });
   }
+
+  pop() {
+    Navigator.of(context!).pop();
+  }
 }

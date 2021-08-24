@@ -2,7 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:beauty_fyi/bloc/gallery_bloc.dart';
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/models/service_media_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -283,7 +283,7 @@ class GalleryIcon extends StatelessWidget {
 
   Widget build(BuildContext context) {
     try {
-      galleryBloc.eventSink.add(galleryBloc.sessionModel!.id as int);
+      galleryBloc.eventSink.add(galleryBloc.sessionModel!.id as String);
     } catch (e) {}
     return StreamBuilder<ServiceMedia>(
         stream: galleryBloc.serviceMediaStream,
@@ -297,7 +297,7 @@ class GalleryIcon extends StatelessWidget {
                     final List<ServiceMedia> images = await ServiceMedia()
                         .readServiceMedia(
                             sql: "session_id = ?",
-                            args: [snapshot.data!.sessionId as int]);
+                            args: [snapshot.data!.sessionId as String]);
                     print("# media: $images");
                     Navigator.pushNamed(context, "/gallery-screen",
                         arguments: {'media': images});

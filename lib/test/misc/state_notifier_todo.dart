@@ -3,7 +3,6 @@ import 'package:riverpod/riverpod.dart';
 
 class ToDoList extends StateNotifier<List<ToDoItem>> {
   ToDoList([List<ToDoItem>? state]) : super([]){
-    print("it has been inited");
   }
 
   void add({required String title}) {

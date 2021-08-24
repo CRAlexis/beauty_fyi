@@ -1,16 +1,20 @@
+import 'dart:convert';
 import 'dart:io';
 
+import 'package:beauty_fyi/http/http_service.dart';
+import 'package:beauty_fyi/models/global.model.dart';
+import 'package:dio/dio.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
 import 'package:beauty_fyi/extensions/string_extension.dart';
 
 class ClientModel {
-  final int? id;
+  final String? id;
   final String? clientFirstName;
   final String? clientLastName;
   final String? clientEmail;
   final String? clientPhoneNumber;
-  final File? clientImage;
+  final String? clientImage;
 
   ClientModel(
       {this.id,
@@ -22,85 +26,129 @@ class ClientModel {
 
   Map<String, dynamic> get map {
     return {
+      'id': id,
       'client_first_name': clientFirstName!.trim().capitalize(),
       'client_last_name': clientLastName!.length != 0
           ? clientLastName!.trim().capitalize()
           : clientLastName,
       'client_email': clientEmail!.trim(),
       'client_phone_number': clientPhoneNumber!.trim(),
-      'client_image': clientImage != null ? clientImage!.path : null
+      'client_image': clientImage != null ? clientImage! : null
     };
   }
 
-  ClientModel _toModel(Map<String, dynamic> query) {
-    return ClientModel(
-        id: query['id'],
-        clientFirstName: query['client_first_name'] ?? "",
-        clientLastName: query['client_last_name'] ?? "",
-        clientEmail: query['client_email'] ?? "",
-        clientPhoneNumber: query['client_phone_number'] ?? "",
-        clientImage: File(query['client_image'] ?? ""));
+  ClientModel _toModelFromCloud(Map<String, dynamic> data) {
+    try {
+      ClientModel client = ClientModel(
+          id: data['_id'],
+          clientFirstName: data['firstName'] ?? "",
+          clientLastName: data['lastName'] ?? "",
+          clientEmail: data['email'] ?? "",
+          clientPhoneNumber: data['phoneNumber'] ?? "",
+          clientImage: data['image'] != 'null'
+              ? GlobalVariables.serverUrl + 'clients/media/' + data['image']
+              : null);
+      return client;
+    } catch (e) {
+      throw (e);
+    }
+  }
+
+  List<ClientModel> toListModelFromCloud(List<dynamic> data) {
+    try {
+      List<ClientModel> clients = [];
+      data.forEach((element) {
+        clients.add(ClientModel(
+            id: element['id'],
+            clientFirstName: element['firstName'] ?? "",
+            clientLastName: element['lastName'] ?? "",
+            clientEmail: element['email'] ?? "",
+            clientPhoneNumber: element['phoneNumber'] ?? "",
+            clientImage: GlobalVariables.serverUrl +
+                'clients/media/' +
+                element['image']));
+      });
+      return clients;
+    } catch (e) {
+      throw (e);
+    }
   }
 
   Future<void> insertClient(ClientModel clientModel) async {
     try {
-      Database db = await openDatabase(
-          join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      await db.insert(
-        'clients',
-        clientModel.map,
-        conflictAlgorithm: ConflictAlgorithm.replace,
-      );
+      final HttpService http = HttpService();
+      FormData content = FormData.fromMap({
+        'firstName': clientModel.clientFirstName,
+        'lastName': clientModel.clientLastName,
+        'email': clientModel.clientEmail,
+        'phoneNumber': clientModel.clientPhoneNumber,
+      });
+      if (clientModel.clientImage != null) {
+        content.files.add(MapEntry(
+            'image',
+            await MultipartFile.fromFile(clientModel.clientImage!,
+                filename: 'CImage.${basename(clientModel.clientImage!)}')));
+      }
+      await http.postRequest(endPoint: 'clients', data: content);
       return;
     } catch (error) {
       throw (error);
     }
   }
 
-  Future<bool> updateClient(ClientModel clientModel) async {
+  Future<void> updateClient(ClientModel clientModel) async {
     try {
-      Database db = await openDatabase(
-          join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      int query = await db
-          .update('clients', clientModel.map, where: "id = ?", whereArgs: [id]);
-      return query == 1;
+      final HttpService http = HttpService();
+      FormData content = FormData.fromMap({
+        'id': clientModel.id,
+        'firstName': clientModel.clientFirstName,
+        'lastName': clientModel.clientLastName,
+        'email': clientModel.clientEmail,
+        'phoneNumber': clientModel.clientPhoneNumber,
+      });
+      if (clientModel.clientImage != null) {
+        content.files.add(MapEntry(
+            'image',
+            await MultipartFile.fromFile(clientModel.clientImage!,
+                filename: 'CImage.${basename(clientModel.clientImage!)}')));
+      }
+      await http.putRequest(endPoint: 'clients', data: content);
     } catch (error) {
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 
-  Future<bool> deleteClient() async {
+  Future<void> deleteClient() async {
     try {
-      Database db = await openDatabase(
-          join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      int query = await db.delete('clients', where: "id = ?", whereArgs: [id]);
-      return query == 1;
+      final HttpService http = HttpService();
+      final content = new Map<String, dynamic>();
+
+      content['clientId'] = id;
+      print("id: $id");
+      await http.deleteRequest(endPoint: 'clients', data: content);
     } catch (error) {
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 
   Future<List<ClientModel>> readClients() async {
     try {
-      Database db = await openDatabase(
-          join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      List<Map<String, dynamic>> query = await db.query('clients');
-      return List.generate(query.length, (index) {
-        return _toModel(query[index]);
-      });
+      final HttpService http = HttpService();
+      Response response = await http.getRequest(endPoint: 'clients');
+      final List<ClientModel> clients =
+          ClientModel().toListModelFromCloud((response.data as List<dynamic>));
+      return clients;
     } catch (error) {
       print("error $error");
-      return Future.error(error, StackTrace.fromString(""));
+      throw (error);
     }
   }
 
   Future<ClientModel> readClient() async {
     try {
-      Database db = await openDatabase(
-          join(await getDatabasesPath(), 'beautyfyi_database.db'));
-      List<Map<String, dynamic>> query =
-          await db.query('clients', where: "id = ?", whereArgs: [id]);
-      return _toModel(query[0]);
+      final HttpService http = HttpService();
+      Response response = await http.getRequest(endPoint: "clients/${this.id}");
+      return ClientModel()._toModelFromCloud((response.data));
     } catch (error) {
       throw (error);
     }

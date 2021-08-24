@@ -50,11 +50,13 @@ Map<String, InputDecoration> textfieldInputDecoration(
         {IconData? iconData,
         String? hintText,
         String? hintTextStyle,
-        String? suffixText}) =>
+        String? suffixText,
+        String? errorText}) =>
     {
       "white_text_decoration": InputDecoration(
         counterText: '',
-        errorStyle: TextStyle(),
+        errorText: errorText,
+        errorStyle: TextStyle(height: 0),
         border: InputBorder.none,
         contentPadding: EdgeInsets.only(top: 14.0),
         prefixIcon: Icon(

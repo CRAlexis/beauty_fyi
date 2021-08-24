@@ -3,7 +3,7 @@ import 'dart:io';
 
 import 'package:beauty_fyi/container/app_bar/app_bar.dart';
 import 'package:beauty_fyi/container/media/grid_media.dart';
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/models/service_media_model.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/service_process_model.dart';
 import 'package:beauty_fyi/providers/services_provider.dart';
@@ -27,71 +27,123 @@ class ServiceScreen extends ConsumerWidget {
 
   Widget build(BuildContext context, ScopedReader watch) {
     final state = watch(serviceNotifierProvider(args['serviceId']));
-    return Scaffold(
-        appBar: CustomAppBar(
-          focused: true,
-          transparent: false,
-          titleText: state is ServiceLoaded ? state.service.serviceName : "",
-          leftIcon: Icons.arrow_back,
-          leftIconClicked: () {
-            Navigator.of(context).pop();
-          },
-          automaticallyImplyLeading: false,
-          centerTitle: true,
-          elevation: 0,
-          showMenuIcon: state is ServiceLoaded
-              ? state.serviceIsActive
-                  ? false
-                  : true
-              : false,
-          menuOptions: ['edit', 'delete'],
-          menuIconClicked: (String val) {
-            switch (val) {
-              case 'edit':
-                state is ServiceLoaded
-                    ? Navigator.pushNamed(context, "/add-service",
-                        arguments: {'id': state.service.id})
-                    : null;
-                break;
-              case 'delete':
-                print("needs to be impletemented");
-                break;
-            }
-          },
-        ),
-        body: Stack(
-          children: [
-            Container(
-                // child: SingleChildScrollView(
-                // physics: ScrollPhysics(),
-                child: Column(children: [
-              _serviceScreenHeader(context: context, state: state),
-              _TabBody(
-                serviceModel: state is ServiceLoaded ? state.service : null,
-                serviceMedia: state is ServiceLoaded ? state.serviceMedia : [],
-                serviceMetaData:
-                    state is ServiceLoaded ? state.serviceMetaData : null,
-              ),
-              SizedBox(
-                height: MediaQuery.of(context).size.height / 14,
-              )
-            ])),
-            _StartSessionButton(
-              state is ServiceLoaded
-                  ? state.serviceIsActive
-                      ? "Start or resume session"
-                      : "Start session"
-                  : "",
-              onPressed: () {
-                state is ServiceLoaded
-                    ? context
-                        .read(sessionNotifierProvider.notifier)
-                        .newSession(state.service.id as int, context)
-                    : null;
-              },
-            )
-          ],
-        ));
+ 
+    return ProviderListener(
+        onChange: (BuildContext context, state) {
+          if (state is ServicesError) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              SnackBar(
+                  content: Text(state.message),
+                  duration: Duration(seconds: 15),
+                  action: SnackBarAction(
+                      label: "retry",
+                      onPressed: () {
+                        try {
+                          context
+                              .read(serviceNotifierProvider(args['serviceId'])
+                                  .notifier)
+                              .getService(args['serviceId']);
+                        } catch (e) {}
+                      })),
+            );
+          }
+        },
+        provider: serviceNotifierProvider(args['serviceId']),
+        child: ProviderListener(
+            onChange: (BuildContext context, state) {
+              if (state is SessionsError) {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(state.message),
+                    duration: Duration(seconds: 10),
+                  ),
+                );
+              }
+            },
+            provider: sessionNotifierProvider,
+            child: Scaffold(
+                appBar: CustomAppBar(
+                  focused: true,
+                  transparent: false,
+                  titleText:
+                      state is ServiceLoaded ? state.service.serviceName : "",
+                  leftIcon: Icons.arrow_back,
+                  leftIconClicked: () {
+                    Navigator.of(context).pop();
+                  },
+                  automaticallyImplyLeading: false,
+                  centerTitle: true,
+                  elevation: 0,
+                  showMenuIcon: state is ServiceLoaded
+                      ? state.serviceIsActive
+                          ? false
+                          : true
+                      : false,
+                  menuOptions: ['edit', 'delete'],
+                  menuIconClicked: (String val) {
+                    switch (val) {
+                      case 'edit':
+                        state is ServiceLoaded
+                            ? Navigator.pushNamed(context, "/add-service",
+                                    arguments: {'id': state.service.id})
+                                .then((value) {
+                                context
+                                    .read(serviceNotifierProvider(
+                                            args['serviceId'])
+                                        .notifier)
+                                    .getService(args['serviceId']);
+                              })
+                            : null;
+                        break;
+                      case 'delete':
+                        state is ServiceLoaded
+                            ? context
+                                .read(serviceNotifierProvider(
+                                        state.service.id as int)
+                                    .notifier)
+                                .deleteService(state.service.id as int, context)
+                            : null;
+                        break;
+                    }
+                  },
+                ),
+                body: Stack(
+                  children: [
+                    Container(
+                        // child: SingleChildScrollView(
+                        // physics: ScrollPhysics(),
+                        child: Column(children: [
+                      _serviceScreenHeader(context: context, state: state),
+                      _TabBody(
+                        serviceModel:
+                            state is ServiceLoaded ? state.service : null,
+                        serviceMedia:
+                            state is ServiceLoaded ? state.serviceMedia : [],
+                        serviceMetaData: state is ServiceLoaded
+                            ? state.serviceMetaData
+                            : null,
+                      ),
+                      SizedBox(
+                        height: MediaQuery.of(context).size.height / 14,
+                      )
+                    ])),
+                    _StartSessionButton(
+                      state is ServiceLoaded
+                          ? state.serviceIsActive
+                              ? "Start or resume session"
+                              : "Start session"
+                          : "",
+                      onPressed: () {
+                        state is ServiceLoaded
+                            ? context
+                                .read(sessionNotifierProvider.notifier)
+                                .checkSessionActivity(
+                                    context, state.service.id as int)
+                            : null;
+                      },
+                    )
+                  ],
+                ))));
   }
 }
 

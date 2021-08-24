@@ -26,7 +26,7 @@ final addServiceNotifierProvider = StateNotifierProvider.autoDispose((ref) {
 final bottomBarNotfierProvider =
     StateNotifierProvider.autoDispose((ref) => BottomBarNotifier());
 final imageFileNotifierProvider =
-    StateNotifierProvider((ref) => ImageFileNotifier());
+    StateNotifierProvider((ref) => ImageFileNotifier(null));
 final serviceProcessNotifierProvider =
     StateNotifierProvider((ref) => ServiceProcessNotifier());
 final serviceNameNotifierProvider =
@@ -228,29 +228,40 @@ class CreateServiceScreen extends StatelessWidget {
                                                               slideIndexProvider)
                                                           .state) {
                                                         case 2:
-                                                          addServiceNotifierController.sendQuery(
-                                                              servicemodel: ServiceModel(
-                                                                  id: serviceId,
-                                                                  serviceName:
-                                                                      serviceNameNotifierController
+                                                          addServiceNotifierController
+                                                              .sendQuery(
+                                                                  serviceModel: ServiceModel(
+                                                                      id:
+                                                                          serviceId,
+                                                                      serviceName: serviceNameNotifierController
                                                                           .serviceNameTextFieldController
                                                                           .text,
-                                                                  serviceDescription:
-                                                                      serviceNameNotifierController
+                                                                      serviceDescription: serviceNameNotifierController
                                                                           .serviceDescriptionTextFieldController
                                                                           .text,
-                                                                  imageSrc:
-                                                                      imageFileNotifierController
-                                                                          .imageFile,
-                                                                  serviceProcesses: json.encode(serviceProcessNotifierController
-                                                                      .serviceProcesses
-                                                                      .map((e) => e
-                                                                          .toMap)
-                                                                      .toList())),
-                                                              updating:
-                                                                  serviceId !=
-                                                                      0,
-                                                              context: context);
+                                                                      imageSrc:
+                                                                          imageFileNotifierController
+                                                                              .imageFile,
+                                                                      serviceProcesses: json.encode(serviceProcessNotifierController
+                                                                          .serviceProcesses
+                                                                          .map((e) => e
+                                                                              .toMap)
+                                                                          .toList())),
+                                                                  updating:
+                                                                      serviceId !=
+                                                                          0,
+                                                                  context:
+                                                                      context)
+                                                              .then((val) {
+                                                            serviceNameNotifierController
+                                                                .softDispose();
+                                                            serviceProcessNotifierController
+                                                                .softDispose();
+                                                            imageFileNotifierController
+                                                                .softDispose();
+                                                          }).onError((error,
+                                                                      stackTrace) =>
+                                                                  null);
                                                           break;
                                                         default:
                                                           context
@@ -356,7 +367,7 @@ class _ChooseImageSlide extends ConsumerWidget {
               bool imageHasUpdated = returnedValue['imageHasUpdated'];
               imageHasUpdated
                   ? imageFileNotifierController.clearImageFile(context)
-                  : imageFileNotifierController.setImageFile(returnedImage);
+                  : imageFileNotifierController.setImageFile(returnedImage, "");
               //will need to validate slide
             },
             onOpenGalleryOrCamera: () {
@@ -369,9 +380,6 @@ class _ChooseImageSlide extends ConsumerWidget {
             },
           ),
         ]);
-    return Container(
-      child: Text("hey"),
-    );
   }
 }
 
@@ -433,6 +441,7 @@ class _ServiceNameSlide extends ConsumerWidget {
               disableTextFields:
                   serviceNameNotifierController.disableTextFields,
               stylingIndex: 1,
+              onChanged: (val) => null,
             )
           ],
         ),
@@ -636,14 +645,14 @@ class __BottomBarState extends State<_BottomBar> with TickerProviderStateMixin {
             // bottomBarVisible = false;
             // slideValidated = isSlideValid(slideIndex: 0, imageSrc: imageSrc);
             openCamera: () async {
-              imageFileNotifierController
-                  .setImageFile(await FileAndImageFunctions.openNativeCamera());
+              imageFileNotifierController.setImageFile(
+                  await FileAndImageFunctions.openNativeCamera(), "");
               // bottomBarVisible = false;
               // slideValidated = isSlideValid(slideIndex: 0, imageSrc: imageSrc);
             },
             openGallery: () async {
-              imageFileNotifierController
-                  .setImageFile(await FileAndImageFunctions.openImagePicker());
+              imageFileNotifierController.setImageFile(
+                  await FileAndImageFunctions.openImagePicker(), "");
               // bottomBarVisible = false;
               // slideValidated = isSlideValid(slideIndex: 0, imageSrc: imageSrc);
             });
@@ -661,7 +670,7 @@ void _recallServiceData(AddServiceNotifier addServiceNotifierController,
   final serviceProcessNotifierController =
       context.read(serviceProcessNotifierProvider.notifier);
   addServiceNotifierController.recallServiceData(id).then((value) {
-    imageFileNotifierController.setImageFile(value['imageFile']);
+    imageFileNotifierController.setImageFile(value['imageFile'], "");
     serviceNameNotifierController.serviceNameTextFieldController.text =
         value['serviceName'];
     serviceNameNotifierController.serviceDescriptionTextFieldController.text =

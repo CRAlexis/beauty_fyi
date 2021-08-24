@@ -7,6 +7,7 @@ import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/service_process_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:beauty_fyi/styles/colors.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:riverpod/riverpod.dart';
@@ -58,6 +59,20 @@ class LiveSessionError extends LiveSessionState {
   int get hashCode => message.hashCode;
 }
 
+class LiveSessionErrorFatal extends LiveSessionState {
+  final String message;
+  const LiveSessionErrorFatal(this.message);
+
+  @override
+  bool operator ==(Object o) {
+    if (identical(this, o)) return true;
+    return o is LiveSessionErrorFatal && o.message == message;
+  }
+
+  @override
+  int get hashCode => message.hashCode;
+}
+
 class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
   final SessionModel? sessionModel;
   LiveSessionNotifier(this.sessionModel, [LiveSessionState? state])
@@ -76,21 +91,15 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
     final DateTimeModel dateTime = DateTimeModel(
         dateTime: DateTime.now(), meta: 'current_process_start_Time');
     try {
-      // print("#1");
       final serviceModel =
           await ServiceModel(id: sessionModel?.serviceId).readService();
-      // print("#2");
       final allProcesses =
           jsonDecode(serviceModel.serviceProcesses as String) as List;
       final currentProcess = ServiceProcess()
           .toModel(allProcesses[sessionModel!.currentProcess as int]);
 
-      // print("#4");
-
       int processDurationInSeconds =
           (currentProcess.processDuration as int) * 60;
-      // print("#5");
-
       await dateTime.insertDateTime(
           newSessionOrNewProcess); // this does not run on first init
 
@@ -101,11 +110,8 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
 
       print("time elapsed: $timeElapsed");
 
-      // print("#6");
-
       processDurationInSeconds -= timeElapsed;
       sessionModel!.updateSession();
-      // print("#7");
       state = LiveSessionActive(
           serviceModel,
           sessionModel as SessionModel,
@@ -114,13 +120,13 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
           currentProcess,
           allProcesses.length - 1 == (sessionModel!.currentProcess as int),
           await storage.read(key: 'vibration_setting') == 'true');
-      // print("#8");
 
       return;
     } catch (e) {
       try {
         print("error: $e");
-        state = LiveSessionError("Something has gone wrong with this session");
+        state =
+            LiveSessionErrorFatal("Something has gone wrong with this session");
         await dateTime.removeDateTime();
         await sessionModel?.endSession();
       } catch (e) {}
@@ -133,66 +139,71 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
   }
 
   Future<void> countdownResumed() async {
-    final dateTimeModel =
-        await DateTimeModel(meta: 'current_process_start_Time').readDateTime();
-    final int idleTime = DateTime.now()
-        .difference((await DateTimeModel(meta: 'paused_time').readDateTime())
-            .dateTime as DateTime)
-        .inSeconds;
-
-    print("current process: ${dateTimeModel.dateTime}");
-    print("idle time: $idleTime");
-    dateTimeModel.setDateTime =
-        dateTimeModel.dateTime!.add(Duration(seconds: idleTime));
-    await dateTimeModel.insertDateTime(true);
-    await DateTimeModel(meta: 'paused_time').removeDateTime();
-    await _fetchCurrentProcess(false);
+    try {
+      final dateTimeModel =
+          await DateTimeModel(meta: 'current_process_start_Time')
+              .readDateTime();
+      final int idleTime = DateTime.now()
+          .difference((await DateTimeModel(meta: 'paused_time').readDateTime())
+              .dateTime as DateTime)
+          .inSeconds;
+      print("current process: ${dateTimeModel.dateTime}");
+      print("idle time: $idleTime");
+      dateTimeModel.setDateTime =
+          dateTimeModel.dateTime!.add(Duration(seconds: idleTime));
+      await dateTimeModel.insertDateTime(true);
+      await DateTimeModel(meta: 'paused_time').removeDateTime();
+      await _fetchCurrentProcess(false);
+    } catch (error) {
+      state =
+          LiveSessionErrorFatal("Something has gone wrong, please try again");
+    }
   }
 
   void appResumed() async {
-    final dateTimeModel =
-        await DateTimeModel(meta: 'current_process_start_Time').readDateTime();
-    final timeElapsed =
-        DateTime.now().difference(dateTimeModel.dateTime as DateTime).inSeconds;
-    dateTimeModel.setDateTime =
-        dateTimeModel.dateTime!.add(Duration(seconds: timeElapsed));
-    await dateTimeModel.insertDateTime(true);
-    await _fetchCurrentProcess(false);
+    try {
+      final dateTimeModel =
+          await DateTimeModel(meta: 'current_process_start_Time')
+              .readDateTime();
+      final timeElapsed = DateTime.now()
+          .difference(dateTimeModel.dateTime as DateTime)
+          .inSeconds;
+      dateTimeModel.setDateTime =
+          dateTimeModel.dateTime!.add(Duration(seconds: timeElapsed));
+      await dateTimeModel.insertDateTime(true);
+      await _fetchCurrentProcess(false);
+    } catch (error) {
+      state =
+          LiveSessionErrorFatal("Something has gone wrong with this session");
+    }
   }
 
   bool startNextProcessLock = false;
   Future<void> startNextProcess() async {
-    if (!startNextProcessLock) {
-      startNextProcessLock = true;
-      sessionModel!.setCurrentProcess = sessionModel!.currentProcess! + 1;
-      final serviceModel =
-          await ServiceModel(id: sessionModel?.serviceId).readService();
-      final allProcesses =
-          jsonDecode(serviceModel.serviceProcesses as String) as List;
-      // print("#3");
-      if (allProcesses.length == sessionModel!.currentProcess) {
-        return endSession();
+    try {
+      if (!startNextProcessLock) {
+        startNextProcessLock = true;
+        sessionModel!.setCurrentProcess = sessionModel!.currentProcess! + 1;
+        final serviceModel =
+            await ServiceModel(id: sessionModel?.serviceId).readService();
+        final allProcesses =
+            jsonDecode(serviceModel.serviceProcesses as String) as List;
+        if (allProcesses.length == sessionModel!.currentProcess) {
+          return endSession();
+        }
+        await _fetchCurrentProcess(true);
+        startNextProcessLock = false;
       }
-      await _fetchCurrentProcess(true);
-      startNextProcessLock = false;
+      return;
+    } catch (error) {
+      state =
+          LiveSessionErrorFatal("Something has gone wrong with this session");
     }
-    return;
   }
 
-  Future<void> endCurrentProcess() async {
+  Future<void> onProcessFinished() async {
     try {
-      // backgroundColors = [
-      //   colorStyles['darker_green'] as Color,
-      //   colorStyles['green'] as Color,
-      //   colorStyles['blue'] as Color,
-      //   colorStyles['green'] as Color
-      // ];
       _vibration();
-      // await DateTimeModel(
-      // dateTime: DateTime.now(),
-      // meta: 'current_process_start_Time',
-      // ).insertDateTime(true);
-      return;
     } catch (e) {
       print(e);
     }
@@ -200,15 +211,9 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
 
   Future<void> endSession() async {
     try {
-      backgroundColors = [
-        colorStyles['dark_purple'] as Color,
-        colorStyles['light_purple'] as Color,
-        colorStyles['blue'] as Color,
-        colorStyles['green'] as Color
-      ];
       final serviceModel =
           await ServiceModel(id: sessionModel?.serviceId).readService();
-      await sessionModel!.endSession();
+      await sessionModel?.endSession();
       state = LiveSessionActive(
           serviceModel,
           sessionModel as SessionModel,
@@ -220,7 +225,15 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
       await DateTimeModel(meta: 'paused_time').removeDateTime();
       return;
     } catch (e) {
-      MessageAlertDialog(message: "Error: Unable to end session.");
+      print(e);
+      if (e is DioError) {
+        state = LiveSessionErrorFatal(
+          "Unable to end session. Please check you are connected to the internet.",
+        );
+        return;
+      }
+      state = LiveSessionErrorFatal("Unable to end session. Please try again.");
+      return;
     }
   }
 
@@ -239,7 +252,6 @@ class LiveSessionNotifier<LiveSessionState> extends StateNotifier {
 
   Future<void> updateNotes(String notes, SessionModel sessionModel) async {
     try {
-      print(sessionModel);
       sessionModel.setNotes = notes;
       await sessionModel.updateSessionNotes();
     } catch (e) {

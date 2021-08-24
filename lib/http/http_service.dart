@@ -1,3 +1,4 @@
+import 'package:beauty_fyi/models/global.model.dart';
 import 'package:dio/dio.dart';
 import 'dart:convert' show utf8, base64;
 
@@ -8,18 +9,71 @@ class HttpService {
   Dio _dio = Dio();
   final storage = new secureStorage.FlutterSecureStorage();
 
-  final baseUrl = "http://192.168.1.245:5000/";
-
   HttpService() {
-    _dio = Dio(BaseOptions(baseUrl: baseUrl));
+    _dio = Dio(BaseOptions(baseUrl: GlobalVariables.serverUrl));
     initializeInterceptors();
   }
 
   Future<Response> postRequest({
     required String endPoint,
-    Map<String, dynamic>? data,
+    data,
   }) async {
     Response response;
+    try {
+      response = await _dio.post(endPoint,
+          data: data, options: Options(headers: await _getHeader()));
+    } on DioError catch (e) {
+      print(e.message);
+      throw StackTrace.current;
+    }
+    return response;
+  }
+
+  Future<Response> putRequest({
+    required String endPoint,
+    data,
+  }) async {
+    Response response;
+    try {
+      response = await _dio.put(endPoint,
+          data: data, options: Options(headers: await _getHeader()));
+    } on DioError catch (e) {
+      print(e.message);
+      throw StackTrace.current;
+    }
+    return response;
+  }
+
+  Future<Response> deleteRequest({
+    required String endPoint,
+    data,
+  }) async {
+    Response response;
+    try {
+      response = await _dio.delete(endPoint,
+          data: data, options: Options(headers: await _getHeader()));
+    } on DioError catch (e) {
+      print(e.message);
+      throw StackTrace.current;
+    }
+    return response;
+  }
+
+  Future<Response> getRequest({
+    required String endPoint,
+  }) async {
+    Response response;
+    try {
+      response = await _dio.get(endPoint,
+          options: Options(headers: await _getHeader()));
+    } on DioError catch (e) {
+      print(e.message);
+      throw StackTrace.current;
+    }
+    return response;
+  }
+
+  Future<Map<String, dynamic>> _getHeader() async {
     String? email = await storage.read(key: 'email') != null
         ? await storage.read(key: 'email')
         : "";
@@ -30,19 +84,10 @@ class HttpService {
         ? await storage.read(key: 'key')
         : "";
     String credentials = base64.encode(utf8.encode('$email:$password'));
-    try {
-      response = await _dio.post(endPoint,
-          data: data,
-          options: Options(headers: {
-            'Basic_Token': 'Basic $credentials',
-            'Authorization': 'Token $key',
-          }));
-    } on DioError catch (e) {
-      print(e.message);
-      return Future.error(e, StackTrace.current);
-    }
-
-    return response;
+    return {
+      'Basic_Token': 'Basic $credentials',
+      'Authorization': 'Token $key',
+    };
   }
 
   void initializeInterceptors() {

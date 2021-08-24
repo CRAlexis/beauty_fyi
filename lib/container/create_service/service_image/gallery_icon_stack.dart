@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:beauty_fyi/styles/colors.dart';
 import 'package:flutter/material.dart';
 
 enum GalleryIconSize {
@@ -76,6 +77,7 @@ class _GalleryIconStackState extends State<GalleryIconStack> {
                           backgroundImage: FileImage(
                             widget.imageSrc!,
                           ),
+                          backgroundColor: colorStyles['light_purple'],
                         )),
                   )),
           Positioned(

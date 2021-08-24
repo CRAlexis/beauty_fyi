@@ -21,7 +21,10 @@ class CountdownActive extends CountdownState {
 }
 
 class CountDownEnded extends CountdownState {
-  const CountDownEnded();
+  final StreamController<int> controller;
+
+  const CountDownEnded(this.controller);
+  Stream<int> get stream => controller.stream;
 }
 
 class CountdownPaused extends CountdownState {
@@ -32,7 +35,9 @@ class CountdownPaused extends CountdownState {
 
 class CountdownError extends CountdownState {
   final String message;
-  const CountdownError(this.message);
+  final StreamController<int> controller;
+
+  const CountdownError(this.message, this.controller);
 
   @override
   bool operator ==(Object o) {
@@ -48,56 +53,61 @@ class CountdownNotifier<CountdownState> extends StateNotifier {
   int _count;
   CountdownNotifier(this._count, [CountdownState? state])
       : super(CountdownInitial()) {
-    sessionFinishedController.add(false);
+    processFinishedController.add(false);
     initStream();
   }
 
   final controller = StreamController<int>.broadcast();
-  final sessionFinishedController = StreamController<bool>.broadcast();
+  final processFinishedController = StreamController<bool>.broadcast();
+
   void initStream() {
     state = CountdownActive(controller);
+    if (_count < 1) {
+      endCountdown(false);
+      return;
+    }
+
     Timer.periodic(Duration(seconds: 1), (timer) {
       try {
         if (!controller.isClosed && state is CountdownActive) {
+          if (_count < 1) {
+            state is! CountDownEnded ? endCountdown(true) : null;
+            timer.cancel();
+            // controller.close();
+            return;
+          }
           controller.sink.add(_count);
           _count--;
-          if (_count == 0) {
-            sessionFinishedController.add(true);
-          }
-        } else if (_count < 1) {
-          controller.sink.add(0);
-          controller.close();
         }
       } catch (e) {
+        state = CountdownError("error", controller);
         timer.cancel();
       }
     });
-    state = CountdownActive(controller);
   }
 
   Stream<int> get stream => controller.stream;
-  Stream<bool> get sessionFinishedStream => sessionFinishedController.stream;
+  Stream<bool> get processFinishedStream => processFinishedController.stream;
   void closeStream() {
     controller.close();
-    sessionFinishedController.close();
+    processFinishedController.close();
   }
 
   void pauseCountdown() => state = CountdownPaused(controller);
   void resumeCountdown() => state = CountdownActive(controller);
-  void endCountdown() {
-    state = CountDownEnded();
-    _count = -1;
+  void endCountdown(bool vibrate) {
+    state = CountDownEnded(controller);
+    processFinishedController.add(vibrate);
   }
 
   void refreshCountdown(int count) async {
-    // await Future.delayed(Duration(seconds: 3));
     this._count = count;
-    state = CountdownActive(controller);
+    initStream();
   }
 
   void dispose() {
     controller.close();
-    sessionFinishedController.close();
+    processFinishedController.close();
     super.dispose();
   }
 }

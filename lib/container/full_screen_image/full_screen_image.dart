@@ -155,7 +155,7 @@ class _FullScreenImageState extends State<FullScreenImage>
                       }
                       AreYouSureAlertDialog(
                         context: context,
-                        message: "Are you sure you want to remove this image?",
+                        message: "Are you sure you want to delete this image?",
                         leftButtonText: "no",
                         rightButtonText: "yes",
                         onLeftButton: () {

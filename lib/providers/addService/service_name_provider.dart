@@ -38,14 +38,18 @@ class ServiceNameNotifier<ServiceNameState> extends StateNotifier {
   }
 
   void _serviceDescriptionListener() {
-    final serviceName = serviceNameTextFieldController.text;
-    if (RegExp(serviceNameRegexString).hasMatch(serviceName) &&
-        serviceName.length >= 4) {
-      autovalidateModeServiceName = AutovalidateMode.onUserInteraction;
-      state = ServiceNameValidation(true);
-    } else {
-      autovalidateModeServiceName = AutovalidateMode.onUserInteraction;
-      state = ServiceNameValidation(false);
+    try {
+      final serviceName = serviceNameTextFieldController.text;
+      if (RegExp(serviceNameRegexString).hasMatch(serviceName) &&
+          serviceName.length >= 4) {
+        autovalidateModeServiceName = AutovalidateMode.onUserInteraction;
+        state = ServiceNameValidation(true);
+      } else {
+        autovalidateModeServiceName = AutovalidateMode.onUserInteraction;
+        state = ServiceNameValidation(false);
+      }
+    } catch (error) {
+      print(error);
     }
   }
 

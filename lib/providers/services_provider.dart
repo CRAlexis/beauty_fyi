@@ -1,6 +1,9 @@
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/container/alert_dialoges/loading_alert_dialog.dart';
+import 'package:beauty_fyi/models/client_model.dart';
+import 'package:beauty_fyi/models/service_media_model.dart';
 import 'package:beauty_fyi/models/service_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:riverpod/riverpod.dart';
 
 enum ServicesProviderEnum { READALL, READONE, NULL }
@@ -84,7 +87,6 @@ class ServicesNotifier extends StateNotifier<ServicesState> {
         getService(serviceId);
         break;
       default:
-        getServices();
         break;
     }
   }
@@ -93,10 +95,20 @@ class ServicesNotifier extends StateNotifier<ServicesState> {
     try {
       state = ServicesLoading();
       final List<ServiceModel> services = await ServiceModel().readServices();
-      final activeServiceId = await SessionModel().checkSessionActivity();
-      state = ServicesLoaded(services, activeServiceId);
+      InitSessionResponseType checkSessionActivity = InitSessionResponseType(
+          false, SessionModel(), ServiceModel(), ClientModel());
+      try {
+        checkSessionActivity = await SessionModel().checkSessionActivity();
+      } catch (e) {}
+
+      state = ServicesLoaded(
+          services,
+          checkSessionActivity.sessionIsActive
+              ? checkSessionActivity.service?.id as int
+              : -1);
       return;
     } catch (e) {
+      print(e);
       state = ServicesError("Unable to load services.");
       return;
     }
@@ -109,11 +121,31 @@ class ServicesNotifier extends StateNotifier<ServicesState> {
       final serviceImages = await fetchServiceImages(serviceId);
       final serviceMetaData =
           await SessionModel(serviceId: serviceId).fetchServiceMetaData();
-      final serviceIsActive = await SessionModel().checkSessionActivity();
-      state = ServiceLoaded(
-          service, serviceImages, serviceMetaData, serviceIsActive != 0);
+      InitSessionResponseType checkSessionActivity = InitSessionResponseType(
+          false, SessionModel(), ServiceModel(), ClientModel());
+      try {
+        checkSessionActivity = await SessionModel().checkSessionActivity();
+      } catch (e) {}
+      state = ServiceLoaded(service, serviceImages, serviceMetaData,
+          checkSessionActivity.service?.id == service.id);
     } catch (e) {
+      print(e);
       state = ServicesError("Unable to load service.");
+    }
+  }
+
+  Future<void> deleteService(int serviceId, context) async {
+    final loadingDialog =
+        LoadingAlertDialog(context: context, message: "Deleting service");
+    try {
+      loadingDialog.show();
+      await (await ServiceModel(id: serviceId).readService()).deleteService();
+      loadingDialog.pop();
+      Navigator.of(context).pop();
+    } catch (error) {
+      print(error);
+      loadingDialog.pop();
+      state = ServicesError("Unable to delete service.");
     }
   }
 

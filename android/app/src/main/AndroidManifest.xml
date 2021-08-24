@@ -54,5 +54,17 @@
     <uses-permission android:name="android.permission.CAMERA" />
     <uses-permission android:name="android.permission.RECORD_AUDIO" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
+    <queries>
+        <!-- If your app opens https URLs -->
+        <intent>
+          <action android:name="android.intent.action.VIEW" />
+          <data android:scheme="https" />
+        </intent>
+        <!-- If your app makes calls -->
+        <intent>
+          <action android:name="android.intent.action.DIAL" />
+          <data android:scheme="tel" />
+        </intent>
+    </queries>
     
 </manifest>

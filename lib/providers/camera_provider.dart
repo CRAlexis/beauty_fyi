@@ -1,10 +1,15 @@
 import 'package:beauty_fyi/bloc/gallery_bloc.dart';
-import 'package:beauty_fyi/models/service_media.dart';
+import 'package:beauty_fyi/functions/file_and_image_functions.dart';
+import 'package:beauty_fyi/models/service_media_model.dart';
 import 'package:beauty_fyi/models/session_model.dart';
 import 'package:camera/camera.dart';
+import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:riverpod/riverpod.dart';
 import 'package:vibration/vibration.dart';
+import 'dart:math';
+
+enum CameraEnum { LIVESESSION }
 
 abstract class CameraState {
   const CameraState();
@@ -20,14 +25,11 @@ class CameraLoading extends CameraState {
 
 class CameraLoaded extends CameraState {
   final CameraController cameraController;
-  const CameraLoaded(this.cameraController);
-  // const CameraLoaded();
-}
-
-class CameraCaptureError extends CameraState {
-  final CameraController cameraController;
+  final bool cameraCaptureError;
   final String message;
-  const CameraCaptureError(this.cameraController, this.message);
+  const CameraLoaded(
+      this.cameraController, this.cameraCaptureError, this.message);
+  // const CameraLoaded();
 }
 
 class CameraLoadingError extends CameraState {
@@ -46,7 +48,8 @@ class CameraLoadingError extends CameraState {
 
 class CameraNotifier<CameraState> extends StateNotifier {
   final GalleryBloc galleryBloc;
-  CameraNotifier(this.galleryBloc, [CameraState? state])
+  final CameraEnum cameraEnum;
+  CameraNotifier(this.galleryBloc, this.cameraEnum, [CameraState? state])
       : super(CameraInitial()) {
     initCamera();
   }
@@ -55,7 +58,8 @@ class CameraNotifier<CameraState> extends StateNotifier {
   Future<void>? initialiseCameraControllerFuture;
   int cameraIndex = 0;
 
-  Future<void> initCamera({index = 0}) async {
+  Future<void> initCamera(
+      {index = 0, cameraError = false, errorMessage = ''}) async {
     try {
       cameraIndex = index;
       state = CameraLoading();
@@ -63,13 +67,14 @@ class CameraNotifier<CameraState> extends StateNotifier {
       camera = cameras[index];
       cameraController = CameraController(camera, ResolutionPreset.high);
       await cameraController.initialize();
+      await cameraController.unlockCaptureOrientation();
       // try {
       // await cameraController.setFlashMode(FlashMode.torch);
       // } catch (e) {
       // usually throws exception when the camera doesn't have flash (like a front camera)
       // print(e);
       // }
-      state = CameraLoaded(cameraController);
+      state = CameraLoaded(cameraController, cameraError, errorMessage);
     } catch (e) {
       state = CameraLoadingError("Unable to load camera");
     }
@@ -79,69 +84,88 @@ class CameraNotifier<CameraState> extends StateNotifier {
     SessionModel sessionModel,
   ) async {
     try {
-      state = CameraLoaded(cameraController);
-      // state = CameraLoaded(cameraController);
-      print("# take photo");
       final directory = await getApplicationDocumentsDirectory();
       final String name = DateTime.now().toString().replaceAll(" ", "");
-      final path = "${directory.path}/$name.png";
+      final path = "${directory.path}/$name.jpg";
       XFile file = await cameraController.takePicture();
-      print("# ${file.path}");
-      file.saveTo(path);
-      await ServiceMedia().insertServiceMedia(ServiceMedia(
-          sessionId: sessionModel.id,
-          serviceId: sessionModel.serviceId,
-          fileType: "image",
-          filePath: path,
-          clientId: sessionModel.clientId));
-      galleryBloc.eventSink.add(sessionModel.id as int);
+      await file.saveTo(path);
+      await FileAndImageFunctions().fixExifRotation(path);
+      await new ServiceMedia(
+              sessionId: sessionModel.id,
+              serviceId: sessionModel.serviceId,
+              fileType: "image",
+              filePath: path,
+              clientId: sessionModel.clientId)
+          .insertServiceMedia(
+        cameraEnum,
+      );
+      galleryBloc.eventSink.add(sessionModel.id as String);
     } catch (error) {
-      print("# $error");
-      state = CameraCaptureError(cameraController, "Unable to take image.");
+      if (error is DioError) {
+        state = CameraLoaded(cameraController, true,
+            "Unable to connect to the server. Please check your connection");
+        return;
+      }
+      initCamera(
+          index: 0,
+          cameraError: true,
+          errorMessage: 'Unable to take image, please try again');
     }
   }
 
   void startRecording() async {
-    print("# start recording");
     try {
-      // state = CameraLoaded(cameraController);
-      // state = CameraLoaded(cameraController);
       Vibration.vibrate(duration: 100);
       await cameraController.startVideoRecording();
     } catch (e) {
-      state = CameraCaptureError(cameraController, "Unable to save video.");
+      initCamera(
+          index: 0,
+          cameraError: true,
+          errorMessage: 'Unable to start recording, please try again');
     }
   }
 
   void stopRecording(
     SessionModel sessionModel,
   ) async {
-    print("# end recording");
     try {
-      print("# 1");
       final d = await getExternalStorageDirectory();
       final String name = DateTime.now().toString().replaceAll(" ", "");
       final directory =
           d != null ? d : await getApplicationDocumentsDirectory();
       final path = "${directory.path}/$name.mp4";
-      print("# 2");
-
       XFile file = await cameraController.stopVideoRecording();
-      print("# 3");
 
-      file.saveTo(path);
-      await ServiceMedia().insertServiceMedia(ServiceMedia(
-          sessionId: sessionModel.id,
-          serviceId: sessionModel.serviceId,
-          fileType: "video",
-          filePath: path));
-      print("# 4");
-
-      galleryBloc.eventSink.add(sessionModel.id as int);
-      print("# 5");
+      await file.saveTo(path);
+      await ServiceMedia(
+              sessionId: sessionModel.id,
+              serviceId: sessionModel.serviceId,
+              fileType: "video",
+              filePath: path,
+              clientId: sessionModel.clientId)
+          .insertServiceMedia(
+        cameraEnum,
+      );
+      galleryBloc.eventSink.add(sessionModel.id as String);
     } catch (error) {
-      state = CameraCaptureError(cameraController, "Unable to save video.");
-      print(error);
+      initCamera(
+          index: 0,
+          cameraError: true,
+          errorMessage: 'Unable to save recording, please try again');
+    }
+  }
+
+  Future<void> setZoom(double val) async {
+    try {
+      double zoom = pow(val, 2.718281828459045).toDouble();
+      double max = await cameraController.getMaxZoomLevel();
+      await cameraController.setZoomLevel(zoom < 1
+          ? 1
+          : zoom > max
+              ? max
+              : zoom);
+    } catch (e) {
+      print("zoom: $e");
     }
   }
 

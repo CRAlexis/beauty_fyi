@@ -1,4 +1,8 @@
+import 'dart:convert';
+
+import 'package:beauty_fyi/container/alert_dialoges/are_you_sure_alert_dialog.dart';
 import 'package:beauty_fyi/models/client_model.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:riverpod/riverpod.dart';
 
 enum ClientProviderEnums { READALL, READONE, NULL }
@@ -56,7 +60,7 @@ class ClientsError extends ClientsState {
 }
 
 class ClientsNotifier extends StateNotifier<ClientsState> {
-  ClientsNotifier(ClientProviderEnums providerEnum, int? clientId,
+  ClientsNotifier(ClientProviderEnums providerEnum, String? clientId,
       [ClientsState? state])
       : super(ClientsInitial()) {
     switch (providerEnum) {
@@ -83,6 +87,7 @@ class ClientsNotifier extends StateNotifier<ClientsState> {
       state = ClientsLoaded(clients);
     } catch (e) {
       try {
+        print(e);
         state = ClientsError("Unable to load clients");
       } catch (e) {}
     }
@@ -92,10 +97,30 @@ class ClientsNotifier extends StateNotifier<ClientsState> {
   Future<void> getClient(id) async {
     try {
       state = ClientsLoading();
-      final client = await ClientModel(id: id).readClient();
-      state = ClientLoaded(client);
+      state = ClientLoaded(await ClientModel(id: id).readClient());
     } catch (e) {
+      print(e);
       state = ClientsError("Unable to load client");
+    }
+  }
+
+  Future<void> deleteClient(id, BuildContext context) async {
+    try {
+      final _ = AreYouSureAlertDialog(
+          context: context,
+          message: "Are you sure you want to delete this client?",
+          leftButtonText: 'no',
+          rightButtonText: 'yes',
+          onLeftButton: () => Navigator.of(context).pop(),
+          onRightButton: () async {
+            await ClientModel(id: id).deleteClient();
+            Navigator.of(context).pop();
+            Navigator.of(context).pop();
+          });
+      _.show();
+    } catch (e) {
+      Navigator.of(context).pop();
+      state = ClientsError("Unable to delete client");
     }
   }
 }
