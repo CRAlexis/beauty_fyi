@@ -35,6 +35,7 @@ void main() async {
   initDatabases();
   WidgetsFlutterBinding.ensureInitialized();
   runApp(ProviderScope(child: MyApp()));
+  //
 }
 
 Future<void> initDatabases() async {
