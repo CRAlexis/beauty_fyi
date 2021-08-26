@@ -41,7 +41,7 @@ class SessionModel {
       this.serviceName,
       this.url});
 
-  Map<String, dynamic> get _toMap {
+  Map<String, dynamic> get toMap {
     return {
       'id': id,
       'client_id': clientId,
@@ -130,7 +130,7 @@ class SessionModel {
           currentProcess: 0,
           serviceId: serviceId,
           url: response.data['url']);
-      await db.insert('sessions', _._toMap);
+      await db.insert('sessions', _.toMap);
       return _;
     } catch (error) {
       throw (error);
@@ -141,7 +141,7 @@ class SessionModel {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), "beautyfyi_database.db"));
-      await db.update('sessions', this._toMap,
+      await db.update('sessions', this.toMap,
           where: "id = ?", whereArgs: [this.id]);
       return;
     } catch (e) {
@@ -153,8 +153,10 @@ class SessionModel {
     try {
       final Database db = await openDatabase(
           join(await getDatabasesPath(), "beautyfyi_database.db"));
-      await db.rawUpdate('UPDATE sessions SET notes = ? WHERE id = ${this.id}',
-          ["${this.notes}"]);
+      print("notes: ${this.notes}");
+      await db.rawUpdate(
+          'UPDATE sessions SET notes = ? WHERE id = "${this.id}"',
+          [this.notes]);
       return;
     } catch (e) {
       throw (e);

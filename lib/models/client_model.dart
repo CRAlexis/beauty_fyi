@@ -100,7 +100,7 @@ class ClientModel {
     try {
       final HttpService http = HttpService();
       FormData content = FormData.fromMap({
-        'id': clientModel.id,
+        'clientId': clientModel.id,
         'firstName': clientModel.clientFirstName,
         'lastName': clientModel.clientLastName,
         'email': clientModel.clientEmail,

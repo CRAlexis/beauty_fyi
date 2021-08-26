@@ -31,6 +31,7 @@ class _PostSessionScreenState extends State<PostSessionScreen>
   @override
   Widget build(BuildContext context) {
     print(widget.args['session_data']);
+    print((widget.args['session_data'] as SessionModel).toMap);
     return Scaffold(
         backgroundColor: colorStyles['cream']!,
         appBar: CustomAppBar(

@@ -37,7 +37,7 @@ class _LiveSessionBottomBarState extends State<LiveSessionBottomBar> {
       setState(() {
         if (widget.tabController.index == 0) {
           customAnimationControlTabBar = CustomAnimationControl.playReverse;
-          customAnimationControlCamera = CustomAnimationControl.stop;
+          // customAnimationControlCamera = CustomAnimationControl.stop;
         } else {
           customAnimationControlCamera = CustomAnimationControl.playReverse;
           customAnimationControlTabBar = CustomAnimationControl.stop;
